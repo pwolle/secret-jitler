@@ -7,13 +7,21 @@ import typing
 uint = jtp.UInt8[jtp.Array, ""]
 uint_pair = jtp.UInt8[jtp.Array, "2"]
 
+bool_jax = jtp.Bool[jtp.Array, ""]
+
 # rng state
 # first one is used internally in jax
 # second is for runtime type checking
 random_key = jxr.KeyArray | jtp.UInt32[jtp.Array, "2"]
 
 # static: recompile for every number of players
-player_total: typing.TypeAlias = int
+player_num: typing.TypeAlias = int
+
+player = uint
+
+L_index = 0
+F_index = 1
+H_index = 2
 
 party = jtp.Bool[jtp.Array, ""]
 card = party
@@ -31,3 +39,8 @@ president = jtp.Int[jtp.Array, ""]  # \in {0, 1, ..., player_num - 1}
 chancelor = jtp.Int[jtp.Array, ""]  # \in {0, 1, ..., player_num - 1}
 
 election_tracker = jtp.Int[jtp.Array, ""]  # \in {0, 1, 2}
+
+player_mask = jtp.Bool[jtp.Array, "player_num"]
+
+# killed[i] = True iff player i is killed
+killed = player_mask
