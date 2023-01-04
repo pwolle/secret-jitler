@@ -1,5 +1,3 @@
-import jax.random as jxr
-
 import jaxtyping as jtp
 
 from . import shtypes
@@ -52,7 +50,7 @@ def propose_new_chancelor(
 def vote_for_president(
     key: shtypes.random_key,
     vote_probs: jtp.Float[jtp.Array, "player_num"]
-) -> shtypes.bool_jax:
+) -> shtypes.jbool:
     """
     The players vote for the proposed president.
 
