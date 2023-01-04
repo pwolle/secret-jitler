@@ -1,39 +1,47 @@
-import jax.random as jxr
-import jaxtyping as jtp
 import typing
 
+import jax.numpy as jnp
+import jax.random as jrn
+import jaxtyping as jtp
 
 # commonly used types
-uint = jtp.UInt8[jtp.Array, ""]
-uint_pair = jtp.UInt8[jtp.Array, "2"]
+jint_dtype = jnp.int8
+jfloat_dtype = jnp.float16
 
-bool_jax = jtp.Bool[jtp.Array, ""]
+jint = jtp.Int[jtp.Array, ""]
+jint_pair = jtp.Int[jtp.Array, "2"]
+
+jbool = jtp.Bool[jtp.Array, ""]
+jfloat = jtp.Float[jtp.Array, ""]
 
 # rng state
 # first one is used internally in jax
 # second is for runtime type checking
-random_key = jxr.KeyArray | jtp.UInt32[jtp.Array, "2"]
+random_key = jrn.KeyArray | jtp.UInt32[jtp.Array, "2"]
 
 # static: recompile for every number of players
 player_num: typing.TypeAlias = int
 
-player = uint
+player = jint
 
-L_index = 0
-F_index = 1
-H_index = 2
+index_L = 0
+index_F = 1
+index_H = 2
 
+# False: L, True: F
 party = jtp.Bool[jtp.Array, ""]
-card = party
+policy = party
 
-roles = jtp.UInt32[jtp.Array, "player_num"]  # 0: L, 1: F, 2: H
+roles = jtp.Int[jtp.Array, "player_num"]  # 0: L, 1: F, 2: H
 
 # board[0] \in {0, 1, ..., 5}, board[1] \in {0, 1, ..., 6}
-board = uint_pair
+board = jint_pair
+# cards[0] for number of L cards, cards[1] for number of F cards
+policies = jint_pair
 
 # board[0] for number of L policies, board[1] for number of F policies
-pile_draw = uint_pair
-pile_discard = uint_pair
+pile_draw = jint_pair
+pile_discard = jint_pair
 
 president = jtp.Int[jtp.Array, ""]  # \in {0, 1, ..., player_num - 1}
 chancelor = jtp.Int[jtp.Array, ""]  # \in {0, 1, ..., player_num - 1}
