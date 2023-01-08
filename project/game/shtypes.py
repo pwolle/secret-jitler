@@ -20,7 +20,7 @@ jfloat = jtp.Float[jtp.Array, ""]
 random_key = jrn.KeyArray | jtp.UInt32[jtp.Array, "2"]
 
 # static: recompile for every number of players
-player_num: typing.TypeAlias = int
+player_num: typing.TypeAlias = int | jint
 
 player = jint
 
