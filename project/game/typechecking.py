@@ -208,18 +208,19 @@ def check_president_or_chancelor(
 @jax.jit
 @jaxtyped
 @typechecked
-def check_chancelor_and_president(
-        chancelor: shtypes.chancelor,
-        president: shtypes.president
+def check_president_and_chancelor(
+        president: shtypes.president,
+        chancelor: shtypes.chancelor
 ) -> shtypes.jbool:
     """
     Check if the types chancelor and president (from shtypes)
     are in a valid state.
 
     Args:
+        president: shtypes.president (jint)
+            Player number of the president.
         chancelor: shtypes.chancelor (jint)
             Player number of the chancelor.
-        president
 
     Returns:
         works: shtypes.jbool
@@ -301,5 +302,71 @@ def check_winner(winner: shtypes.winner) -> shtypes.jbool:
 
     """
     works = jnp.logical_and(winner.sum() >= 0, winner.sum() <= 1)
+
+    return works
+
+
+@jax.jit
+@jaxtyped
+@typechecked
+def check_all(
+        player_num: shtypes.player_num,
+        player: shtypes.player,
+        roles: shtypes.roles,
+        board: shtypes.board,
+        pile_draw: shtypes.pile_draw,
+        pile_discard: shtypes.pile_discard,
+        president: shtypes.president,
+        chancelor: shtypes.chancelor,
+        election_tracker: shtypes.election_tracker,
+        killed: shtypes.killed,
+        winner: shtypes.winner
+) -> shtypes.jbool:
+    """
+    Check all types as needed (from shtypes).
+
+    Args:
+        player_num: shtypes.player_num (alias for int)
+            Amount of players.
+        player: shtypes.player
+            Number of player.
+        roles: shtypes.roles
+            Array specifying all roles.
+        board: shtypes.board
+            The board state.
+        pile_draw: shtypes.pile_draw
+            The draw pile.
+        pile_discard: shtypes.pile_discard
+            The discard pile.
+        president: shtypes.president
+            Player number of the president.
+        chancelor: shtypes.president
+            Player number of the chancelor.
+        election_tracker: shtypes.election_tracker
+            State of the election.
+        killed: shtypes.killed
+            Array specifying which players are dead.
+        winner: shtypes.winner
+            Array specifying which party has won.
+
+    Returns:
+        works: shtypes.jbool
+            True iff all tested types are in a valid state.
+    """
+    works = (
+            check_player_num(player_num) *
+            check_player(player) *
+            check_roles(roles) *
+            check_board(board) *
+            check_pile(pile_draw) *
+            check_pile(pile_discard) *
+            check_piles_board(pile_draw, pile_discard, board) *
+            check_president_or_chancelor(president) *
+            check_president_or_chancelor(chancelor) *
+            check_president_and_chancelor(president, chancelor) *
+            check_election_tracker(election_tracker) *
+            check_killed(killed) *
+            check_winner(winner)
+    )
 
     return works
