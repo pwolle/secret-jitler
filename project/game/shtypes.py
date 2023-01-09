@@ -56,3 +56,6 @@ killed = player_mask
 # first index is True iff L won, second index is True iff F won
 # never both True
 winner = jtp.Bool[jtp.Array, "2"]
+
+# maximum number of turns
+max_turns = 30
