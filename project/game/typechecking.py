@@ -1,5 +1,5 @@
 import jax
-import shtypes
+from . import shtypes
 import jax.numpy as jnp
 from jaxtyping import jaxtyped
 from typeguard import typechecked
