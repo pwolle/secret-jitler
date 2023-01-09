@@ -2,6 +2,7 @@ import shtypes
 import jaxtyping as jtp
 import jax.numpy as jnp
 import jax.random as jrn
+import jax
 
 from jaxtyping import jaxtyped
 from typeguard import typechecked
@@ -31,6 +32,19 @@ def done(policies: shtypes.board) -> shtypes.winner:
 
     # return the array
     return out
+
+def is_Hitler_alive(killed: shtypes.killed, roles: shtypes.roles) -> shtypes.winner:
+
+    # who is H?
+    H_where = jnp.where(roles > 1, True, False)
+
+    # is he still alive?
+    H_alive = jnp.all(jnp.logical_not(jnp.logical_and(H_where, killed)))
+
+	# L win if H is death
+    winner = jnp.array([jnp.logical_not(H_alive),False])
+	
+    return winner
 
 
 @jaxtyped
@@ -105,19 +119,6 @@ def kill_player(
     # bool-masking the situation at the begining and now
     out = (killed * illegal) + (cache * legal)
 
-    # who is Hitler?
-    H_where = jnp.where(role > 1, True, False)
-
-    # is he still alive?
-    H_alive = jnp.all(jnp.logical_not(jnp.logical_and(H_where, out)))
-
-    # create bool-mask; returns a full-false Array if H is dead
-    mask = jnp.array([H_alive] * player_number)
-    mask = jnp.logical_and(mask, legal)
-
-    # bool-mask the 'out' array
-    out = out * mask
-
     return out
 
 
@@ -166,3 +167,4 @@ def executive_full(
         key
     )
     return winner, killed
+    
