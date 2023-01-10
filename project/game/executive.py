@@ -2,7 +2,6 @@ from . import shtypes
 import jaxtyping as jtp
 import jax.numpy as jnp
 import jax.random as jrn
-import jax
 
 from jaxtyping import jaxtyped
 from typeguard import typechecked
@@ -53,7 +52,6 @@ def is_Hitler_alive(killed: shtypes.killed, roles: shtypes.roles) -> shtypes.win
 def kill_player(
     killed: shtypes.killed,
     policies: shtypes.board,
-    role: shtypes.roles,
     president: shtypes.president,
     player_number: shtypes.player_num,
     probabilities: jtp.Float[jtp.Array, "player_num"],
@@ -157,11 +155,14 @@ def executive_full(
         killed: shtypes.killed
             - the updated 'killed'-array
     """
-    winner = done(policies)
+    # iff H dies, L won
+    win_by_kill = is_H_alive(killed, roles)
+    mask = win_by_kill.at[0].get()
+    winner = win_by_kill * mask + done(policies)*jnp.logical_not(mask)
+
     killed = kill_player(
         killed,
         policies,
-        role,
         president,
         player_number,
         probabilities,
