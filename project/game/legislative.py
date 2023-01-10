@@ -597,4 +597,4 @@ def mask_policies_history(
             - iff `player_history[i] != player` then `policies_history[i]` is masked
     """
     mask = jnp.logical_not(player_history == player)
-    return mask * policies_history
+    return mask[:, None] * policies_history
