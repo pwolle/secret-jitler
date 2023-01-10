@@ -1,4 +1,4 @@
-import shtypes
+from . import shtypes
 import jaxtyping as jtp
 import jax.numpy as jnp
 import jax.random as jrn
@@ -33,6 +33,7 @@ def done(policies: shtypes.board) -> shtypes.winner:
     # return the array
     return out
 
+
 def is_Hitler_alive(killed: shtypes.killed, roles: shtypes.roles) -> shtypes.winner:
 
     # who is H?
@@ -41,9 +42,9 @@ def is_Hitler_alive(killed: shtypes.killed, roles: shtypes.roles) -> shtypes.win
     # is he still alive?
     H_alive = jnp.all(jnp.logical_not(jnp.logical_and(H_where, killed)))
 
-	# L win if H is death
-    winner = jnp.array([jnp.logical_not(H_alive),False])
-	
+    # L win if H is death
+    winner = jnp.array([jnp.logical_not(H_alive), False])
+
     return winner
 
 
@@ -167,4 +168,3 @@ def executive_full(
         key
     )
     return winner, killed
-    

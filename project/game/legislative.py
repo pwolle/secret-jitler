@@ -51,7 +51,8 @@ def draw(
     pile_discard: shtypes.pile_discard,
 ) -> tuple[shtypes.pile_draw, shtypes.pile_discard, shtypes.policy]:
     """
-    Draw a policy from the draw pile. If necessary transfer the discard pile to the draw pile.
+    Draw a policy from the draw pile. 
+    If necessary transfer the discard pile to the draw pile.
 
     Args:
         key: shtypes.random_key
@@ -329,14 +330,22 @@ def enact_policy(
 @jaxtyped
 @typechecked
 def legislative_session_narrated(
-    key: shtypes.random_key,
-    *,
-    pile_draw: shtypes.pile_draw,
-    pile_discard: shtypes.pile_discard,
-    discard_F_probabilities_president: jtp.Float[jtp.Array, "2"],
-    discard_F_probability_chancellor: shtypes.jfloat,
-    board: shtypes.board,
-) -> tuple[shtypes.pile_draw, shtypes.pile_discard, shtypes.board]:
+        key: shtypes.random_key,
+        *,
+        pile_draw: shtypes.pile_draw,
+        pile_discard: shtypes.pile_discard,
+        board: shtypes.board,
+        discard_F_probabilities_president: jtp.Float[jtp.Array, "2"],
+        discard_F_probability_chancellor: shtypes.jfloat,
+        president_policies_history: shtypes.policies_history,
+        chancelor_policies_history: shtypes.policies_history
+) -> tuple[
+    shtypes.pile_draw,
+    shtypes.pile_discard,
+    shtypes.board,
+    shtypes.policies_history,
+    shtypes.policies_history,
+]:
     """
     Perform a legislative session narrated by print statements.
 
@@ -385,6 +394,10 @@ def legislative_session_narrated(
         key, pile_draw=pile_draw, pile_discard=pile_discard
     )
 
+    president_policies_history = push_policies_history(
+        policies=policies, policies_history=president_policies_history
+    )
+
     utils.print_policies(policies)
 
     # select the presidents discard_F probability depending on the drawn policies
@@ -406,6 +419,10 @@ def legislative_session_narrated(
         subkey, policies=policies, discard_F_probability=discard_F_probability_president
     )
 
+    chancelor_policies_history = push_policies_history(
+        policies=policies, policies_history=chancelor_policies_history
+    )
+
     utils.print_policies(policies)
 
     pile_discard = discard(pile_discard=pile_discard, policy=to_discard)
@@ -423,4 +440,18 @@ def legislative_session_narrated(
 
     utils.print_board(board)
 
-    return pile_draw, pile_discard, board
+    return pile_draw, pile_discard, board, president_policies_history, chancelor_policies_history
+
+
+@jaxtyped
+@typechecked
+def push_policies_history(
+    *,
+    policies: shtypes.policies,
+    policies_history: jtp.Int[jtp.Array, "history 2"]
+) -> jtp.Int[jtp.Array, "history 2"]:
+    """
+    """
+    policies_history = jnp.roll(policies_history, shift=1, axis=0)
+    policies_history = policies_history.at[0].set(policies)
+    return policies_history
