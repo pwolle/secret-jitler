@@ -343,31 +343,39 @@ def legislative_session_narrated(
     Args:
         key: shtypes.random_key
             Random number generator state.
+
         pile_draw: shtypes.policies
             The draw pile:
             - The first element is the number of L policies.
             - The second element is the number of F policies.
+
         pile_discard: shtypes.policies
             The discard pile.
             - same format as `pile_draw` above
+
         board: shtypes.policies
             The board.
             - `board[0]` the number of L policies
             - `board[1]` the number of F policies
+
         discard_F_probabilities_president: jtp.Float[jtp.Array, "2"]
             The probabilities of discarding a F policy desired by the president:
             - `discard_F_probabilities_president[0]` is used when 1 L policy is drawn.
             - `discard_F_probabilities_president[1]` is used when 2 L policies are drawn.
             - 0 or 3 L policies leave no choice for the president.
+
         discard_F_probability_chancellor: jtp.Float[jtp.Array, ""]
             The probability of discarding a F policy desired by the chancellor.
+
     Returns:
         pile_draw: shtypes.policies
             The new draw pile. Might contain more or fewer policies, since the discard pile might be shuffled.
             - same format as `pile_draw` above
+
         pile_discard: shtypes.policies
             The new discard pile. Might contain more or fewer policies (see above).
             - same format as `pile_draw` above
+
         board: shtypes.policies
             The new board with the enacted policy added.
             - same format as `pile_draw` above
