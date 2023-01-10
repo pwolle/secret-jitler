@@ -57,6 +57,9 @@ killed = player_mask
 # never both True
 winner = jtp.Bool[jtp.Array, "2"]
 
+# maximum number of turns
+max_turns = 30
+
 history_size = 30
 
 policies_history = jtp.Int[jtp.Array, "history 2"]
