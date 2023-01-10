@@ -561,9 +561,40 @@ def push_policies_history(
     Returns:
         policies_history: jtp.Int[jtp.Array, "history 2"]
             The updated policies history.
+            - same format as `policies_history` above
             - `policies_history[0]` contains the given policies
             - `policies_history[1:]` contains the old policies history
     """
     policies_history = jnp.roll(policies_history, shift=1, axis=0)
     policies_history = policies_history.at[0].set(policies)
     return policies_history
+
+
+def mask_policies_history(
+    *,
+    player: shtypes.player,
+    player_history: jtp.Int[jtp.Array, "history"],
+    policies_history: jtp.Int[jtp.Array, "history 2"]
+) -> jtp.Int[jtp.Array, "history", 2]:
+    """
+    Masks policies history depending on the player. The history is masked iff 
+    the player is not the same as the player at that time according to the player history.
+
+    Args:
+        player: shtypes.player,
+            The player.
+
+        policies_history: jtp.Int[jtp.Array, "history 2"]
+            The policies history:
+            - `policies_history[i]` stands for the policies in the i-th-last turn
+            - `policies_history[i, 0]` for the number of L policies
+            - `policies_history[i, 1]` for the number of F policies
+
+    Returns:
+        policies_history: jtp.Int[jtp.Array, "history 2"]
+            The masked policies history
+            - same format as `policies_history` above
+            - iff `player_history[i] != player` then `policies_history[i]` is masked
+    """
+    mask = jnp.logical_not(player_history == player)
+    return mask * policies_history
