@@ -330,6 +330,97 @@ def enact_policy(
 @jaxtyped
 @typechecked
 def legislative_session_narrated(
+    key: shtypes.random_key,
+    *,
+    pile_draw: shtypes.pile_draw,
+    pile_discard: shtypes.pile_discard,
+    discard_F_probabilities_president: jtp.Float[jtp.Array, "2"],
+    discard_F_probability_chancellor: shtypes.jfloat,
+    board: shtypes.board,
+) -> tuple[shtypes.pile_draw, shtypes.pile_discard, shtypes.board]:
+    """
+    Perform a legislative session narrated by print statements.
+    Args:
+        key: shtypes.random_key
+            Random number generator state.
+        pile_draw: shtypes.pile_draw
+            The draw pile:
+            - The first element is the number of L policies.
+            - The second element is the number of F policies.
+        pile_discard: shtypes.pile_discard
+            The discard pile.
+            - same format as `pile_draw` above
+        board: shtypes.board
+            The board.
+            - `board[0]` the number of L policies
+            - `board[1]` the number of F policies
+        discard_F_probabilities_president: jtp.Float[jtp.Array, "2"]
+            The probabilities of discarding a F policy desired by the president:
+            - `discard_F_probabilities_president[0]` is used when 1 L policy is drawn.
+            - `discard_F_probabilities_president[1]` is used when 2 L policies are drawn.
+            - 0 or 3 L policies leave no choice for the president.
+        discard_F_probability_chancellor: shtypes.jfloat
+            The probability of discarding a F policy desired by the chancellor.
+    Returns:
+        pile_draw: shtypes.pile_draw
+            The new draw pile. Might contain more or fewer policies, since the discard pile might be shuffled.
+            - same format as `pile_draw` above
+        pile_discard: shtypes.pile_discard
+            The new discard pile. Might contain more or fewer policies (see above).
+            - same format as `pile_draw` above
+        board: shtypes.board
+            The new board with the enacted policy added.
+            - same format as `pile_draw` above
+    """
+    # draw three policies
+    pile_draw, pile_discard, policies = draw_three(
+        key, pile_draw=pile_draw, pile_discard=pile_discard
+    )
+
+    utils.print_policies(policies)
+
+    # select the presidents discard_F probability depending on the drawn policies
+    discard_F_probability_president = jnp.zeros([])
+
+    # if there is 1 L card select the first index
+    discard_F_probability_president += (
+        policies[0] == 1
+    ) * discard_F_probabilities_president[0]
+
+    # if there are 2 L policies select the second index
+    discard_F_probability_president += (
+        policies[0] == 2
+    ) * discard_F_probabilities_president[1]
+
+    # president chooses two of the three policies
+    key, subkey = jrn.split(key)
+    policies, to_discard = president_choose_policies(
+        subkey, policies=policies, discard_F_probability=discard_F_probability_president
+    )
+
+    utils.print_policies(policies)
+
+    pile_discard = discard(pile_discard=pile_discard, policy=to_discard)
+
+    # chancellor chooses one of the two policies
+    key, subkey = jrn.split(key)
+    to_enact, to_discard = chancellor_choose_policy(
+        subkey, policies=policies, discard_F_probability=discard_F_probability_chancellor
+    )
+
+    pile_discard = discard(pile_discard=pile_discard, policy=to_discard)
+
+    # enact policy
+    board = enact_policy(policy=to_enact, board=board)
+
+    utils.print_board(board)
+
+    return pile_draw, pile_discard, board
+
+
+@jaxtyped
+@typechecked
+def legislative_session_history(
         key: shtypes.random_key,
         *,
         pile_draw: shtypes.pile_draw,
@@ -359,7 +450,7 @@ def legislative_session_narrated(
             - The second element is the number of F policies.
 
         pile_discard: shtypes.pile_discard
-            The discard pile.
+            The discard pile:
             - same format as `pile_draw` above
 
         board: shtypes.board
@@ -398,7 +489,7 @@ def legislative_session_narrated(
         policies=policies, policies_history=president_policies_history
     )
 
-    utils.print_policies(policies)
+    # utils.print_policies(policies)
 
     # select the presidents discard_F probability depending on the drawn policies
     discard_F_probability_president = jnp.zeros([])
@@ -423,7 +514,7 @@ def legislative_session_narrated(
         policies=policies, policies_history=chancelor_policies_history
     )
 
-    utils.print_policies(policies)
+    # utils.print_policies(policies)
 
     pile_discard = discard(pile_discard=pile_discard, policy=to_discard)
 
@@ -438,7 +529,7 @@ def legislative_session_narrated(
     # enact policy
     board = enact_policy(policy=to_enact, board=board)
 
-    utils.print_board(board)
+    # utils.print_board(board)
 
     return pile_draw, pile_discard, board, president_policies_history, chancelor_policies_history
 
@@ -451,6 +542,27 @@ def push_policies_history(
     policies_history: jtp.Int[jtp.Array, "history 2"]
 ) -> jtp.Int[jtp.Array, "history 2"]:
     """
+    Push the policies to a history of policies.
+    - push the entries one to the right along the history axis
+    - insert given policies in first entry along the history axis
+
+    Args:
+        policies: shtypes.policies
+            The policies:
+            - The first element is the number of L policies.
+            - The second element is the number of F policies.
+
+        policies_history: jtp.Int[jtp.Array, "history 2"]
+            The policies history:
+            - `policies_history[i]` stands for the policies in the i-th-last turn
+            - `policies_history[i, 0]` for the number of L policies
+            - `policies_history[i, 1]` for the number of F policies
+
+    Returns:
+        policies_history: jtp.Int[jtp.Array, "history 2"]
+            The updated policies history.
+            - `policies_history[0]` contains the given policies
+            - `policies_history[1:]` contains the old policies history
     """
     policies_history = jnp.roll(policies_history, shift=1, axis=0)
     policies_history = policies_history.at[0].set(policies)
