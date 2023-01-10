@@ -32,7 +32,7 @@ index_H = 2
 party = jtp.Bool[jtp.Array, ""]
 policy = party
 
-roles = jtp.Int[jtp.Array, "player_num"]  # 0: L, 1: F, 2: H
+roles = jtp.Int[jtp.Array, "players"]  # 0: L, 1: F, 2: H
 
 # board[0] \in {0, 1, ..., 5}, board[1] \in {0, 1, ..., 6}
 board = jint_pair
@@ -48,7 +48,7 @@ chancelor = jtp.Int[jtp.Array, ""]  # \in {0, 1, ..., player_num - 1}
 
 election_tracker = jtp.Int[jtp.Array, ""]  # \in {0, 1, 2}
 
-player_mask = jtp.Bool[jtp.Array, "player_num"]
+player_mask = jtp.Bool[jtp.Array, "players"]
 
 # killed[i] = True iff player i is killed
 killed = player_mask
@@ -59,3 +59,7 @@ winner = jtp.Bool[jtp.Array, "2"]
 
 # maximum number of turns
 max_turns = 30
+
+history_size = 30
+
+policies_history = jtp.Int[jtp.Array, "history 2"]
