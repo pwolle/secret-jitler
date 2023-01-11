@@ -5,17 +5,6 @@ import typeguard
 
 @jtp.jaxtyped
 @typeguard.typechecked
-def roll_history(
-    history: jtp.Shaped[jnp.ndarray, "history, *_"]
-) -> jtp.Shaped[jnp.ndarray, "history, *_"]:
-    """
-    """
-    zeros = jnp.zeros_like(history[0])[None]
-    return jnp.concatenate([zeros, history[1:]], axis=0)
-
-
-@jtp.jaxtyped
-@typeguard.typechecked
 def policy_repr(
     *,
     policy: bool | jtp.Bool[jnp.ndarray, ""]
@@ -101,3 +90,28 @@ def board_repr(
             result += empty + " "
 
     return result[:-1]
+
+
+@jtp.jaxtyped
+@typeguard.typechecked
+def roll_history(
+    history: jtp.Shaped[jnp.ndarray, "history *_"]
+) -> jtp.Shaped[jnp.ndarray, "history *_"]:
+    """
+    """
+    zeros = jnp.zeros_like(history[0])[None]
+    return jnp.concatenate([zeros, history[1:]], axis=0)
+
+
+@jtp.jaxtyped
+@typeguard.typechecked
+def mask_for_player(
+    player: jtp.Int[jnp.ndarray, ""],
+    player_visible: jtp.Int[jnp.ndarray, "history"],
+    history: jtp.Shaped[jnp.ndarray, "history *_"]
+) -> jtp.Shaped[jnp.ndarray, "players history *_"]:
+    """
+    """
+    mask = player_visible != player
+
+    raise NotImplementedError
