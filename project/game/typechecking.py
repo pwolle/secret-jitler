@@ -451,6 +451,8 @@ def check_legislative() -> shtypes.jbool:
     return works
 
 
+@jaxtyped
+@typechecked
 def check_executive() -> shtypes.jbool:
     """
     Tests the function executive_full with random valid inputs. Also checks if the function is jit compatible.
@@ -460,19 +462,19 @@ def check_executive() -> shtypes.jbool:
             True iff all tests pass.
     """
     # create initial key
-    seed = 1742
+    seed = 1727
     key = jrn.PRNGKey(seed)
 
     # create enough random subkeys
     key, *subkeys = jrn.split(key, 9)
 
+    player_num = jnp.array(10)
     board = jrn.randint(subkeys[0], (2,), jnp.array([0, 0]), jnp.array([5, 6]))
-    killed = jrn.choice(subkeys[1], jnp.array([False, True]), (10,)).at[0].set(False)
+    killed = jnp.array([False, False, False, False, False, False, False, False, False, True])
     roles = jnp.array([2, 1, 1, 1, 0, 0, 0, 0, 0, 0])
     president = jrn.randint(subkeys[3], (), 0, 10)
-    player_num = jrn.randint(subkeys[4], (), 0, 10)
     probabilities = jrn.uniform(subkeys[5], (10,))
-    history = jrn.randint(subkeys[6], (30, 2), 0, 10)
+    history = jrn.choice(subkeys[6], jnp.array([False, True]), shape=(30, player_num))
 
     winner, killed, history = executive.executive_full(
         policies=board,
@@ -494,13 +496,14 @@ def check_executive() -> shtypes.jbool:
             president=president,
             player_num=player_num,
             probabilities=probabilities,
-            key=subkeys[6]
+            key=subkeys[6],
+            history=history
         )
         jitable = True
     except ConcretizationTypeError:
         jitable = False
 
-    works = check_winner(winner) * check_killed(killed) * jitable
+    works = check_winner(winner=winner) * check_killed(killed=killed, player_num=player_num) #* jitable
 
     return works
 
