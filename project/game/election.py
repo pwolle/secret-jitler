@@ -7,10 +7,14 @@ from . import shtypes
 
 import jax
 
+from jaxtyping import jaxtyped
+from typeguard import typechecked
+
 # we need a way to calculate the mask
 
 
-@jax.jit
+@jaxtyped
+@typechecked
 def next_president(
     # TODO: what does this need?
     player_num: shtypes.player_num,
@@ -45,7 +49,8 @@ def next_president(
     return president % player_num
 
 
-@jax.jit
+@jaxtyped
+@typechecked
 def chancelor_mask(
     # TODO: what does this need?
     player_mask: shtypes.player_mask,
@@ -83,7 +88,8 @@ def chancelor_mask(
     return player_mask
 
 
-@jax.jit
+@jaxtyped
+@typechecked
 def propose_new_chancelor(
     key: shtypes.random_key,
     proposal_probs: jtp.Float[jtp.Array, "player_num"],
@@ -116,7 +122,8 @@ def propose_new_chancelor(
     return jxr.choice(key, len(mask), p=proposal_probs)
 
 
-@jax.jit
+@jaxtyped
+@typechecked
 def vote_for_president(
     key: shtypes.random_key,
     vote_probability: jtp.Float[jtp.Array, "player_num"]
