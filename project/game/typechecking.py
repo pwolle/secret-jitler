@@ -1,14 +1,17 @@
 import jax
-from . import shtypes
 import jax.numpy as jnp
+import jax.random as jrn
+from jax._src.errors import ConcretizationTypeError, TracerIntegerConversionError
 from jaxtyping import jaxtyped
 from typeguard import typechecked
+
+from . import shtypes, legislative
 
 
 @jax.jit
 @jaxtyped
 @typechecked
-def check_player_num(player_num: shtypes.player_num) -> shtypes.jbool:
+def check_player_num(*, player_num: shtypes.player_num) -> shtypes.jbool:
     """
     Check the type player_num (from shtypes).
 
@@ -29,6 +32,7 @@ def check_player_num(player_num: shtypes.player_num) -> shtypes.jbool:
 @jaxtyped
 @typechecked
 def check_player(
+        *,
         player_num: shtypes.player_num,
         player: shtypes.player
 ) -> shtypes.jbool:
@@ -54,6 +58,7 @@ def check_player(
 @jaxtyped
 @typechecked
 def check_roles(
+        *,
         player_num: shtypes.player_num,
         roles: shtypes.roles
 ) -> shtypes.jbool:
@@ -64,8 +69,7 @@ def check_roles(
         player_num: shtypes.player_num
             Number of players.
         roles: shtypes.roles (jtp.Int[jtp.Array, "player_num"])
-            Roles of all players. Should have length player_num and contain
-            the values 0, 1, 2 for the roles Liberal, Fascist, Hitler.
+            Roles of all players. Should have length player_num and contain the values 0, 1, 2 for the roles L, F, H.
             According to the game rules we have got different scenarios:
 
             Players  |  5  |  6  |  7  |  8  |  9  | 10  |
@@ -96,14 +100,14 @@ def check_roles(
 @jax.jit
 @jaxtyped
 @typechecked
-def check_board(board: shtypes.board) -> shtypes.jbool:
+def check_board(*, board: shtypes.board) -> shtypes.jbool:
     """
     Check the type board (from shtypes).
 
     Args:
         board: shtypes.board (jint_pair)
-            The board state (how many policies each party enacted).
-            board[0] should be in [0, 1, ..., 5], board[1] in [0, 1, ..., 6].
+            The board state (how many policies each party enacted). board[0] should be in [0, 1, ..., 5],
+            board[1] in [0, 1, ..., 6].
 
     Returns:
         works: shtypes.jbool
@@ -122,6 +126,7 @@ def check_board(board: shtypes.board) -> shtypes.jbool:
 @jaxtyped
 @typechecked
 def check_pile(
+        *,
         pile: shtypes.pile_draw | shtypes.pile_discard
 ) -> shtypes.jbool:
     """
@@ -129,9 +134,8 @@ def check_pile(
 
     Args:
         pile: shtypes.pile_draw (jint pair) | shtypes.pile_discard (jint_pair)
-            Both piles should contain the number of L policies (6 max)
-            at the first position and the number of F policies (11 max) at the
-            second.
+            Both piles should contain the number of L policies (6 max) at the first position and the number of F
+            policies (11 max) at the second.
 
     Returns:
         works: shtypes.jbool
@@ -150,6 +154,7 @@ def check_pile(
 @jaxtyped
 @typechecked
 def check_piles_board(
+        *,
         pile_draw: shtypes.pile_draw,
         pile_discard: shtypes.pile_discard,
         board: shtypes.board
@@ -182,19 +187,19 @@ def check_piles_board(
 @jax.jit
 @jaxtyped
 @typechecked
-def check_president_or_chancelor(
+def check_president_or_chancellor(
+        *,
         player_num: shtypes.player_num,
         role: shtypes.president | shtypes.chancelor
 ) -> shtypes.jbool:
     """
-    Check the type president or chancelor (from shtypes).
+    Check the type president or chancellor (from shtypes).
 
     Args:
         player_num: shtypes.player_num
             Number of players.
         role: shtypes.president or shtypes.chancelor (jint)
-            Player number of the president or chancelor. Should be between 0 and
-            player_num - 1.
+            Player number of the president or chancellor. Should be between 0 and player_num - 1.
 
     Returns:
         works: shtypes.jbool
@@ -208,25 +213,25 @@ def check_president_or_chancelor(
 @jax.jit
 @jaxtyped
 @typechecked
-def check_president_and_chancelor(
+def check_president_and_chancellor(
+        *,
         president: shtypes.president,
-        chancelor: shtypes.chancelor
+        chancellor: shtypes.chancelor
 ) -> shtypes.jbool:
     """
-    Check if the types chancelor and president (from shtypes)
-    are in a valid state.
+    Check if the types chancellor and president (from shtypes) are in a valid state.
 
     Args:
         president: shtypes.president (jint)
             Player number of the president.
-        chancelor: shtypes.chancelor (jint)
-            Player number of the chancelor.
+        chancellor: shtypes.chancelor (jint)
+            Player number of the chancellor.
 
     Returns:
         works: shtypes.jbool
-            True iff chancelor and president are in a valid state.
+            True iff chancellor and president are in a valid state.
     """
-    works = jnp.logical_not(chancelor == president)
+    works = jnp.logical_not(chancellor == president)
 
     return works
 
@@ -235,6 +240,7 @@ def check_president_and_chancelor(
 @jaxtyped
 @typechecked
 def check_election_tracker(
+        *,
         election_tracker: shtypes.election_tracker
 ) -> shtypes.jbool:
     """
@@ -257,6 +263,7 @@ def check_election_tracker(
 @jaxtyped
 @typechecked
 def check_killed(
+        *,
         player_num: shtypes.player_num,
         killed: shtypes.killed
 ) -> shtypes.jbool:
@@ -267,8 +274,7 @@ def check_killed(
         player_num: shtypes.player_num
             Number of players.
         killed: shtypes.killed (jtp.Bool[jtp.Array, "player_num"])
-            State of livelihood of each player. killed[i] should be True iff
-            player i is killed.
+            State of livelihood of each player. killed[i] should be True iff player i is killed.
 
     Returns:
         works: shtypes.jbool
@@ -286,15 +292,14 @@ def check_killed(
 @jax.jit
 @jaxtyped
 @typechecked
-def check_winner(winner: shtypes.winner) -> shtypes.jbool:
+def check_winner(*, winner: shtypes.winner) -> shtypes.jbool:
     """
     Check the type winner (from shtypes).
 
     Args:
         winner: shtypes.winner (jtp.Bool[jtp.Array, "2"])
-            The boolean array showing which party won. First index is True iff
-            liberals won, second iff fascists won. Can both be False but never
-            [True, True].
+            The boolean array showing which party won. First index is True iff liberals won, second iff fascists won.
+            Can both be False but never [True, True].
 
     Returns:
         works: shtypes.jbool
@@ -310,6 +315,7 @@ def check_winner(winner: shtypes.winner) -> shtypes.jbool:
 @jaxtyped
 @typechecked
 def check_all(
+        *,
         player_num: shtypes.player_num,
         player: shtypes.player,
         roles: shtypes.roles,
@@ -317,7 +323,7 @@ def check_all(
         pile_draw: shtypes.pile_draw,
         pile_discard: shtypes.pile_discard,
         president: shtypes.president,
-        chancelor: shtypes.chancelor,
+        chancellor: shtypes.chancelor,
         election_tracker: shtypes.election_tracker,
         killed: shtypes.killed,
         winner: shtypes.winner
@@ -340,8 +346,8 @@ def check_all(
             The discard pile.
         president: shtypes.president
             Player number of the president.
-        chancelor: shtypes.president
-            Player number of the chancelor.
+        chancellor: shtypes.president
+            Player number of the chancellor.
         election_tracker: shtypes.election_tracker
             State of the election.
         killed: shtypes.killed
@@ -361,12 +367,73 @@ def check_all(
             check_pile(pile_draw) *
             check_pile(pile_discard) *
             check_piles_board(pile_draw, pile_discard, board) *
-            check_president_or_chancelor(president) *
-            check_president_or_chancelor(chancelor) *
-            check_president_and_chancelor(president, chancelor) *
+            check_president_or_chancellor(president) *
+            check_president_or_chancellor(chancellor) *
+            check_president_and_chancellor(president, chancellor) *
             check_election_tracker(election_tracker) *
             check_killed(killed) *
             check_winner(winner)
     )
+
+    return works
+
+
+# testing combined functions of election.py, executive.py and legislative.py
+@jaxtyped
+@typechecked
+def check_legislative() -> shtypes.jbool:
+    """
+    Tests the function legislative_session_narrated with random inputs. Also checks if the function is jit compatible.
+
+    Returns:
+        works: shtypes.jbool
+            True iff all tests pass.
+    """
+    # create initial key
+    seed = 1743
+    key = jrn.PRNGKey(seed)
+
+    # create enough random subkeys
+    key, *subkeys = jrn.split(key, 5)
+
+    # create random board state and corresponding piles for correct input
+    board = jrn.randint(subkeys[0], (2,), jnp.array([0, 0]), jnp.array([5, 6]))
+    pile_draw = jnp.array([5 - board[0], 11 // 2 - board[1]])
+    pile_discard = jnp.array([1, 11 - pile_draw[1] - board[1]])
+
+    # create random bot probabilities
+    discard_f_probabilities_president = jrn.uniform(subkeys[1], (2,))
+    discard_f_probability_chancellor = jrn.uniform(subkeys[2])
+
+    pile_draw_new, pile_discard_new, board_new = legislative.legislative_session_narrated(
+        subkeys[3],
+        pile_draw=pile_draw,
+        pile_discard=pile_discard,
+        board=board,
+        discard_F_probabilities_president=discard_f_probabilities_president,
+        discard_F_probability_chancellor=discard_f_probability_chancellor
+    )
+
+    piles_checked = check_pile(pile=pile_draw_new), check_pile(pile=pile_discard_new)
+    board_checked = check_board(board=board_new)
+    piles_and_board_checked = check_piles_board(pile_draw=pile_draw_new, pile_discard=pile_discard_new, board=board_new)
+
+    try:
+        legislative_session_jit = jax.jit(legislative.legislative_session_narrated)
+        legislative_session_jit(
+            subkeys[3],
+            pile_draw=pile_draw,
+            pile_discard=pile_discard,
+            board=board,
+            discard_F_probabilities_president=discard_f_probabilities_president,
+            discard_F_probability_chancellor=discard_f_probability_chancellor
+        )
+        jitable = True
+    except ConcretizationTypeError:
+        jitable = False
+    except TracerIntegerConversionError:
+        jitable = False
+
+    works = piles_checked[0] * piles_checked[1] * board_checked * piles_and_board_checked * jitable
 
     return works
