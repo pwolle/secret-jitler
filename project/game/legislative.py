@@ -164,7 +164,7 @@ def discard_chosen(
     key: shtypes.random_key,
     *,
     policies: shtypes.policies,
-    discard_F_probability: jtp.Float[jtp.Array, ""],
+    discard_F_probability: jtp.Float[jnp.ndarray, ""],
 ) -> tuple[shtypes.policies, shtypes.policy]:
     """
     Given some policies choose to discard one of them.
@@ -178,7 +178,7 @@ def discard_chosen(
             - `policies[0]` the number of L policies
             - `policies[1]` the number of F policies.
 
-        discard_F_probability: jtp.Float[jtp.Array, ""]
+        discard_F_probability: jtp.Float[jnp.ndarray, ""]
             The probability of discarding a F policy desired by the player.
 
     Returns:
@@ -219,7 +219,7 @@ def president_choose_policies(
     key: shtypes.random_key,
     *,
     policies: shtypes.policies,
-    discard_F_probability: jtp.Float[jtp.Array, ""],
+    discard_F_probability: jtp.Float[jnp.ndarray, ""],
 ) -> tuple[shtypes.policies, shtypes.policy]:
     """
     President chooses two of the three policies from the draw pile.
@@ -233,7 +233,7 @@ def president_choose_policies(
             - `policies[0]` the number of L policies
             - `policies[1]` the number of F policies.
 
-        discard_F_probability: jtp.Float[jtp.Array, ""]
+        discard_F_probability: jtp.Float[jnp.ndarray, ""]
             The probability of discarding a F card desired by the president.
 
     Returns:
@@ -255,7 +255,7 @@ def chancellor_choose_policy(
     key: shtypes.random_key,
     *,
     policies: shtypes.policies,
-    discard_F_probability: jtp.Float[jtp.Array, ""],
+    discard_F_probability: jtp.Float[jnp.ndarray, ""],
 ) -> tuple[shtypes.policy, shtypes.policy]:
     """
     Chancellor chooses one of the two policies the president has chosen.
@@ -269,7 +269,7 @@ def chancellor_choose_policy(
             - `policies[0]` the number of L policies
             - `policies[1]` the number of F policies.
 
-        discard_F_probability: jtp.Float[jtp.Array, ""]
+        discard_F_probability: jtp.Float[jnp.ndarray, ""]
             The probability of discarding a F card desired by the chancellor.
 
     Returns:
@@ -334,8 +334,8 @@ def legislative_session_narrated(
     *,
     pile_draw: shtypes.policies,
     pile_discard: shtypes.policies,
-    discard_F_probabilities_president: jtp.Float[jtp.Array, "2"],
-    discard_F_probability_chancellor: jtp.Float[jtp.Array, ""],
+    discard_F_probabilities_president: jtp.Float[jnp.ndarray, "2"],
+    discard_F_probability_chancellor: jtp.Float[jnp.ndarray, ""],
     board: shtypes.policies,
 ) -> tuple[shtypes.policies, shtypes.policies, shtypes.policies]:
     """
@@ -358,13 +358,13 @@ def legislative_session_narrated(
             - `board[0]` the number of L policies
             - `board[1]` the number of F policies
 
-        discard_F_probabilities_president: jtp.Float[jtp.Array, "2"]
+        discard_F_probabilities_president: jtp.Float[jnp.ndarray, "2"]
             The probabilities of discarding a F policy desired by the president:
             - `discard_F_probabilities_president[0]` is used when 1 L policy is drawn.
             - `discard_F_probabilities_president[1]` is used when 2 L policies are drawn.
             - 0 or 3 L policies leave no choice for the president.
 
-        discard_F_probability_chancellor: jtp.Float[jtp.Array, ""]
+        discard_F_probability_chancellor: jtp.Float[jnp.ndarray, ""]
             The probability of discarding a F policy desired by the chancellor.
 
     Returns:
@@ -434,16 +434,16 @@ def legislative_session_history(
         pile_draw: shtypes.policies,
         pile_discard: shtypes.policies,
         board: shtypes.policies,
-        discard_F_probabilities_president: jtp.Float[jtp.Array, "2"],
-        discard_F_probability_chancellor: jtp.Float[jtp.Array, ""],
-        president_policies_history: jtp.Int[jtp.Array, "history 2"],
-        chancelor_policies_history: jtp.Int[jtp.Array, "history 2"]
+        discard_F_probabilities_president: jtp.Float[jnp.ndarray, "2"],
+        discard_F_probability_chancellor: jtp.Float[jnp.ndarray, ""],
+        president_policies_history: jtp.Int[jnp.ndarray, "history 2"],
+        chancelor_policies_history: jtp.Int[jnp.ndarray, "history 2"]
 ) -> tuple[
     shtypes.policies,
     shtypes.policies,
     shtypes.policies,
-    jtp.Int[jtp.Array, "history 2"],
-    jtp.Int[jtp.Array, "history 2"],
+    jtp.Int[jnp.ndarray, "history 2"],
+    jtp.Int[jnp.ndarray, "history 2"],
 ]:
     """
     Perform a legislative session narrated by print statements.
@@ -466,13 +466,13 @@ def legislative_session_history(
             - `board[0]` the number of L policies
             - `board[1]` the number of F policies
 
-        discard_F_probabilities_president: jtp.Float[jtp.Array, "2"]
+        discard_F_probabilities_president: jtp.Float[jnp.ndarray, "2"]
             The probabilities of discarding a F policy desired by the president:
             - `discard_F_probabilities_president[0]` is used when 1 L policy is drawn.
             - `discard_F_probabilities_president[1]` is used when 2 L policies are drawn.
             - 0 or 3 L policies leave no choice for the president.
 
-        discard_F_probability_chancellor: jtp.Float[jtp.Array, ""]
+        discard_F_probability_chancellor: jtp.Float[jnp.ndarray, ""]
             The probability of discarding a F policy desired by the chancellor.
 
     Returns:
@@ -547,8 +547,8 @@ def legislative_session_history(
 def push_policies_history(
     *,
     policies: shtypes.policies,
-    policies_history: jtp.Int[jtp.Array, "history 2"]
-) -> jtp.Int[jtp.Array, "history 2"]:
+    policies_history: jtp.Int[jnp.ndarray, "history 2"]
+) -> jtp.Int[jnp.ndarray, "history 2"]:
     """
     Push the policies to a history of policies.
     - push the entries one to the right along the history axis
@@ -560,14 +560,14 @@ def push_policies_history(
             - The first element is the number of L policies.
             - The second element is the number of F policies.
 
-        policies_history: jtp.Int[jtp.Array, "history 2"]
+        policies_history: jtp.Int[jnp.ndarray, "history 2"]
             The policies history:
             - `policies_history[i]` stands for the policies in the i-th-last turn
             - `policies_history[i, 0]` for the number of L policies
             - `policies_history[i, 1]` for the number of F policies
 
     Returns:
-        policies_history: jtp.Int[jtp.Array, "history 2"]
+        policies_history: jtp.Int[jnp.ndarray, "history 2"]
             The updated policies history.
             - same format as `policies_history` above
             - `policies_history[0]` contains the given policies
@@ -581,9 +581,9 @@ def push_policies_history(
 def mask_policies_history(
     *,
     player: shtypes.player,
-    player_history: jtp.Int[jtp.Array, "history"],
-    policies_history: jtp.Int[jtp.Array, "history 2"]
-) -> jtp.Int[jtp.Array, "history", 2]:
+    player_history: jtp.Int[jnp.ndarray, "history"],
+    policies_history: jtp.Int[jnp.ndarray, "history 2"]
+) -> jtp.Int[jnp.ndarray, "history 2"]:
     """
     Masks policies history depending on the player. The history is masked iff 
     the player is not the same as the player at that time according to the player history.
@@ -592,14 +592,14 @@ def mask_policies_history(
         player: shtypes.player,
             The player.
 
-        policies_history: jtp.Int[jtp.Array, "history 2"]
+        policies_history: jtp.Int[jnp.ndarray, "history 2"]
             The policies history:
             - `policies_history[i]` stands for the policies in the i-th-last turn
             - `policies_history[i, 0]` for the number of L policies
             - `policies_history[i, 1]` for the number of F policies
 
     Returns:
-        policies_history: jtp.Int[jtp.Array, "history 2"]
+        policies_history: jtp.Int[jnp.ndarray, "history 2"]
             The masked policies history
             - same format as `policies_history` above
             - iff `player_history[i] != player` then `policies_history[i]` is masked
