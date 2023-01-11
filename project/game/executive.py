@@ -135,7 +135,7 @@ def kill_player(
     return out
 
 
-def history_init(size: shtypes.history_size, players: shtypes.player_num) -> jtp.Bool[jtp.Array, " history_size players"]:
+def history_init(size: int | shtypes.jint, players: shtypes.player_num) -> jtp.Bool[jtp.Array, "players history"]:
 
     """
     Function to initialize the history for killed players
@@ -145,39 +145,39 @@ def history_init(size: shtypes.history_size, players: shtypes.player_num) -> jtp
             -length of history
         players: shtypes.player_num
     """
-    return jnp.zeros((player_num,size))
+    return jnp.zeros((players,size))
 	
 
-def history_update(history: jtp.Bool[jtp.Array, " history_size players"], killed:shtypes.killed) -> jtp.Bool[jtp.Array, " history_size players"]:
+def history_update(history: jtp.Bool[jtp.Array, "players history"], killed:shtypes.killed) -> jtp.Bool[jtp.Array, "players history"]:
     """
     Function to log the killings.
     
     Args:
-	history: jtp.Bool[jtp.Array, " history players"]
+	history: jtp.Bool[jtp.Array, " players history"]
 	    - history of the killed players
         killed: shtypes.killed
             - list of killed players
     
     Returns:
-    	history: jtp.Bool[jtp.Array, " history players"]
+    	history: jtp.Bool[jtp.Array, "players history"]
     	    - updated list of killed players
     """   
     history = jnp.roll(history,1)
     history = history.at[:,0].set(killed)
     return history.astype(bool)
 
-
+@jaxtyped
+@typechecked
 def executive_full(
     policies: shtypes.board,
-
     killed: shtypes.killed,
     role: shtypes.roles,
     president: shtypes.president,
-    players: shtypes.player_num,
+    player_num: shtypes.player_num,
     probabilities: jtp.Float[jtp.Array, "players"],
-    key: shtypes.random_key
-    history: jtp.Bool[jtp.Array, " history_size players"]
-) -> tuple[shtypes.winner, shtypes.killed, jtp.Bool[jtp.Array, " history_size players"]]:
+    key: shtypes.random_key,
+    history: jtp.Bool[jnp.ndarray, "players history"]
+) -> tuple[shtypes.winner, shtypes.killed, jtp.Bool[jtp.Array, " players history"]]:
     """
     combination of all executive functions
     Args:	
@@ -204,7 +204,7 @@ def executive_full(
             - winner[1] is True iff F won		
         killed: shtypes.killed
             - the updated 'killed'-array
-        history: jtp.Bool[jtp.Array, " history_size players"]
+        history: jtp.Bool[jtp.Array, "history players"]
             - the updated history of killed players
     """
 
