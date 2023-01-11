@@ -1,36 +1,25 @@
 import jax.numpy as jnp
 import jaxtyping as jtp
+import typeguard
 
 
-def push_history(
+@jtp.jaxtyped
+@typeguard.typechecked
+def roll_history(
+    history: jtp.Shaped[jnp.ndarray, "history, *_"]
+) -> jtp.Shaped[jnp.ndarray, "history, *_"]:
+    """
+    """
+    zeros = jnp.zeros_like(history[0])[None]
+    return jnp.concatenate([zeros, history[1:]], axis=0)
+
+
+@jtp.jaxtyped
+@typeguard.typechecked
+def policy_repr(
     *,
-    history: jtp.Shaped[jnp.ndarray, "history *other"],
-    value: jtp.Shaped[jnp.ndarray, "other"]
-) -> jtp.Shaped[jnp.ndarray, "history *other"]:
-    """
-    Push a new value into the history by
-    - shifting all values to the right along the first axis
-    - inserting the new value at the leftmost position in the first axis
-
-    Args:
-        history: jtp.Shaped[jnp.ndarray, "history *other"]
-            The history:
-            - `history[i]` for the `i`-th oldest value
-            - `history[0]` for the most recent value
-
-        value: jtp.Shaped[jnp.ndarray, "other"]
-            The new value to push into the history.
-
-    Returns:
-        history: jtp.Shaped[jnp.ndarray, "history *other"]
-            The updated history.
-    """
-    history = jnp.roll(history, shift=1, axis=0)
-    history = history.at[0].set(value)
-    return history
-
-
-def policy_repr(policy: bool | jtp.Bool[jnp.ndarray, ""]) -> str:
+    policy: bool | jtp.Bool[jnp.ndarray, ""]
+) -> str:
     """
     Creates a string representation of a policy that is nicer to print.
 
@@ -45,13 +34,18 @@ def policy_repr(policy: bool | jtp.Bool[jnp.ndarray, ""]) -> str:
             - "\x1b[34m▣\x1b[0m" for L (False)
             - "\x1b[31m▣\x1b[0m" for F (True)
     """
-    if not policy:
-        return "\x1b[34m" + "▣" + "\x1b[0m"
+    if policy:
+        return "\x1b[31m" + "▣" + "\x1b[0m"  # F: red
     else:
-        return "\x1b[31m" + "▣" + "\x1b[0m"
+        return "\x1b[34m" + "▣" + "\x1b[0m"  # L: blue
 
 
-def policies_repr(policies: jtp.Int[jnp.ndarray, "2"]) -> str:
+@jtp.jaxtyped
+@typeguard.typechecked
+def policies_repr(
+    *,
+    policies: tuple[int, int] | jtp.Int[jnp.ndarray, "2"]
+) -> str:
     """
     Builds a string representation of given L and F policy counts.
 
@@ -69,18 +63,21 @@ def policies_repr(policies: jtp.Int[jnp.ndarray, "2"]) -> str:
     result = ""
 
     for _ in range(policies[0]):
-        result += policy_repr(False) + " "
+        result += policy_repr(policy=False) + " "
 
     result = result[:-1] + "\n"
 
     for _ in range(policies[1]):
-        result += policy_repr(True) + " "
+        result += policy_repr(policy=True) + " "
 
     return result[:-1]
 
 
+@jtp.jaxtyped
+@typeguard.typechecked
 def board_repr(
-    board: jtp.Int[jnp.ndarray, "2"],
+    *,
+    board: tuple[int, int] | jtp.Int[jnp.ndarray, "2"],
     empty: str = "\x1b[2;37m▢\x1b[0m"
 ) -> str:
     """
@@ -90,7 +87,7 @@ def board_repr(
 
     for i in range(5):
         if i < board[0]:
-            result += policy_repr(False) + " "
+            result += policy_repr(policy=False) + " "
         else:
             result += empty + " "
 
@@ -98,7 +95,7 @@ def board_repr(
 
     for i in range(6):
         if i < board[1]:
-            result += policy_repr(True) + " "
+            result += policy_repr(policy=True) + " "
 
         else:
             result += empty + " "
