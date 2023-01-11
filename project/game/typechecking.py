@@ -1,11 +1,11 @@
 import jax
 import jax.numpy as jnp
 import jax.random as jrn
-from jax._src.errors import ConcretizationTypeError, TracerIntegerConversionError
+from jax._src.errors import ConcretizationTypeError
 from jaxtyping import jaxtyped
 from typeguard import typechecked
 
-from . import shtypes, legislative
+from . import shtypes, legislative, executive
 
 
 @jax.jit
@@ -383,7 +383,8 @@ def check_all(
 @typechecked
 def check_legislative() -> shtypes.jbool:
     """
-    Tests the function legislative_session_narrated with random inputs. Also checks if the function is jit compatible.
+    Tests the function legislative_session_narrated with random valid inputs.
+    Also checks if the function is jit compatible.
 
     Returns:
         works: shtypes.jbool
@@ -394,7 +395,7 @@ def check_legislative() -> shtypes.jbool:
     key = jrn.PRNGKey(seed)
 
     # create enough random subkeys
-    key, *subkeys = jrn.split(key, 5)
+    key, *subkeys = jrn.split(key, 7)
 
     # create random board state and corresponding piles for correct input
     board = jrn.randint(subkeys[0], (2,), jnp.array([0, 0]), jnp.array([5, 6]))
@@ -405,35 +406,99 @@ def check_legislative() -> shtypes.jbool:
     discard_f_probabilities_president = jrn.uniform(subkeys[1], (2,))
     discard_f_probability_chancellor = jrn.uniform(subkeys[2])
 
-    pile_draw_new, pile_discard_new, board_new = legislative.legislative_session_narrated(
-        subkeys[3],
+    # create random history
+    president_policies_history = jrn.randint(subkeys[3], (30, 2), 0, 10)
+    chancellor_policies_history = jrn.randint(subkeys[4], (30, 2), 0, 10)
+
+    (pile_draw,
+     pile_discard,
+     board,
+     president_policies_history,
+     chancellor_policies_history
+     ) = legislative.legislative_session_history(
+        subkeys[5],
         pile_draw=pile_draw,
         pile_discard=pile_discard,
         board=board,
         discard_F_probabilities_president=discard_f_probabilities_president,
-        discard_F_probability_chancellor=discard_f_probability_chancellor
+        discard_F_probability_chancellor=discard_f_probability_chancellor,
+        president_policies_history=president_policies_history,
+        chancelor_policies_history=chancellor_policies_history
     )
 
-    piles_checked = check_pile(pile=pile_draw_new), check_pile(pile=pile_discard_new)
-    board_checked = check_board(board=board_new)
-    piles_and_board_checked = check_piles_board(pile_draw=pile_draw_new, pile_discard=pile_discard_new, board=board_new)
+    piles_checked = check_pile(pile=pile_draw), check_pile(pile=pile_discard)
+    board_checked = check_board(board=board)
+    piles_and_board_checked = check_piles_board(pile_draw=pile_draw, pile_discard=pile_discard, board=board)
 
     try:
-        legislative_session_jit = jax.jit(legislative.legislative_session_narrated)
+        legislative_session_jit = jax.jit(legislative.legislative_session_history)
         legislative_session_jit(
             subkeys[3],
             pile_draw=pile_draw,
             pile_discard=pile_discard,
             board=board,
             discard_F_probabilities_president=discard_f_probabilities_president,
-            discard_F_probability_chancellor=discard_f_probability_chancellor
+            discard_F_probability_chancellor=discard_f_probability_chancellor,
+            president_policies_history=president_policies_history,
+            chancelor_policies_history=chancellor_policies_history
         )
         jitable = True
     except ConcretizationTypeError:
-        jitable = False
-    except TracerIntegerConversionError:
         jitable = False
 
     works = piles_checked[0] * piles_checked[1] * board_checked * piles_and_board_checked * jitable
 
     return works
+
+
+def check_executive() -> shtypes.jbool:
+    """
+    Tests the function executive_full with random valid inputs. Also checks if the function is jit compatible.
+
+    Returns:
+        works: shtypes.jbool
+            True iff all tests pass.
+    """
+    # create initial key
+    seed = 1742
+    key = jrn.PRNGKey(seed)
+
+    # create enough random subkeys
+    key, *subkeys = jrn.split(key, 8)
+
+    board = jrn.randint(subkeys[0], (2,), jnp.array([0, 0]), jnp.array([5, 6]))
+    killed = jrn.choice(subkeys[1], jnp.array([False, True]), (10,)).at[0].set(False)
+    roles = jnp.array([2, 1, 1, 1, 0, 0, 0, 0, 0, 0])
+    president = jrn.randint(subkeys[3], (), 0, 10)
+    player_num = jrn.randint(subkeys[4], (), 0, 10)
+    probabilities = jrn.uniform(subkeys[5], (10,))
+
+    winner, killed = executive.executive_full(
+        policies=board,
+        killed=killed,
+        roles=roles,
+        president=president,
+        player_number=player_num,
+        probabilities=probabilities,
+        key=subkeys[6]
+    )
+
+    try:
+        executive_full_jit = jax.jit(executive.executive_full)
+        executive_full_jit(
+            policies=board,
+            killed=killed,
+            roles=roles,
+            president=president,
+            player_number=player_num,
+            probabilities=probabilities,
+            key=subkeys[6]
+        )
+        jitable = True
+    except ConcretizationTypeError:
+        jitable = False
+
+    works = check_winner(winner) * check_killed(killed) * jitable
+
+    return works
+
