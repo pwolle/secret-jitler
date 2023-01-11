@@ -464,7 +464,7 @@ def check_executive() -> shtypes.jbool:
     key = jrn.PRNGKey(seed)
 
     # create enough random subkeys
-    key, *subkeys = jrn.split(key, 8)
+    key, *subkeys = jrn.split(key, 9)
 
     board = jrn.randint(subkeys[0], (2,), jnp.array([0, 0]), jnp.array([5, 6]))
     killed = jrn.choice(subkeys[1], jnp.array([False, True]), (10,)).at[0].set(False)
@@ -472,15 +472,17 @@ def check_executive() -> shtypes.jbool:
     president = jrn.randint(subkeys[3], (), 0, 10)
     player_num = jrn.randint(subkeys[4], (), 0, 10)
     probabilities = jrn.uniform(subkeys[5], (10,))
+    history = jrn.randint(subkeys[6], (30, 2), 0, 10)
 
-    winner, killed = executive.executive_full(
+    winner, killed, history = executive.executive_full(
         policies=board,
         killed=killed,
         roles=roles,
         president=president,
-        player_number=player_num,
+        player_num=player_num,
         probabilities=probabilities,
-        key=subkeys[6]
+        key=subkeys[7],
+        history=history
     )
 
     try:
@@ -490,7 +492,7 @@ def check_executive() -> shtypes.jbool:
             killed=killed,
             roles=roles,
             president=president,
-            player_number=player_num,
+            player_num=player_num,
             probabilities=probabilities,
             key=subkeys[6]
         )
