@@ -427,7 +427,7 @@ def elective_session_history(
     jtp.Int[jnp.ndarray, "history"],
     jtp.Int[jnp.ndarray, "history"],
     jtp.Int[jnp.ndarray, "history player_num"],
-    jtp.Int[jnp.ndarray, "history"],
+    jtp.Bool[jnp.ndarray, "history"],
     jtp.Int[jnp.ndarray, "history"],
 ]:
     ###########################
