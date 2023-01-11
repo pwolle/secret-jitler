@@ -1,8 +1,8 @@
-import shtypes
+from . import shtypes
 import jaxtyping as jtp
 import jax.numpy as jnp
 import jax.random as jrn
-import jax
+
 from jaxtyping import jaxtyped
 from typeguard import typechecked
 
@@ -135,7 +135,7 @@ def kill_player(
     return out
 
 
-def history_init(size: shtypes.history_size, players: shtypes.player_num) -> jtp.Bool[jtp.Array, "history players"]:
+def history_init(size: shtypes.history_size, players: shtypes.player_num) -> jtp.Bool[jtp.Array, "players history"]:
 
     """
     Function to initialize the history for killed players
@@ -145,21 +145,21 @@ def history_init(size: shtypes.history_size, players: shtypes.player_num) -> jtp
             -length of history
         players: shtypes.player_num
     """
-    return jnp.zeros((player_num,size))
+    return jnp.zeros((players,size))
 	
 
-def history_update(history: jtp.Bool[jtp.Array, "history players"], killed:shtypes.killed) -> jtp.Bool[jtp.Array, "history players"]:
+def history_update(history: jtp.Bool[jtp.Array, "players history"], killed:shtypes.killed) -> jtp.Bool[jtp.Array, "players history"]:
     """
     Function to log the killings.
     
     Args:
-	history: jtp.Bool[jtp.Array, " history players"]
+	history: jtp.Bool[jtp.Array, " players history"]
 	    - history of the killed players
         killed: shtypes.killed
             - list of killed players
     
     Returns:
-    	history: jtp.Bool[jtp.Array, " history players"]
+    	history: jtp.Bool[jtp.Array, "players history"]
     	    - updated list of killed players
     """   
     history = jnp.roll(history,1)
@@ -173,11 +173,11 @@ def executive_full(
     killed: shtypes.killed,
     role: shtypes.roles,
     president: shtypes.president,
-    players: shtypes.player_num,
+    player_num: shtypes.player_num,
     probabilities: jtp.Float[jtp.Array, "players"],
     key: shtypes.random_key,
-    history: jtp.Bool[jnp.ndarray, "2 5"]
-) -> tuple[shtypes.winner, shtypes.killed, jtp.Bool[jtp.Array, " history players"]]:
+    history: jtp.Bool[jnp.ndarray, "players history"]
+) -> tuple[shtypes.winner, shtypes.killed, jtp.Bool[jtp.Array, " players history"]]:
     """
     combination of all executive functions
     Args:	
@@ -226,14 +226,3 @@ def executive_full(
     
     return winner, killed, history
 
-
-jit_full = jax.jit(executive_full)
-pol=jnp.array([4,5])
-killed=jnp.array([True,False,False,False,True])
-role=jnp.array([1,2,0,1,0])
-pre=jnp.array(3)
-players=5
-prob=jnp.array([-jnp.inf,1,4,6,7])
-key=jrn.PRNGKey(42)
-history=jnp.array([[False,False],[False,False],[False,False],[False,False],[False,False]])
-print(jit_full(pol,killed,role,pre,players,prob,key,history))
