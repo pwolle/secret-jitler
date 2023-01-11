@@ -26,7 +26,7 @@ def done(policies: shtypes.board) -> shtypes.winner:
     l_won = l == 5
     f_won = f == 6
 
-    # gamestate array
+    # game state array
     out = jnp.array([l_won, f_won])
 
     # return the array
@@ -68,7 +68,6 @@ def kill_player(
     killed: shtypes.killed,
     policies: shtypes.board,
     president: shtypes.president,
-
     players: shtypes.player_num,
     probabilities: jtp.Float[jtp.Array, "players"],
     key: shtypes.random_key
@@ -84,8 +83,6 @@ def kill_player(
             - currently living players
         policies: shtypes.board
             - board of currently enacted policies
-        role: shtypes.roles
-            - array of the roles for each player
         president: shtypes.president
             - player number of the current president
         players: shtypes.player_num
@@ -103,8 +100,8 @@ def kill_player(
 
     # - calculate kill probabilities -
 
-    # set the kill probability for not shootbale player to -inf
-    kill_mask = jnp.array([-jnp.inf] * players)
+    # set the kill probability for not shootable player to -inf
+    kill_mask = jnp.array(jnp.array([-jnp.inf]) * players)
     kill_mask = kill_mask * killable
 
     # since 0 * inf = nan: we have to decontanimize the probability array
@@ -145,10 +142,12 @@ def history_init(size: int | shtypes.jint, players: shtypes.player_num) -> jtp.B
             -length of history
         players: shtypes.player_num
     """
-    return jnp.zeros((size,players))
+    return jnp.zeros((size, players))
 
 
-def history_update(history: jtp.Bool[jtp.Array, "history players"], killed:shtypes.killed) -> jtp.Bool[jtp.Array, "history players"]:
+def history_update(
+        history: jtp.Bool[jtp.Array, "history players"], killed: shtypes.killed
+) -> jtp.Bool[jtp.Array, "history players"]:
     """
     Function to log the killings.
     
@@ -176,7 +175,7 @@ def executive_full(
     player_num: shtypes.player_num,
     probabilities: jtp.Float[jtp.Array, "players"],
     key: shtypes.random_key,
-    history: jtp.Bool[jnp.ndarray, "players history"]
+    history: jtp.Bool[jnp.ndarray, "history players"]
 ) -> tuple[shtypes.winner, shtypes.killed, jtp.Bool[jtp.Array, "history players"]]:
     """
     combination of all executive functions
@@ -190,7 +189,7 @@ def executive_full(
             - array of the roles for each player
         president: shtypes.president
             - player number of the current president
-        players: shtypes.player_num
+        player_num: shtypes.player_num
             - number of people participating
         probabilities: jtp.Float[jtp.Array, "players"]
             - probability for each player to be shot
@@ -225,4 +224,3 @@ def executive_full(
     winner = win_by_kill * mask + done(policies)*jnp.logical_not(mask)
     
     return winner, killed, history
-
