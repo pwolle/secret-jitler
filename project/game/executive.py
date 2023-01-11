@@ -68,6 +68,7 @@ def kill_player(
     killed: shtypes.killed,
     policies: shtypes.board,
     president: shtypes.president,
+
     players: shtypes.player_num,
     probabilities: jtp.Float[jtp.Array, "players"],
     key: shtypes.random_key
@@ -168,6 +169,7 @@ def history_update(history: jtp.Bool[jtp.Array, " history_size players"], killed
 
 def executive_full(
     policies: shtypes.board,
+
     killed: shtypes.killed,
     role: shtypes.roles,
     president: shtypes.president,
@@ -196,7 +198,7 @@ def executive_full(
             - random number generator key
         history: jtp.Float[jtp.Array, "players"]
             - history of killed players
-    Retuns:
+    Returns:
         winner: shtypes.winner
             - winner[0] is True iff L won
             - winner[1] is True iff F won		
