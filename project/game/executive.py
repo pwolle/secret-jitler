@@ -68,7 +68,8 @@ def kill_player(
     killed: shtypes.killed,
     policies: shtypes.board,
     president: shtypes.president,
-    players: shtypes.players,
+
+    players: shtypes.player_num,
     probabilities: jtp.Float[jtp.Array, "players"],
     key: shtypes.random_key
 ) -> shtypes.killed:
@@ -87,7 +88,7 @@ def kill_player(
             - array of the roles for each player
         president: shtypes.president
             - player number of the current president
-        players: shtypes.players
+        players: shtypes.player_num
             - number of people participating
         probabilities: jtp.Float[jtp.Array, "players"]
             - probability for each player to be shot
@@ -134,7 +135,7 @@ def kill_player(
     return out
 
 
-def history_init(size: shtypes.history_size, players: shtypes.players) -> jtp.Bool[jtp.Array, " history_size players"]:
+def history_init(size: shtypes.history_size, players: shtypes.player_num) -> jtp.Bool[jtp.Array, " history_size players"]:
 
     """
     Function to initialize the history for killed players
@@ -142,9 +143,9 @@ def history_init(size: shtypes.history_size, players: shtypes.players) -> jtp.Bo
     Args:
         size: shtypes.history_size
             -length of history
-        players: shtypes.players
+        players: shtypes.player_num
     """
-    return jnp.zeros((players,size))
+    return jnp.zeros((player_num,size))
 	
 
 def history_update(history: jtp.Bool[jtp.Array, " history_size players"], killed:shtypes.killed) -> jtp.Bool[jtp.Array, " history_size players"]:
@@ -172,9 +173,7 @@ def executive_full(
     killed: shtypes.killed,
     role: shtypes.roles,
     president: shtypes.president,
-
-    players: shtypes.playes,
-
+    players: shtypes.player_num,
     probabilities: jtp.Float[jtp.Array, "players"],
     key: shtypes.random_key
     history: jtp.Bool[jtp.Array, " history_size players"]
@@ -191,13 +190,15 @@ def executive_full(
             - array of the roles for each player
         president: shtypes.president
             - player number of the current president
-        players: shtypes.players
+        players: shtypes.player_num
             - number of people participating
         probabilities: jtp.Float[jtp.Array, "players"]
             - probability for each player to be shot
         key: shtypes.random_key
             - random number generator key
-    Retuns:
+        history: jtp.Float[jtp.Array, "players"]
+            - history of killed players
+    Returns:
         winner: shtypes.winner
             - winner[0] is True iff L won
             - winner[1] is True iff F won		
@@ -213,7 +214,7 @@ def executive_full(
         killed,
         policies,
         president,
-        players,
+        player_num,
         probabilities,
         key
     )
