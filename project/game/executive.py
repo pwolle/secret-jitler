@@ -135,7 +135,7 @@ def kill_player(
     return out
 
 
-def history_init(size: shtypes.history_size, players: shtypes.player_num) -> jtp.Bool[jtp.Array, "players history"]:
+def history_init(size: int | shtypes.jint, players: shtypes.player_num) -> jtp.Bool[jtp.Array, "players history"]:
 
     """
     Function to initialize the history for killed players
