@@ -135,7 +135,7 @@ def kill_player(
     return out
 
 
-def history_init(size: int | shtypes.jint, players: shtypes.player_num) -> jtp.Bool[jtp.Array, "players history"]:
+def history_init(size: int | shtypes.jint, players: shtypes.player_num) -> jtp.Bool[jtp.Array, "history players"]:
 
     """
     Function to initialize the history for killed players
@@ -145,15 +145,15 @@ def history_init(size: int | shtypes.jint, players: shtypes.player_num) -> jtp.B
             -length of history
         players: shtypes.player_num
     """
-    return jnp.zeros((players,size))
+    return jnp.zeros((size,players))
 
 
-def history_update(history: jtp.Bool[jtp.Array, "players history"], killed:shtypes.killed) -> jtp.Bool[jtp.Array, "players history"]:
+def history_update(history: jtp.Bool[jtp.Array, "history players"], killed:shtypes.killed) -> jtp.Bool[jtp.Array, "history players"]:
     """
     Function to log the killings.
     
     Args:
-    history: jtp.Bool[jtp.Array, " players history"]
+    history: jtp.Bool[jtp.Array, "history players"]
         - history of the killed players
         killed: shtypes.killed
             - list of killed players
@@ -163,7 +163,7 @@ def history_update(history: jtp.Bool[jtp.Array, "players history"], killed:shtyp
             - updated list of killed players
     """   
     history = jnp.roll(history,1)
-    history = history.at[:,0].set(killed)
+    history = history.at[0].set(killed)
     return history.astype(bool)
 
 @jaxtyped
@@ -177,7 +177,7 @@ def executive_full(
     probabilities: jtp.Float[jtp.Array, "players"],
     key: shtypes.random_key,
     history: jtp.Bool[jnp.ndarray, "players history"]
-) -> tuple[shtypes.winner, shtypes.killed, jtp.Bool[jtp.Array, " players history"]]:
+) -> tuple[shtypes.winner, shtypes.killed, jtp.Bool[jtp.Array, "history players"]]:
     """
     combination of all executive functions
     Args:	
