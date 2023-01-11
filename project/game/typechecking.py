@@ -468,7 +468,7 @@ def check_executive() -> shtypes.jbool:
     # create enough random subkeys
     key, *subkeys = jrn.split(key, 9)
 
-    player_num = jnp.array(10)
+    player_num = 10
     board = jrn.randint(subkeys[0], (2,), jnp.array([0, 0]), jnp.array([5, 6]))
     killed = jnp.array([False, False, False, False, False, False, False, False, False, True])
     roles = jnp.array([2, 1, 1, 1, 0, 0, 0, 0, 0, 0])
@@ -488,7 +488,7 @@ def check_executive() -> shtypes.jbool:
     )
 
     try:
-        executive_full_jit = jax.jit(executive.executive_full)
+        executive_full_jit = jax.jit(executive.executive_full, static_argnames="player_num")
         executive_full_jit(
             policies=board,
             killed=killed,
@@ -503,7 +503,7 @@ def check_executive() -> shtypes.jbool:
     except ConcretizationTypeError:
         jitable = False
 
-    works = check_winner(winner=winner) * check_killed(killed=killed, player_num=player_num) #* jitable
+    works = check_winner(winner=winner) * check_killed(killed=killed, player_num=player_num) * jitable
 
     return works
 
