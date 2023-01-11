@@ -68,7 +68,7 @@ def kill_player(
     killed: shtypes.killed,
     policies: shtypes.board,
     president: shtypes.president,
-    players: shtypes.players,
+    players: shtypes.player_num,
     probabilities: jtp.Float[jtp.Array, "players"],
     key: shtypes.random_key
 ) -> shtypes.killed:
@@ -134,7 +134,7 @@ def kill_player(
     return out
 
 
-def history_init(size: shtypes.history_size, players: shtypes.players) -> jtp.Bool[jtp.Array, " history_size players"]:
+def history_init(size: shtypes.history_size, players: shtypes.player_num) -> jtp.Bool[jtp.Array, " history_size players"]:
 
     """
     Function to initialize the history for killed players
@@ -144,7 +144,7 @@ def history_init(size: shtypes.history_size, players: shtypes.players) -> jtp.Bo
             -length of history
         players: shtypes.players
     """
-    return jnp.zeros((players,size))
+    return jnp.zeros((player_num,size))
 	
 
 def history_update(history: jtp.Bool[jtp.Array, " history_size players"], killed:shtypes.killed) -> jtp.Bool[jtp.Array, " history_size players"]:
@@ -168,13 +168,10 @@ def history_update(history: jtp.Bool[jtp.Array, " history_size players"], killed
 
 def executive_full(
     policies: shtypes.board,
-
     killed: shtypes.killed,
     role: shtypes.roles,
     president: shtypes.president,
-
-    players: shtypes.playes,
-
+    players: shtypes.player_num,
     probabilities: jtp.Float[jtp.Array, "players"],
     key: shtypes.random_key
     history: jtp.Bool[jtp.Array, " history_size players"]
@@ -197,6 +194,7 @@ def executive_full(
             - probability for each player to be shot
         key: shtypes.random_key
             - random number generator key
+        history: jtp.Float[jtp.Array, "players"]
     Retuns:
         winner: shtypes.winner
             - winner[0] is True iff L won
