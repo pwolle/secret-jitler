@@ -5,14 +5,14 @@ import jax.random as jrn
 import jaxtyping as jtp
 
 # commonly used types
-jint_dtype = jnp.int8
-jfloat_dtype = jnp.float16
+jint_dtype = jnp.int32
+jfloat_dtype = jnp.float32
 
-jint = jtp.Int[jtp.Array, ""]
-jint_pair = jtp.Int[jtp.Array, "2"]
+jint = jtp.Int32[jtp.Array, ""]
+jint_pair = jtp.Int32[jtp.Array, "2"]
 
 jbool = jtp.Bool[jtp.Array, ""]
-jfloat = jtp.Float[jtp.Array, ""]
+jfloat = jtp.Float32[jtp.Array, ""]
 
 # rng state
 # first one is used internally in jax
@@ -32,7 +32,7 @@ index_H = 2
 party = jtp.Bool[jtp.Array, ""]
 policy = party
 
-roles = jtp.Int[jtp.Array, "player_num"]  # 0: L, 1: F, 2: H
+roles = jtp.Int32[jtp.Array, "players"]  # 0: L, 1: F, 2: H
 
 # board[0] \in {0, 1, ..., 5}, board[1] \in {0, 1, ..., 6}
 board = jint_pair
@@ -43,12 +43,12 @@ policies = jint_pair
 pile_draw = jint_pair
 pile_discard = jint_pair
 
-president = jtp.Int[jtp.Array, ""]  # \in {0, 1, ..., player_num - 1}
-chancelor = jtp.Int[jtp.Array, ""]  # \in {0, 1, ..., player_num - 1}
+president = jtp.Int32[jtp.Array, ""]  # \in {0, 1, ..., player_num - 1}
+chancelor = jtp.Int32[jtp.Array, ""]  # \in {0, 1, ..., player_num - 1}
 
-election_tracker = jtp.Int[jtp.Array, ""]  # \in {0, 1, 2}
+election_tracker = jtp.Int32[jtp.Array, ""]  # \in {0, 1, 2}
 
-player_mask = jtp.Bool[jtp.Array, "player_num"]
+player_mask = jtp.Bool[jtp.Array, "players"]
 
 # killed[i] = True iff player i is killed
 killed = player_mask
@@ -56,3 +56,10 @@ killed = player_mask
 # first index is True iff L won, second index is True iff F won
 # never both True
 winner = jtp.Bool[jtp.Array, "2"]
+
+# maximum number of turns
+max_turns = 30
+
+history_size = 30
+
+policies_history = jtp.Int32[jtp.Array, "history 2"]

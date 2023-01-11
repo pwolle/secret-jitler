@@ -1,5 +1,6 @@
 import jax.numpy as jnp
 import jax.random as jrn
+import jaxtyping as jtp
 
 from jaxtyping import jaxtyped
 from typeguard import typechecked
@@ -100,3 +101,9 @@ def chancellor() -> shtypes.player:
         shtypes.player: The initial chancellor (0).
     """
     return jnp.array(0, dtype=shtypes.jint_dtype)
+
+
+def policies_history(
+    history_size: int = shtypes.history_size
+) -> jtp.Int[jtp.Array, "history 2"]:
+    return jnp.zeros((history_size, 2), dtype=shtypes.jint_dtype)

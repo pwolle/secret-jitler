@@ -1,8 +1,7 @@
-import shtypes
+from . import shtypes
 import jaxtyping as jtp
 import jax.numpy as jnp
 import jax.random as jrn
-import jax
 
 from jaxtyping import jaxtyped
 from typeguard import typechecked
@@ -27,23 +26,39 @@ def done(policies: shtypes.board) -> shtypes.winner:
     l_won = l == 5
     f_won = f == 6
 
-    # gamestate array
+    # game state array
     out = jnp.array([l_won, f_won])
 
     # return the array
     return out
 
-def is_Hitler_alive(killed: shtypes.killed, roles: shtypes.roles) -> shtypes.winner:
+@jaxtyped
+@typechecked
+def is_H_alive(killed: shtypes.killed, roles: shtypes.roles) -> shtypes.winner:
 
+    """
+    Checks if H is still alive and returns the Game-implications (iE if L won or not)
+    
+    Args:
+        killed: shtypes.killed
+            - currently dead players
+        roles: shtypes.roles
+            - the roles for each player
+    Returns:
+        winner: shtypes.winner
+            - winner[0] True iff L won
+            - winner[1] always False
+    
+    """
     # who is H?
     H_where = jnp.where(roles > 1, True, False)
 
     # is he still alive?
     H_alive = jnp.all(jnp.logical_not(jnp.logical_and(H_where, killed)))
 
-	# L win if H is death
+    # L win if H is death
     winner = jnp.array([jnp.logical_not(H_alive),False])
-	
+
     return winner
 
 
@@ -52,10 +67,9 @@ def is_Hitler_alive(killed: shtypes.killed, roles: shtypes.roles) -> shtypes.win
 def kill_player(
     killed: shtypes.killed,
     policies: shtypes.board,
-    role: shtypes.roles,
     president: shtypes.president,
-    player_number: shtypes.player_num,
-    probabilities: jtp.Float[jtp.Array, "player_num"],
+    players: shtypes.player_num,
+    probabilities: jtp.Float[jtp.Array, "players"],
     key: shtypes.random_key
 ) -> shtypes.killed:
     """
@@ -64,23 +78,19 @@ def kill_player(
         - if legal, killable (i.e. neither dead nor president) play is shot
         - chooses the player to shoot random with a given key and probabilities for all players
         - iff Hitler is shot, function returns a full-false-array, otherwise an updated 'killed'-array
-
     Args:
         killed: shtypes.killed
             - currently living players
         policies: shtypes.board
             - board of currently enacted policies
-        role: shtypes.roles
-            - array of the roles for each player
         president: shtypes.president
             - player number of the current president
-        player_number: shtypes.player_num
+        players: shtypes.player_num
             - number of people participating
-        probabilities: jtp.Float[jtp.Array, "player_num"]
+        probabilities: jtp.Float[jtp.Array, "players"]
             - probability for each player to be shot
         key: shtypes.random_key
             - random number generator key
-
     Returns:
         out: shtypes.killed
             - the updated 'killed'-array
@@ -90,8 +100,8 @@ def kill_player(
 
     # - calculate kill probabilities -
 
-    # set the kill probability for not shootbale player to -inf
-    kill_mask = jnp.array([-jnp.inf] * player_number)
+    # set the kill probability for not shootable player to -inf
+    kill_mask = jnp.array(jnp.array([-jnp.inf]) * players)
     kill_mask = kill_mask * killable
 
     # since 0 * inf = nan: we have to decontanimize the probability array
@@ -107,7 +117,7 @@ def kill_player(
 
     # choose the player to kill by weighted random
     number = jrn.choice(
-        key, jnp.arange(player_number), shape=(1,), p=probabilities)
+        key, jnp.arange(players), shape=(1,), p=probabilities)
 
     # kills a player
     cache = killed.at[number].set(True)
@@ -122,49 +132,95 @@ def kill_player(
     return out
 
 
+def history_init(size: int | shtypes.jint, players: shtypes.player_num) -> jtp.Bool[jtp.Array, "history players"]:
+
+    """
+    Function to initialize the history for killed players
+    
+    Args:
+        size: shtypes.history_size
+            -length of history
+        players: shtypes.player_num
+    """
+    return jnp.zeros((size, players))
+
+
+def history_update(
+        history: jtp.Bool[jtp.Array, "history players"], killed: shtypes.killed
+) -> jtp.Bool[jtp.Array, "history players"]:
+    """
+    Function to log the killings.
+    
+    Args:
+    history: jtp.Bool[jtp.Array, "history players"]
+        - history of the killed players
+        killed: shtypes.killed
+            - list of killed players
+    
+    Returns:
+        history: jtp.Bool[jtp.Array, "players history"]
+            - updated list of killed players
+    """   
+    history = jnp.roll(history,1)
+    history = history.at[0].set(killed)
+    return history.astype(bool)
+
+@jaxtyped
+@typechecked
 def executive_full(
     policies: shtypes.board,
     killed: shtypes.killed,
-    role: shtypes.roles,
+    roles: shtypes.roles,
     president: shtypes.president,
-    player_number: shtypes.player_num,
-    probabilities: jtp.Float[jtp.Array, "player_num"],
-    key: shtypes.random_key
-) -> tuple[shtypes.winner, shtypes.killed]:
+    player_num: shtypes.player_num,
+    probabilities: jtp.Float[jtp.Array, "players"],
+    key: shtypes.random_key,
+    history: jtp.Bool[jnp.ndarray, "history players"]
+) -> tuple[shtypes.winner, shtypes.killed, jtp.Bool[jtp.Array, "history players"]]:
     """
     combination of all executive functions
     Args:	
+
         policies: shtypes.board
             - board of currently enacted policies
         killed: shtypes.killed
             - currently living players
-        role: shtypes.roles
+        roles: shtypes.roles
             - array of the roles for each player
         president: shtypes.president
             - player number of the current president
-        player_number: shtypes.player_num
+        player_num: shtypes.player_num
             - number of people participating
-        probabilities: jtp.Float[jtp.Array, "player_num"]
+        probabilities: jtp.Float[jtp.Array, "players"]
             - probability for each player to be shot
         key: shtypes.random_key
             - random number generator key
-
-    Retuns:
+        history: jtp.Float[jtp.Array, "players"]
+            - history of killed players
+    Returns:
         winner: shtypes.winner
             - winner[0] is True iff L won
             - winner[1] is True iff F won		
         killed: shtypes.killed
             - the updated 'killed'-array
+        history: jtp.Bool[jtp.Array, "history players"]
+            - the updated history of killed players
     """
-    winner = done(policies)
+
+    history = history_update(history, killed)
+    
     killed = kill_player(
         killed,
         policies,
-        role,
         president,
-        player_number,
+        player_num,
         probabilities,
         key
     )
-    return winner, killed
     
+    # iff H dies, L won
+    win_by_kill = is_H_alive(killed, roles)
+    mask = win_by_kill.at[0].get()
+    winner = win_by_kill * mask + done(policies)*jnp.logical_not(mask)
+    
+    return winner, killed, history
