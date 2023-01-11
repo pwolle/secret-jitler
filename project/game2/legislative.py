@@ -238,3 +238,7 @@ def session_chancellor(
     board_history = board_history.at[0].set(policy)
 
     return board_history, discard_pile_history
+
+
+def test_legislative():
+    pass
