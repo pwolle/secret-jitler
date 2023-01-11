@@ -10,16 +10,17 @@ import jax
 from jaxtyping import jaxtyped
 from typeguard import typechecked
 
+
 # we need a way to calculate the mask
 
 
 @jaxtyped
 @typechecked
 def next_president(
-    # TODO: what does this need?
-    player_num: shtypes.player_num,
-    president: shtypes.president,
-    killed: shtypes.killed,
+        # TODO: what does this need?
+        player_num: shtypes.player_num,
+        president: shtypes.president,
+        killed: shtypes.killed,
 ) -> shtypes.player:
     """
     Pass the presidential candidacy clockwise to the next alive player.
@@ -52,11 +53,11 @@ def next_president(
 @jaxtyped
 @typechecked
 def chancelor_mask(
-    # TODO: what does this need?
-    president: shtypes.president,
-    ex_president: shtypes.president,
-    chancelor: shtypes.chancelor,
-    killed: shtypes.killed
+        # TODO: what does this need?
+        president: shtypes.president,
+        ex_president: shtypes.president,
+        chancelor: shtypes.chancelor,
+        killed: shtypes.killed
 ) -> shtypes.player_mask:
     """
     Create chancelor_mask to prevent invalid nominations.
@@ -74,13 +75,12 @@ def chancelor_mask(
             mask for chancelor nomination
     """
 
-	
     # prevent nomination of dead people
     player_mask = killed
 
     # prevent self nomination
     player_mask = player_mask.at[president].set(True)
-    
+
     # prevent nomination of ex president
     player_mask = player_mask.at[ex_president].set(True)
 
@@ -93,9 +93,9 @@ def chancelor_mask(
 @jaxtyped
 @typechecked
 def propose_new_chancelor(
-    key: shtypes.random_key,
-    proposal_probs: jtp.Float[jtp.Array, "player_num"],
-    mask: shtypes.player_mask
+        key: shtypes.random_key,
+        proposal_probs: jtp.Float[jtp.Array, "player_num"],
+        mask: shtypes.player_mask
 ) -> shtypes.player:
     """
     The current president proposes a new chancelor.
@@ -125,9 +125,9 @@ def propose_new_chancelor(
 @jaxtyped
 @typechecked
 def vote_for_chancelor(
-    key: shtypes.random_key,
-    vote_probability: jtp.Float[jtp.Array, "player_num"],
-    killed: shtypes.killed
+        key: shtypes.random_key,
+        vote_probability: jtp.Float[jtp.Array, "player_num"],
+        killed: shtypes.killed
 ) -> jtp.Bool[jtp.Array, "player_num"]:
     """
     The players vote for the proposed president.
@@ -147,25 +147,24 @@ def vote_for_chancelor(
         	votes[i] contains player i's vote
             Contains the votes of all players including dead ones. Dead players always vote with False.
     """
-    
+
     # get player_num without additional function parameter
     player_num = len(vote_probability)
 
-	# set probability of dead players to 0.0
+    # set probability of dead players to 0.0
     vote_probability = vote_probability.at[jnp.nonzero(killed, size=player_num)].set(0.0)
 
-	# contains True or False for each player
+    # contains True or False for each player
     votes = jrn.bernoulli(key, vote_probability)
 
     return votes
-    
-    
-    
+
+
 @jaxtyped
 @typechecked
 def check_vote(
-    votes: jtp.Bool[jtp.Array, "player_num"],
-    killed: shtypes.killed
+        votes: jtp.Bool[jtp.Array, "player_num"],
+        killed: shtypes.killed
 ) -> shtypes.jbool:
     """
     The players vote for the proposed president.
@@ -182,22 +181,22 @@ def check_vote(
         shtypes.bool_jax
             Whether the proposed chancelor was accepted.
     """
-	
-	# get player_num without additional function parameter
-    player_num = len(votes)    
 
-	# check if the vote is passed or not.
-	# majority (<50%) of alive players voted True
-	# True with majority else False
-    return jnp.sum(votes)-jnp.sum(killed) > (player_num-jnp.sum(killed))//2
-    
-    
+    # get player_num without additional function parameter
+    player_num = len(votes)
+
+    # check if the vote is passed or not.
+    # majority (<50%) of alive players voted True
+    # True with majority else False
+    return jnp.sum(votes) - jnp.sum(killed) > (player_num - jnp.sum(killed)) // 2
+
+
 @jaxtyped
 @typechecked
 def update_chancelor(
-	chancelor: shtypes.chancelor,
-    proposed_chancelor: shtypes.chancelor,
-    chancelor_accepted: shtypes.jbool
+        chancelor: shtypes.chancelor,
+        proposed_chancelor: shtypes.chancelor,
+        chancelor_accepted: shtypes.jbool
 ) -> shtypes.chancelor:
     """
     Updates the current chancelor if the proposed chancelor was accepted.
@@ -216,17 +215,17 @@ def update_chancelor(
         shtypes.chancelor
             Old chancelor when the vote failed. Proposed chancelor if vote succeded.
     """
-	    
-	# if chancelor_accepted == False (chancelor was accepted): value is chancelor (old chancelor)
-	# else: value is proposed_chancelor (new chancelor)
+
+    # if chancelor_accepted == False (chancelor was accepted): value is chancelor (old chancelor)
+    # else: value is proposed_chancelor (new chancelor)
     return chancelor_accepted * proposed_chancelor + (1 - chancelor_accepted) * chancelor
-    
-    
+
+
 @jaxtyped
 @typechecked
 def update_election_tracker(
-	election_tracker: shtypes.election_tracker,
-    chancelor_accepted: shtypes.jbool
+        election_tracker: shtypes.election_tracker,
+        chancelor_accepted: shtypes.jbool
 ) -> shtypes.election_tracker:
     """
     Updates the election_tracker. If a chancelor was accepted reset to 0 else increase with 1.
@@ -242,17 +241,17 @@ def update_election_tracker(
         shtypes.election_tracker
             same as in args
     """
-	    
-	# if chancelor_accepted == True resets election_tracker with * (1 - chancelor_accepted)
-	# else election_tracker is added 1
+
+    # if chancelor_accepted == True resets election_tracker with * (1 - chancelor_accepted)
+    # else election_tracker is added 1
     return (election_tracker + (1 - chancelor_accepted)) * (1 - chancelor_accepted)
-    
-    
+
+
 @jaxtyped
 @typechecked
 def history_presidents(
-    president: shtypes.president,
-    president_history: jtp.Int[jnp.ndarray, "history"]
+        president: shtypes.president,
+        president_history: jtp.Int[jnp.ndarray, "history"]
 ) -> jtp.Int[jnp.ndarray, "history"]:
     """
     Push the current president to a history of president.
@@ -274,15 +273,14 @@ def history_presidents(
     president_history = jnp.roll(president_history, shift=1, axis=0)
     president_history = president_history.at[0].set(president)
     return president_history
-    
-    
+
+
 @jaxtyped
 @typechecked
 def history_proposed_chancelor(
-    proposed_chancelor: shtypes.chancelor,
-    proposed_chancelor_history: jtp.Int[jnp.ndarray, "history"]
+        proposed_chancelor: shtypes.chancelor,
+        proposed_chancelor_history: jtp.Int[jnp.ndarray, "history"]
 ) -> jtp.Int[jnp.ndarray, "history"]:
-
     """
     Push the current proposed_chancelor to a history of proposed_chancelors.
     - push the entries one to the right along the history axis
@@ -306,15 +304,12 @@ def history_proposed_chancelor(
     return proposed_chancelor_history
 
 
-
- 
 @jaxtyped
 @typechecked
 def history_votes_for_chancelor(
-    votes: jtp.Bool[jtp.Array, "player_num"],
-    history_votes: jtp.Int[jnp.ndarray, "history player_num"]
+        votes: jtp.Bool[jtp.Array, "player_num"],
+        history_votes: jtp.Int[jnp.ndarray, "history player_num"]
 ) -> jtp.Int[jnp.ndarray, "history player_num"]:
-
     """
 
     NEEDS UPDATE SAME AS OTHER HISTORYS
@@ -337,19 +332,17 @@ def history_votes_for_chancelor(
             
     """
 
-
-
     history_votes = jnp.roll(history_votes, shift=1, axis=0)
-    history_votes = history_votes.at[0,:].set(votes)
+    history_votes = history_votes.at[0, :].set(votes)
     return history_votes
-     
+
+
 @jaxtyped
 @typechecked
 def history_chancelor_accepted(
-    chancelor_accepted: shtypes.jbool,
-    chancelor_accepted_history: jtp.Bool[jnp.ndarray, "history"]
+        chancelor_accepted: shtypes.jbool,
+        chancelor_accepted_history: jtp.Bool[jnp.ndarray, "history"]
 ) -> jtp.Bool[jnp.ndarray, "history"]:
-
     """
 
     NEEDS UPDATE SAME AS OTHER HISTORYS
@@ -371,19 +364,18 @@ def history_chancelor_accepted(
             - `proposed_chancelor_history[1:]` contains the old proposed_chancelor
             
     """
-
 
     chancelor_accepted_history = jnp.roll(chancelor_accepted_history, shift=1, axis=0)
     chancelor_accepted_history = chancelor_accepted_history.at[0].set(chancelor_accepted)
     return chancelor_accepted_history
-     
+
+
 @jaxtyped
 @typechecked
 def history_election_tracker(
-    election_tracker: shtypes.election_tracker,
-    election_tracker_history: jtp.Int[jnp.ndarray, "history"]
+        election_tracker: shtypes.election_tracker,
+        election_tracker_history: jtp.Int[jnp.ndarray, "history"]
 ) -> jtp.Int[jnp.ndarray, "history"]:
-   
     """
    
    NEEDS UPDATE SAME AS OTHER HISTORYS
@@ -405,93 +397,87 @@ def history_election_tracker(
             - `proposed_chancelor_history[1:]` contains the old proposed_chancelor
             
     """
-   
+
     election_tracker_history = jnp.roll(election_tracker_history, shift=1, axis=0)
     election_tracker_history = election_tracker_history.at[0].set(election_tracker)
     return election_tracker_history
-    
- 
+
+
+@jaxtyped
+@typechecked
 def elective_session_history(
-	key: shtypes.random_key,
-	*,
-	player_num: shtypes.player_num,
-	president: shtypes.president,
-	chancelor: shtypes.chancelor,
-	killed: shtypes.killed,
-	proposal_probs: jtp.Float[jtp.Array, "player_num"],
-	vote_probability: jtp.Float[jtp.Array, "player_num"],
-	election_tracker: shtypes.election_tracker,
-	president_history: jtp.Int[jnp.ndarray, "history"],
-	proposed_chancelor_history: jtp.Int[jnp.ndarray, "history"],
-	votes_for_chancelor_history: jtp.Int[jnp.ndarray, "history player_num"],
-	chancelor_accepted_history: jtp.Bool[jnp.ndarray, "history"],
-	election_tracker_history: jtp.Int[jnp.ndarray, "history"],
+        key: shtypes.random_key,
+        *,
+        player_num: shtypes.player_num,
+        president: shtypes.president,
+        chancelor: shtypes.chancelor,
+        killed: shtypes.killed,
+        proposal_probs: jtp.Float[jtp.Array, "player_num"],
+        vote_probability: jtp.Float[jtp.Array, "player_num"],
+        election_tracker: shtypes.election_tracker,
+        president_history: jtp.Int[jnp.ndarray, "history"],
+        proposed_chancelor_history: jtp.Int[jnp.ndarray, "history"],
+        votes_for_chancelor_history: jtp.Int[jnp.ndarray, "history player_num"],
+        chancelor_accepted_history: jtp.Bool[jnp.ndarray, "history"],
+        election_tracker_history: jtp.Int[jnp.ndarray, "history"],
 ) -> tuple[
-	shtypes.president,
-	shtypes.chancelor,
-	jtp.Int[jnp.ndarray, "history"],
-	jtp.Int[jnp.ndarray, "history"],
-	jtp.Int[jnp.ndarray, "history player_num"],
-	jtp.Int[jnp.ndarray, "history"],
-	jtp.Int[jnp.ndarray, "history"],
+    shtypes.president,
+    shtypes.chancelor,
+    shtypes.election_tracker,
+    jtp.Int[jnp.ndarray, "history"],
+    jtp.Int[jnp.ndarray, "history"],
+    jtp.Int[jnp.ndarray, "history player_num"],
+    jtp.Int[jnp.ndarray, "history"],
+    jtp.Int[jnp.ndarray, "history"],
 ]:
+    ###########################
+    # PRESIDENTIAL UPDATE
+    ###########################
 
-	###########################
-	# PRESIDENTIAL UPDATE
-	###########################
-	
-	# holds ex_president used in chancelor_mask()
-	ex_president = president
-	# updates president
-	president = next_president(player_num,president,killed)
-	# pushes president to history
-	president_history = history_presidents(president,president_history)
+    # holds ex_president used in chancelor_mask()
+    ex_president = president
+    # updates president
+    president = next_president(player_num, president, killed)
+    # pushes president to history
+    president_history = history_presidents(president, president_history)
 
-	###########################
-	# CHANCELOR UPDATE
-	###########################
-	
-	# create mask for ineligible proposals of chancelors
-	mask = chancelor_mask(president,ex_president,chancelor,killed)
-	
-	# get new random key for proposed_chancelor
-	key, subkey = jrn.split(key)
-	# get proposed chancelor from with proposal_probs from current president
-	proposed_chancelor = propose_new_chancelor(subkey, proposal_probs, mask)
-	# push proposed chancelor to history
-	proposed_chancelor_history = history_proposed_chancelor(proposed_chancelor, proposed_chancelor_history)
+    ###########################
+    # CHANCELOR UPDATE
+    ###########################
 
-	###########################
-	# VOTING
-	###########################
-	
-	# get new random key for voting
-	key, subkey = jrn.split(key)
-	# get votes regarding new chancelor of all players with their probabilitys
-	votes = vote_for_chancelor(subkey, vote_probability, killed)
-	# pushes votes to history
-	votes_for_chancelor_history = history_votes_for_chancelor(votes, votes_for_chancelor_history)
-	
-	# check if majority voted for new chancelor
-	chancelor_accepted = check_vote(votes, killed)
-	
-	# updates election_tracker for "forced policies"
-	election_tracker = update_election_tracker(election_tracker, chancelor_accepted)
-	# push election_tracker to history
-	election_tracker_history = history_election_tracker(election_tracker, election_tracker_history)
+    # create mask for ineligible proposals of chancelors
+    mask = chancelor_mask(president, ex_president, chancelor, killed)
 
-	# push chancelor_accepted to history
-	chancelor_accepted_history = history_chancelor_accepted(chancelor_accepted, chancelor_accepted_history)
+    # get new random key for proposed_chancelor
+    key, subkey = jrn.split(key)
+    # get proposed chancelor from with proposal_probs from current president
+    proposed_chancelor = propose_new_chancelor(subkey, proposal_probs, mask)
+    # push proposed chancelor to history
+    proposed_chancelor_history = history_proposed_chancelor(proposed_chancelor, proposed_chancelor_history)
 
-	# update chancelor if a new on was voted or keep current
-	chancelor = update_chancelor(chancelor, proposed_chancelor, chancelor_accepted)
+    ###########################
+    # VOTING
+    ###########################
 
-	return president, chancelor, election_tracker, president_history, proposed_chancelor_history, votes_for_chancelor_history, chancelor_accepted_history, election_tracker_history
-    
-    
-    
-    
-    
-    
-    
-    
+    # get new random key for voting
+    key, subkey = jrn.split(key)
+    # get votes regarding new chancelor of all players with their probabilitys
+    votes = vote_for_chancelor(subkey, vote_probability, killed)
+    # pushes votes to history
+    votes_for_chancelor_history = history_votes_for_chancelor(votes, votes_for_chancelor_history)
+
+    # check if majority voted for new chancelor
+    chancelor_accepted = check_vote(votes, killed)
+
+    # updates election_tracker for "forced policies"
+    election_tracker = update_election_tracker(election_tracker, chancelor_accepted)
+    # push election_tracker to history
+    election_tracker_history = history_election_tracker(election_tracker, election_tracker_history)
+
+    # push chancelor_accepted to history
+    chancelor_accepted_history = history_chancelor_accepted(chancelor_accepted, chancelor_accepted_history)
+
+    # update chancelor if a new on was voted or keep current
+    chancelor = update_chancelor(chancelor, proposed_chancelor, chancelor_accepted)
+
+    return president, chancelor, election_tracker, president_history, proposed_chancelor_history, votes_for_chancelor_history, chancelor_accepted_history, election_tracker_history
