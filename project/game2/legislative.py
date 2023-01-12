@@ -1,9 +1,11 @@
+import random
+
+import jax
+import jax.lax as jla
 import jax.numpy as jnp
 import jax.random as jrn
-import jax.lax as jla
 import jaxtyping as jtp
 import typeguard
-import random
 
 from . import utils
 
@@ -29,7 +31,7 @@ def draw_pile_history_init(history_size: int) -> jtp.Int[jnp.ndarray, "history 2
 @typeguard.typechecked
 def push_policy(
     *,
-    policy: jtp.Bool[jnp.ndarray, "history"],
+    policy: jtp.Bool[jnp.ndarray, ""],
     policies: jtp.Int[jnp.ndarray, "history 2"],
 ) -> jtp.Int[jnp.ndarray, "history 2"]:
     """
@@ -95,7 +97,7 @@ def draw_policy(
             New discard pile:
             - same format as `draw_pile` above
     """
-    draw_pile, discard_pile = draw_pile_history[1], discard_pile_history[1]
+    draw_pile, discard_pile = draw_pile_history[0], discard_pile_history[0]
 
     # switch piles if draw_pile is empty
     draw_pile, discard_pile = jla.cond(
@@ -103,10 +105,13 @@ def draw_policy(
         lambda: (discard_pile, draw_pile),
         lambda: (draw_pile, discard_pile)
     )
-    discard_pile_history = discard_pile_history.at[0].set(discard_pile)
 
-    # draw a policy from bernouli distribution, with probability of F policy
-    policy = jrn.bernoulli(key, draw_pile[1] / draw_pile.sum())
+    discard_pile_history = discard_pile_history.at[0].set(discard_pile)
+    draw_pile_history = draw_pile_history.at[0].set(draw_pile)
+
+    # draw a policy from bernouli distribution
+    probability = draw_pile[1] / draw_pile.sum()  # probability of F policy
+    policy = jrn.bernoulli(key, probability)
 
     draw_pile_history = jla.select(
         policy,
@@ -166,7 +171,8 @@ def session_draw(
     """
     policies = jnp.zeros([2], dtype=president_shown_history.dtype)
 
-    for _ in range(3):
+    for key in jrn.split(key, 3):
+
         policy, draw_pile_history, discard_pile_history = draw_policy(
             key,
             draw_pile_history=draw_pile_history,
@@ -214,9 +220,8 @@ def session_president(
         policies.at[0].add(-1)  # discard L policy
     )
 
-    discard_pile_history = discard_pile_history.at[0].set(
-        push_policy(policy=to_discard, policies=discard_pile_history[0])
-    )
+    discard_pile_history = push_policy(
+        policy=to_discard, policies=discard_pile_history)
 
     chancellor_shown_history = chancellor_shown_history.at[0].set(policies)
 
@@ -235,25 +240,24 @@ def session_chancellor(
 ) -> tuple[jtp.Int[jnp.ndarray, "history 2"], jtp.Int[jnp.ndarray, "history 2"]]:
     """
     """
-    # chancelor discards a policy (can use the presidents function for that)
-    policy, discard_pile_history = session_president(
+    to_enact, discard_pile_history = session_president(
         key,
         discard_F_probability=discard_F_probability,
         president_shown_history=chancellor_shown_history,
+        chancellor_shown_history=jnp.zeros_like(chancellor_shown_history),
         discard_pile_history=discard_pile_history
     )
 
-    # chancelor enacts a policy
-    board_history = board_history.at[0].set(policy)
+    to_enact = to_enact[0].argmax().astype(bool)
+    board_history = push_policy(policy=to_enact, policies=board_history)
 
     return board_history, discard_pile_history
 
 
 def test_legislative():
     """
-
     """
-    history_size = 30
+    history_size = 3
     president_discard_F_probability = jnp.array(0.5)
     chancellor_discard_F_probability = jnp.array(0.5)
 
@@ -261,14 +265,18 @@ def test_legislative():
     discard_pile_history = policies_history_init(history_size)
     draw_pile_history = draw_pile_history_init(history_size)
 
-    print(draw_pile_history)
-
     president_shown_history = policies_history_init(history_size)
     chancellor_shown_history = policies_history_init(history_size)
 
+    session_draw_jit = jax.jit(session_draw)
+    session_president_jit = jax.jit(session_president)
+    session_chancellor_jit = jax.jit(session_chancellor)
+
     key = jrn.PRNGKey(random.randint(0, 2**32 - 1))
 
-    for _ in range(10):
+    for i in range(8):
+        print("\n-- round", i + 1, "--")
+
         board_history = utils.roll_history(history=board_history)
         discard_pile_history = utils.roll_history(history=discard_pile_history)
         draw_pile_history = utils.roll_history(history=draw_pile_history)
@@ -282,46 +290,50 @@ def test_legislative():
         )
 
         key, subkey = jrn.split(key)
-        # president_shown_history, draw_pile_history, discard_pile_history = session_draw(
-        #     subkey,
-        #     president_shown_history=president_shown_history,
-        #     draw_pile_history=draw_pile_history,
-        #     discard_pile_history=discard_pile_history
-        # )
 
-        print(draw_pile_history)
-        print(discard_pile_history[1])
+        print("draw    ", utils.policies_repr(draw_pile_history[0]))
+        print("discard ", utils.policies_repr(discard_pile_history[0]))
 
-        policy, draw_pile_history, discard_pile_history = draw_policy(
+        print("- running session draw -")
+
+        key, subkey = jrn.split(key)
+        president_shown_history, draw_pile_history, discard_pile_history = session_draw(
             subkey,
+            president_shown_history=president_shown_history,
             draw_pile_history=draw_pile_history,
             discard_pile_history=discard_pile_history
         )
 
-        print(policy)
-        print(draw_pile_history[0])
-        print(discard_pile_history[0])
+        print("draw    ", utils.policies_repr(draw_pile_history[0]))
+        print("discard ", utils.policies_repr(discard_pile_history[0]))
 
-        # key, subkey = jrn.split(key)
-        # chancellor_shown_history, discard_pile_history = session_president(
-        #     subkey,
-        #     discard_F_probability=president_discard_F_probability,
-        #     president_shown_history=president_shown_history,
-        #     chancellor_shown_history=chancellor_shown_history,
-        #     discard_pile_history=discard_pile_history
-        # )
+        print("shown p ", utils.policies_repr(president_shown_history[0]))
 
-        # print(utils.policies_repr(chancellor_shown_history[0]))
+        print("- running session president -")
 
-        # key, subkey = jrn.split(key)
-        # board_history, discard_pile_history = session_chancellor(
-        #     subkey,
-        #     discard_F_probability=chancellor_discard_F_probability,
-        #     chancellor_shown_history=chancellor_shown_history,
-        #     discard_pile_history=discard_pile_history,
-        #     board_history=board_history
-        # )
+        key, subkey = jrn.split(key)
+        chancellor_shown_history, discard_pile_history = session_president(
+            subkey,
+            discard_F_probability=president_discard_F_probability,
+            president_shown_history=president_shown_history,
+            chancellor_shown_history=chancellor_shown_history,
+            discard_pile_history=discard_pile_history
+        )
 
-        # print(utils.board_repr(board_history[0]))
+        print("discard ", utils.policies_repr(discard_pile_history[0]))
+        print("shown c ", utils.policies_repr(chancellor_shown_history[0]))
 
-        break
+        print("- running session chancellor -")
+
+        key, subkey = jrn.split(key)
+        board_history, discard_pile_history = session_chancellor(
+            subkey,
+            discard_F_probability=chancellor_discard_F_probability,
+            chancellor_shown_history=chancellor_shown_history,
+            discard_pile_history=discard_pile_history,
+            board_history=board_history
+        )
+
+        print("discard ", utils.policies_repr(discard_pile_history[0]))
+        print("board")
+        print(utils.board_repr(board_history[0]))

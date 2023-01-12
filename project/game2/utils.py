@@ -32,7 +32,7 @@ def policy_repr(
 @jtp.jaxtyped
 @typeguard.typechecked
 def policies_repr(
-    *,
+    # *,
     policies: tuple[int, int] | jtp.Int[jnp.ndarray, "2"]
 ) -> str:
     """
@@ -54,7 +54,7 @@ def policies_repr(
     for _ in range(policies[0]):
         result += policy_repr(policy=False) + " "
 
-    result = result[:-1] + "\n"
+    # result = result[:-1]   + "\n"
 
     for _ in range(policies[1]):
         result += policy_repr(policy=True) + " "
@@ -65,8 +65,8 @@ def policies_repr(
 @jtp.jaxtyped
 @typeguard.typechecked
 def board_repr(
-    *,
     board: tuple[int, int] | jtp.Int[jnp.ndarray, "2"],
+    *,
     empty: str = "\x1b[2;37m▢\x1b[0m"
 ) -> str:
     """
@@ -99,8 +99,7 @@ def roll_history(
 ) -> jtp.Shaped[jnp.ndarray, "history *_"]:
     """
     """
-    zeros = jnp.zeros_like(history[0])[None]
-    return jnp.concatenate([zeros, history[:-1]], axis=0)
+    return jnp.concatenate([history[0][None], history[:-1]], axis=0)
 
 
 @jtp.jaxtyped
