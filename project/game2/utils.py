@@ -100,7 +100,7 @@ def roll_history(
     """
     """
     zeros = jnp.zeros_like(history[0])[None]
-    return jnp.concatenate([zeros, history[1:]], axis=0)
+    return jnp.concatenate([zeros, history[:-1]], axis=0)
 
 
 @jtp.jaxtyped
