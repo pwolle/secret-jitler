@@ -5,7 +5,7 @@ from jax._src.errors import ConcretizationTypeError
 from jaxtyping import jaxtyped
 from typeguard import typechecked
 
-from . import shtypes, legislative, executive
+from . import shtypes, legislative, executive, election
 
 
 @jax.jit
@@ -468,7 +468,7 @@ def check_executive() -> shtypes.jbool:
     # create enough random subkeys
     key, *subkeys = jrn.split(key, 9)
 
-    player_num = jnp.array(10)
+    player_num = 10
     board = jrn.randint(subkeys[0], (2,), jnp.array([0, 0]), jnp.array([5, 6]))
     killed = jnp.array([False, False, False, False, False, False, False, False, False, True])
     roles = jnp.array([2, 1, 1, 1, 0, 0, 0, 0, 0, 0])
@@ -488,7 +488,7 @@ def check_executive() -> shtypes.jbool:
     )
 
     try:
-        executive_full_jit = jax.jit(executive.executive_full)
+        executive_full_jit = jax.jit(executive.executive_full, static_argnames="player_num")
         executive_full_jit(
             policies=board,
             killed=killed,
@@ -503,7 +503,92 @@ def check_executive() -> shtypes.jbool:
     except ConcretizationTypeError:
         jitable = False
 
-    works = check_winner(winner=winner) * check_killed(killed=killed, player_num=player_num) #* jitable
+    works = check_winner(winner=winner) * check_killed(killed=killed, player_num=player_num) * jitable
 
     return works
 
+
+@jaxtyped
+@typechecked
+def check_election() -> shtypes.jbool:
+    """
+    Tests the function elective_session_history with random valid inputs. Also checks if the function is jit compatible.
+
+    Returns:
+        works: shtypes.jbool
+            True iff all tests pass.
+    """
+    # create initial key
+    seed = 1727
+    key = jrn.PRNGKey(seed)
+
+    # create enough random subkeys
+    key, *subkeys = jrn.split(key, 10)
+
+    player_num = jrn.randint(subkeys[0], (), 5, 10)
+    president = jrn.randint(subkeys[1], (), 0, player_num)
+    chancellor = jrn.randint(subkeys[2], (), 0, player_num)
+    killed = jnp.zeros(player_num).astype(bool).at[jrn.choice(subkeys[3], jnp.arange(player_num))].set(True)
+    proposal_probs = jrn.uniform(subkeys[5], shape=(player_num,))
+    vote_probability = jrn.uniform(subkeys[6], shape=(player_num,))
+    election_tracker = jrn.choice(subkeys[7], jnp.array([0, 1]))
+    president_history = jnp.zeros(30, dtype=shtypes.jint_dtype)
+    proposed_chancelor_history = jnp.zeros(30, dtype=shtypes.jint_dtype)
+    votes_for_chancelor_history = jnp.zeros((30, player_num), dtype=shtypes.jint_dtype)
+    chancelor_accepted_history = jnp.zeros(30, dtype=shtypes.jint_dtype).astype(bool)
+    election_tracker_history = jnp.zeros(30, dtype=shtypes.jint_dtype)
+
+    (president,
+     chancellor,
+     election_tracker,
+     president_history,
+     proposed_chancelor_history,
+     votes_for_chancelor_history,
+     chancelor_accepted_history,
+     election_tracker_history) = election.elective_session_history(
+        subkeys[8],
+        player_num=player_num,
+        president=president,
+        chancelor=chancellor,
+        killed=killed,
+        proposal_probs=proposal_probs,
+        vote_probability=vote_probability,
+        election_tracker=election_tracker,
+        president_history=president_history,
+        proposed_chancelor_history=proposed_chancelor_history,
+        votes_for_chancelor_history=votes_for_chancelor_history,
+        chancelor_accepted_history=chancelor_accepted_history,
+        election_tracker_history=election_tracker_history
+    )
+
+    try:
+        elective_session_history_jit = jax.jit(election.elective_session_history)
+        elective_session_history_jit(
+            subkeys[8],
+            player_num=player_num,
+            president=president,
+            chancelor=chancellor,
+            killed=killed,
+            proposal_probs=proposal_probs,
+            vote_probability=vote_probability,
+            election_tracker=election_tracker,
+            president_history=president_history,
+            proposed_chancelor_history=proposed_chancelor_history,
+            votes_for_chancelor_history=votes_for_chancelor_history,
+            chancelor_accepted_history=chancelor_accepted_history,
+            election_tracker_history=election_tracker_history
+        )
+        jitable = True
+    except ConcretizationTypeError:
+        jitable = False
+
+    works = (
+        check_president_or_chancellor(role=president, player_num=player_num)
+        * check_president_or_chancellor(role=chancellor, player_num=player_num)
+        * check_president_and_chancellor(president=president, chancellor=chancellor)
+        * check_killed(killed=killed, player_num=player_num)
+        * check_election_tracker(election_tracker=election_tracker)
+        * jitable
+    )
+
+    return works
