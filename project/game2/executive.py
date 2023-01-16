@@ -1,5 +1,4 @@
 import typing
-import jax
 import jax.numpy as jnp
 import jax.random as jrn
 import jaxtyping as jtp
