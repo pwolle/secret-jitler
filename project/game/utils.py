@@ -5,7 +5,7 @@ import jax.lax as jla
 from jaxtyping import jaxtyped
 from typeguard import typechecked
 
-import stype as T
+from . import stype as T
 
 
 @jaxtyped
@@ -48,12 +48,6 @@ def draw_policy(
     draw_now, disc_now = draw[0], disc[0]
 
     # switch piles if draw_pile is empty
-    # draw_now, disc_now = jla.cond(
-    #     draw_now.sum() == 0,
-    #     lambda: (disc_now, draw_now),
-    #     lambda: (draw_now, disc_now)
-    # )
-
     empty = draw_now.sum() == 0
     draw_now += disc_now * empty
     disc_now -= disc_now * empty

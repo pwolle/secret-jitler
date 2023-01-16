@@ -4,7 +4,7 @@ import jaxtyping as jtp
 from jaxtyping import jaxtyped
 from typeguard import typechecked
 
-import stype as T
+from . import stype as T
 
 
 @jaxtyped

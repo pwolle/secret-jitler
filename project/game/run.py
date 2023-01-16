@@ -1,19 +1,18 @@
-import jax.debug
 import jax.lax as jla
 import jax.numpy as jnp
 import jax.random as jrn
 import jaxtyping as jtp
 from jaxtyping import jaxtyped
-from tqdm import trange
 from typeguard import typechecked
 
-import stype as T
-import utils
+from . import init
+from . import stype as T
+from . import utils
 
 
 @jaxtyped
 @typechecked
-def next_presi(
+def propose(
     key: T.key,
     presi: T.presi,
     killed: T.killed,
@@ -326,13 +325,61 @@ def shoot(
     return {"killed": killed, "winner": winner}
 
 
+def dummy_history(
+    key: T.key,
+    player_total: int = 10,
+    game_len: int = 30,
+    prob_vote: float | jtp.Float[jnp.ndarray, ""] = 0.9,
+    prob_discard: float | jtp.Float[jnp.ndarray, ""] = 0.5,
+):
+    """
+    """
+    key, subkey = jrn.split(key)
+    state = init.state(subkey, player_total, game_len)
+
+    logprobs = jnp.zeros((player_total, player_total))
+    probs = jnp.zeros((player_total,))
+
+    history = {}
+
+    for k, v in state.items():
+        history[k] = jnp.zeros((game_len + 1, *v.shape), dtype=v.dtype)
+        history[k] = history[k].at[0].set(v)
+
+    for i in range(game_len):
+        key, subkey = jrn.split(key)
+        state = utils.push_state(state)
+
+        key, subkey = jrn.split(key)
+        state |= propose(key=key, logprobs=logprobs, **state)
+
+        key, subkey = jrn.split(key)
+        state |= vote(key=key, probs=probs + prob_vote, **state)
+
+        key, subkey = jrn.split(key)
+        state |= presi_discard(key=key, probs=probs + prob_discard, **state)
+
+        key, subkey = jrn.split(key)
+        state |= chanc_discard(key=key, probs=probs + prob_discard, **state)
+
+        key, subkey = jrn.split(key)
+        state |= shoot(key=key, logprobs=logprobs, **state)
+
+        for k, v in state.items():
+            history[k] = history[k].at[i + 1].set(v)
+
+    return history
+
+
 def main():
     import random
-
     import jax
 
-    import init
-    import utils
+    propose_jit = jax.jit(propose)
+    vote_jit = jax.jit(vote)
+    presi_discard_jit = jax.jit(presi_discard)
+    chanc_discard_jit = jax.jit(chanc_discard)
+    shoot_jit = jax.jit(shoot)
 
     player_total = 6
     history_size = 11
@@ -340,18 +387,9 @@ def main():
     probs = jnp.zeros((player_total, player_total), dtype=jnp.float32)
 
     key = jrn.PRNGKey(random.randint(0, 2 ** 32 - 1))
+
     key, subkey = jrn.split(key)
-
     state = init.state(subkey, player_total, history_size)
-
-    propose = jax.jit(next_presi)
-    vote_jit = jax.jit(vote)
-
-    presi_discard_jit = jax.jit(presi_discard)
-
-    chanc_discard_jit = jax.jit(chanc_discard)
-
-    shoot_jit = jax.jit(shoot)
 
     print("roles", *state["roles"][0])
 
@@ -359,7 +397,7 @@ def main():
         state = utils.push_state(state)
 
         key, subkey = jrn.split(key)
-        state |= propose(key=key, logprobs=probs, **state)
+        state |= propose_jit(key=key, logprobs=probs, **state)
 
         key, subkey = jrn.split(key)
         state |= vote_jit(key=key, probs=probs[0] + 0.9, **state)
@@ -377,7 +415,6 @@ def main():
         print("killed ", *state["killed"][0].astype(int))
         print("tracker", *state["tracker"])
         print("votes  ", *state["voted"][0].astype(int))
-
         print("presi-s", *state["presi_shown"][0])
         print("chanc-s", *state["chanc_shown"][0])
         print("disc   ", *state["disc"][0])
