@@ -211,6 +211,8 @@ def presi_discard(
     }
 
 
+@jaxtyped
+@typechecked
 def chanc_discard(
     key: T.key,
     disc: T.disc,
@@ -264,6 +266,8 @@ def chanc_discard(
     return {"disc": disc, "board": board, "winner": winner}
 
 
+@jaxtyped
+@typechecked
 def shoot(
     key: T.key,
     board: T.board,
@@ -325,6 +329,8 @@ def shoot(
     return {"killed": killed, "winner": winner}
 
 
+@jaxtyped
+@typechecked
 def dummy_history(
     key: T.key,
     player_total: int = 10,
