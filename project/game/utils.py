@@ -1,79 +1,98 @@
-from . import shtypes
+import jaxtyping as jtp
+import jax.numpy as jnp
+import jax.random as jrn
+import jax.lax as jla
+from jaxtyping import jaxtyped
+from typeguard import typechecked
+
+from . import stype as T
 
 
-def policy_repr(policy: shtypes.policy) -> str:
+@jaxtyped
+@typechecked
+def push_state(state: dict[str, jtp.Shaped[jnp.ndarray, "history *_"]]) \
+        -> dict[str, jtp.Shaped[jnp.ndarray, "history *_"]]:
     """
-    Returns a string representation of a policy that is nicer to print.
-
-    Args:
-        policy: shtypes.policy
-            The policy to represent.
-
-    Returns:
-        str: A string representation of the policy.
     """
-    if not policy:
-        return "\x1b[34m" + "▣" + "\x1b[0m"
-    else:
-        return "\x1b[31m" + "▣" + "\x1b[0m"
+    updated = {}
+    for k, v in state.items():
+        updated[k] = jnp.concatenate([v[0][None], v[:-1]], axis=0)
+
+    return updated
 
 
-def print_policies(policies: shtypes.policies, end="\n") -> None:
+@jaxtyped
+@typechecked
+def discard_policy(
+    policy: jtp.Bool[jnp.ndarray, ""],
+    disc: T.disc
+) -> T.disc:
     """
-    Prints given policies.
-
-    Args:
-        policies: shtypes.policies
-            The policies to print.
-            - 0th element is the number of L policies
-            - 1st element is the number of F policies
-
-        end: str
-            The string to print at the end of the policies.
-
-    Returns:
-        None
     """
-    for _ in range(policies[0]):
-        print("\x1b[34m" + "▣" + "\x1b[0m", end=" ")
-
-    for _ in range(policies[1]):
-        print("\x1b[31m" + "▣" + "\x1b[0m", end=" ")
-
-    print(end=end)
+    return disc.at[0, policy.astype(int)].add(1)
 
 
-def print_board(board: shtypes.board, end="\n") -> None:
+@jaxtyped
+@typechecked
+def draw_policy(
+    key: T.key,
+    draw: T.draw,
+    disc: T.disc,
+) -> tuple[
+    jtp.Bool[jnp.ndarray, ""],
+    jtp.Int[jnp.ndarray, "history 2"],
+    jtp.Int[jnp.ndarray, "history 2"]
+]:
     """
-    Prints given board.
-
-    Args:
-        board: shtypes.board
-            The board to print.
-            - 0th element is the number of L policies
-            - 1st element is the number of F policies
-
-        end: str
-            The string to print at the end of the board.
-
-    Returns:
-        None
     """
+    draw_now, disc_now = draw[0], disc[0]
 
-    print("\x1b[34m" + "L:" + "\x1b[0m", end="  ")
-    for i in range(5):
-        if i < board[0]:
-            print("\x1b[34m" + "▣" + "\x1b[0m", end=" ")
-        else:
-            print("\x1b[2;37m" + "▢" + "\x1b[0m", end=" ")
+    # switch piles if draw_pile is empty
+    empty = draw_now.sum() == 0
+    draw_now += disc_now * empty
+    disc_now -= disc_now * empty
 
-    print()
-    print("\x1b[31m" + "F:" + "\x1b[0m", end=" ")
+    # probability of F policy
+    prob = draw_now[1] / draw_now.sum()
 
-    for i in range(6):
-        if i < board[1]:
-            print("\x1b[31m" + "▣" + "\x1b[0m", end=" ")
-        else:
-            print("\x1b[2;37m" + "▢" + "\x1b[0m", end=" ")
+    # draw a policy from bernouli distribution
+    policy = jrn.bernoulli(key, prob)
 
-    print(end=end)
+    draw_now = draw_now.at[policy.astype(int)].add(-1)
+
+    disc = disc.at[0].set(disc_now)
+    draw = draw.at[0].set(draw_now)
+
+    return policy, draw, disc
+
+
+def main():
+    import init
+
+    player_total = 5
+    history_size = 3
+
+    key = jrn.PRNGKey(0)
+
+    draw = init.draw(history_size)
+    disc = init.disc(history_size)
+
+    for i in range(20):
+        key, subkey = jrn.split(key, 2)
+        policy, draw, disc = draw_policy(subkey, draw=draw, disc=disc)
+
+        disc = discard_policy(policy, disc)
+
+        print(policy, draw[0], disc[0])
+
+        state = push_state({
+            "draw": draw,
+            "disc": disc
+        })
+
+        draw = state["draw"]
+        disc = state["disc"]
+
+
+if __name__ == "__main__":
+    main()
