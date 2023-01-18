@@ -135,7 +135,7 @@ def vote(
 
     # skip
     presi_shown_skip = presi_shown.at[0].set(0)
-    chanc_shown_skip = presi_shown.at[0].set(0)
+    # chanc_shown_skip = presi_shown.at[0].set(0)
 
     # force
     policy_force, draw_force, disc_force = utils.draw_policy(key, draw, disc)
@@ -155,8 +155,8 @@ def vote(
     presi_shown = presi_shown.at[0].set(policies)
 
     # if skip
-    presi_shown = jla.select(~works, presi_shown_skip, presi_shown)
-    chanc_shown = jla.select(~works, chanc_shown_skip, presi_shown)
+    presi_shown = jla.select(works, presi_shown, presi_shown_skip)
+    # chanc_shown = jla.select(~works, chanc_shown_skip, chanc_shown)
 
     # if force (force => ~works=skip)
     force = tracker[0] == 3
@@ -175,7 +175,7 @@ def vote(
         "winner": winner,
         "tracker": tracker,
         "presi_shown": presi_shown,
-        "chanc_shown": chanc_shown,
+        # "chanc_shown": chanc_shown,
     }
 
 
@@ -346,7 +346,7 @@ def dummy_history(
     key: T.key,
     player_total: int = 10,
     game_len: int = 30,
-    prob_vote: float | jtp.Float[jnp.ndarray, ""] = 0.9,
+    prob_vote: float | jtp.Float[jnp.ndarray, ""] = 0.7,
     prob_discard: float | jtp.Float[jnp.ndarray, ""] = 0.5,
 ) -> dict[str, jtp.Shaped[jnp.ndarray, "..."]]:
     """
@@ -444,6 +444,9 @@ def main() -> None:
         print("role   ", state["roles"][0][state["chanc"][0]])
         print("winner ", *state["winner"][0].astype(int))
         print("")
+
+    print("presi_shown", state["presi_shown"])
+    print("chanc_shown", state["chanc_shown"])
 
 
 if __name__ == "__main__":
