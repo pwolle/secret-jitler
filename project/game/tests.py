@@ -21,8 +21,8 @@ def test_unchanged(
     """
     unchanged = True
 
-    for i in range(1, arr[0][0].shape[0]):
-        unchanged *= (arr[0][i - 1] == arr[0][i]).all()
+    for i in range(1, arr[0].shape[0]):
+        unchanged *= (arr[i - 1][:-1] == arr[i][1:]).all()
 
     return unchanged
 
@@ -288,7 +288,7 @@ def test_dummy_history(*, seed: int, player_total: int, game_len: int) -> jtp.Bo
 
     proposed_works = test_presi_chanc_or_proposed(player_total=player_total, arr=dic['proposed'])
 
-    voted_works = test_voted_killed(arr=dic['voted'])
+    voted_works = test_unchanged(arr=dic['voted'])
 
     tracker_works = test_tracker(tracker=dic['tracker'])
 
@@ -298,7 +298,7 @@ def test_dummy_history(*, seed: int, player_total: int, game_len: int) -> jtp.Bo
 
     chanc_shown_works = test_chanc_shown(chanc_shown=dic['chanc_shown'])
 
-    killed_works = test_voted_killed(arr=dic['killed'])
+    killed_works = test_unchanged(arr=dic['killed'])
 
     winner_works = test_winner(winner=dic['winner'])
 
