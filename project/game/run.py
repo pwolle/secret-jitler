@@ -80,6 +80,7 @@ def vote(
     winner: T.winner,
     roles: T.roles,
     presi_shown: T.presi_shown,
+    chanc_shown: T.chanc_shown,
     probs: jtp.Float[jnp.ndarray, "players"],
     **_
 ) -> dict[
@@ -135,6 +136,7 @@ def vote(
 
     # skip
     presi_shown_skip = presi_shown.at[0].set(0)
+    chanc_shown_skip = chanc_shown.at[0].set(0)
     draw_skip = draw
     disc_skip = disc
 
@@ -157,6 +159,7 @@ def vote(
 
     # if skip
     presi_shown = jla.select(works, presi_shown, presi_shown_skip)
+    chanc_shown = jla.select(works, chanc_shown, chanc_shown_skip)
     draw = jla.select(works, draw, draw_skip)
     disc = jla.select(works, disc, disc_skip)
     # chanc_shown = jla.select(~works, chanc_shown_skip, chanc_shown)
@@ -178,7 +181,7 @@ def vote(
         "winner": winner,
         "tracker": tracker,
         "presi_shown": presi_shown,
-        # "chanc_shown": chanc_shown,
+        "chanc_shown": chanc_shown,
     }
 
 
