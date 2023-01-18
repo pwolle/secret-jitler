@@ -82,7 +82,18 @@ def vote(
     presi_shown: T.presi_shown,
     probs: jtp.Float[jnp.ndarray, "players"],
     **_
-) -> dict:
+) -> dict[
+    str,
+    T.draw
+    | T.disc
+    | T.board
+    | T.chanc
+    | T.voted
+    | T.winner
+    | T.tracker
+    | T.presi_shown
+    | T.chanc_shown
+]:
     """
     """
     probs = jnp.clip(probs, 0., 1.)
@@ -124,7 +135,7 @@ def vote(
 
     # skip
     presi_shown_skip = presi_shown.at[0].set(0)
-    chanc_shown_skip = presi_shown.at[0].set(0)
+    # chanc_shown_skip = presi_shown.at[0].set(0)
 
     # force
     policy_force, draw_force, disc_force = utils.draw_policy(key, draw, disc)
@@ -144,8 +155,8 @@ def vote(
     presi_shown = presi_shown.at[0].set(policies)
 
     # if skip
-    presi_shown = jla.select(~works, presi_shown_skip, presi_shown)
-    chanc_shown = jla.select(~works, chanc_shown_skip, presi_shown)
+    presi_shown = jla.select(works, presi_shown, presi_shown_skip)
+    # chanc_shown = jla.select(~works, chanc_shown_skip, chanc_shown)
 
     # if force (force => ~works=skip)
     force = tracker[0] == 3
@@ -164,7 +175,7 @@ def vote(
         "winner": winner,
         "tracker": tracker,
         "presi_shown": presi_shown,
-        "chanc_shown": chanc_shown,
+        # "chanc_shown": chanc_shown,
     }
 
 
@@ -179,7 +190,7 @@ def presi_discard(
     chanc_shown: T.chanc_shown,
     probs: jtp.Float[jnp.ndarray, "players"],
     **_
-) -> dict:
+) -> dict[str, T.chanc_shown | T.disc]:
     """
     """
     policies = presi_shown[0]
@@ -211,6 +222,8 @@ def presi_discard(
     }
 
 
+@jaxtyped
+@typechecked
 def chanc_discard(
     key: T.key,
     disc: T.disc,
@@ -221,7 +234,7 @@ def chanc_discard(
     chanc_shown: T.chanc_shown,
     probs: jtp.Float[jnp.ndarray, "players"],
     **_
-):
+) -> dict[str, T.disc | T.board | T.winner]:
     """
     """
     policies = chanc_shown[0]
@@ -264,6 +277,8 @@ def chanc_discard(
     return {"disc": disc, "board": board, "winner": winner}
 
 
+@jaxtyped
+@typechecked
 def shoot(
     key: T.key,
     board: T.board,
@@ -274,7 +289,7 @@ def shoot(
     roles: T.roles,
     logprobs: jtp.Float[jnp.ndarray, "players players"],
     **_
-):
+) -> dict[str, T.killed | T.winner]:
     """
     """
     # only shoot if a F policy has been enacted
@@ -325,13 +340,15 @@ def shoot(
     return {"killed": killed, "winner": winner}
 
 
+@jaxtyped
+@typechecked
 def dummy_history(
     key: T.key,
     player_total: int = 10,
     game_len: int = 30,
-    prob_vote: float | jtp.Float[jnp.ndarray, ""] = 0.9,
+    prob_vote: float | jtp.Float[jnp.ndarray, ""] = 0.7,
     prob_discard: float | jtp.Float[jnp.ndarray, ""] = 0.5,
-):
+) -> dict[str, jtp.Shaped[jnp.ndarray, "..."]]:
     """
     """
     key, subkey = jrn.split(key)
@@ -371,7 +388,9 @@ def dummy_history(
     return history
 
 
-def main():
+@jaxtyped
+@typechecked
+def main() -> None:
     import random
     import jax
 
@@ -425,6 +444,9 @@ def main():
         print("role   ", state["roles"][0][state["chanc"][0]])
         print("winner ", *state["winner"][0].astype(int))
         print("")
+
+    print("presi_shown", state["presi_shown"])
+    print("chanc_shown", state["chanc_shown"])
 
 
 if __name__ == "__main__":
