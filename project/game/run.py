@@ -135,7 +135,8 @@ def vote(
 
     # skip
     presi_shown_skip = presi_shown.at[0].set(0)
-    # chanc_shown_skip = presi_shown.at[0].set(0)
+    draw_skip = draw
+    disc_skip = disc
 
     # force
     policy_force, draw_force, disc_force = utils.draw_policy(key, draw, disc)
@@ -156,6 +157,8 @@ def vote(
 
     # if skip
     presi_shown = jla.select(works, presi_shown, presi_shown_skip)
+    draw = jla.select(works, draw, draw_skip)
+    disc = jla.select(works, disc, disc_skip)
     # chanc_shown = jla.select(~works, chanc_shown_skip, chanc_shown)
 
     # if force (force => ~works=skip)
@@ -400,19 +403,19 @@ def main() -> None:
     chanc_discard_jit = jax.jit(chanc_discard)
     shoot_jit = jax.jit(shoot)
 
-    player_total = 6
-    history_size = 11
+    player_total = 5
+    history_size = 3
 
     probs = jnp.zeros((player_total, player_total), dtype=jnp.float32)
 
-    key = jrn.PRNGKey(random.randint(0, 2 ** 32 - 1))
+    key = jrn.PRNGKey(812786549)  # random.randint(0, 2 ** 32 - 1))
 
     key, subkey = jrn.split(key)
     state = init.state(subkey, player_total, history_size)
 
     print("roles", *state["roles"][0])
 
-    for _ in range(10):
+    for _ in range(3):
         state = utils.push_state(state)
 
         key, subkey = jrn.split(key)
@@ -445,8 +448,12 @@ def main() -> None:
         print("winner ", *state["winner"][0].astype(int))
         print("")
 
-    print("presi_shown", state["presi_shown"])
-    print("chanc_shown", state["chanc_shown"])
+    # print("presi_shown", state["presi_shown"])
+    # print("chanc_shown", state["chanc_shown"])
+
+    print("draw", state["draw"])
+    print("disc", state["disc"])
+    print("board", state["board"])
 
 
 if __name__ == "__main__":
