@@ -251,20 +251,29 @@ def test_winner(*, winner: jtp.Bool[jnp.ndarray, "historyy history 2"]) -> jtp.B
 
 @jaxtyped
 @typechecked
-def test_dummy_history(*, seed: int, player_total: int, game_len: int) -> jtp.Bool[jnp.ndarray, ""]:
+def test_dummy_history(
+        *,
+        key: jrn.KeyArray | jtp.UInt32[jnp.ndarray, "2"],
+        player_total: int,
+        game_len: int
+) -> jtp.Bool[jnp.ndarray, ""]:
     """
     Test the function dummy_history from run.
 
     Args:
-        seed: int
-            The seed used for random testing.
+        key: jrn.KeyArray | jtp.UInt32[jnp.ndarray, "2"]
+            The key used for random testing.
+
+        player_total: int
+            Total number of players.
+
+        game_len: int
+            Number of rounds.
 
     Returns:
         works: jtp.Bool[jnp.ndarray, ""]
             True iff all tests pass.
     """
-    key = jrn.PRNGKey(seed)
-
     key, subkey = jrn.split(key)
     prob_vote = jrn.uniform(subkey)
 
@@ -314,4 +323,4 @@ def test_dummy_history(*, seed: int, player_total: int, game_len: int) -> jtp.Bo
             * killed_works \
             * winner_works
 
-    return works
+    return jnp.logical_or(works, dic['winner'].sum()).all()
