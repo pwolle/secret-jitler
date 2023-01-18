@@ -11,15 +11,16 @@ def vote_data(history, player: int):
 
 
 def main():
-    key = jrn.PRNGKey(0)
+    # key = jrn.PRNGKey(0)
 
-    history = dummy_history(key, 5, 30)
+    # history = dummy_history(key, 5, 30)
 
-    print(history["voted"].shape)
+    # print(history["voted"].shape)
 
-    vote_data(history, 0)
+    # vote_data(history, 0)
+    pass
 
 
 if __name__ == "__main__":
-    # from game.run import main
+    from game.run import main
     main()
