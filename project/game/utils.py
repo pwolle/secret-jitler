@@ -64,35 +64,3 @@ def draw_policy(
     draw = draw.at[0].set(draw_now)
 
     return policy, draw, disc
-
-
-def main():
-    import init
-
-    player_total = 5
-    history_size = 3
-
-    key = jrn.PRNGKey(0)
-
-    draw = init.draw(history_size)
-    disc = init.disc(history_size)
-
-    for i in range(20):
-        key, subkey = jrn.split(key, 2)
-        policy, draw, disc = draw_policy(subkey, draw=draw, disc=disc)
-
-        disc = discard_policy(policy, disc)
-
-        print(policy, draw[0], disc[0])
-
-        state = push_state({
-            "draw": draw,
-            "disc": disc
-        })
-
-        draw = state["draw"]
-        disc = state["disc"]
-
-
-if __name__ == "__main__":
-    main()
