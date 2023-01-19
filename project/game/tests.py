@@ -11,7 +11,8 @@ from . import run
 @typechecked
 def test_unchanged(
         *,
-        arr: jtp.Int[jnp.ndarray, "historyy history players"] | jtp.Int[jnp.ndarray, "historyy history"] | jtp.Int[jnp.ndarray, "historyy history 2"]
+        arr: jtp.Int[jnp.ndarray, "historyy history players"] | jtp.Int[jnp.ndarray, "historyy history"] | jtp.Int[
+            jnp.ndarray, "historyy history 2"]
 ) -> jtp.Bool[jnp.ndarray, ""]:
     """
     Test a given history array.
@@ -25,7 +26,6 @@ def test_unchanged(
         unchanged *= (arr[i - 1][:-1] == arr[i][1:]).all()
 
     return unchanged
-
 
 
 @jaxtyped
@@ -125,7 +125,7 @@ def test_cards(
         *,
         draw: jtp.Int[jnp.ndarray, "historyy history 2"],
         disc: jtp.Int[jnp.ndarray, "historyy history 2"],
-        board: jtp.Int[jnp.ndarray, "historyy history 2"]
+        board: jtp.Int[jnp.ndarray, "historyy history 2"],
 ) -> jtp.Bool[jnp.ndarray, ""]:
     """
     Test the draw, disc and board history array.
@@ -254,8 +254,8 @@ def test_winner(*, winner: jtp.Bool[jnp.ndarray, "historyy history 2"]) -> jtp.B
 def test_dummy_history(
         *,
         key: jrn.KeyArray | jtp.UInt32[jnp.ndarray, "2"],
-        player_total: int,
-        game_len: int
+        player_total: int = 10,
+        game_len: int = 30
 ) -> jtp.Bool[jnp.ndarray, ""]:
     """
     Test the function dummy_history from run.
