@@ -7,7 +7,7 @@ from typeguard import typechecked
 
 from . import init
 from . import stype as T
-from . import utils
+from . import util
 
 
 @jaxtyped
@@ -141,7 +141,7 @@ def vote(
     disc_skip = disc
 
     # force
-    policy_force, draw_force, disc_force = utils.draw_policy(key, draw, disc)
+    policy_force, draw_force, disc_force = util.draw_policy(key, draw, disc)
     board_force = board.at[0, policy_force.astype(int)].add(1)
 
     # draw 3
@@ -149,7 +149,7 @@ def vote(
 
     for _ in range(3):
         key, subkey = jrn.split(key)
-        policy, draw, disc = utils.draw_policy(
+        policy, draw, disc = util.draw_policy(
             subkey, draw, disc
         )
 
@@ -371,7 +371,7 @@ def dummy_history(
 
     for i in range(game_len):
         key, subkey = jrn.split(key)
-        state = utils.push_state(state)
+        state = util.push_state(state)
 
         key, subkey = jrn.split(key)
         state |= propose(key=key, logprobs=logprobs, **state)
@@ -411,7 +411,7 @@ def main() -> None:
 
     probs = jnp.zeros((player_total, player_total), dtype=jnp.float32)
 
-    key = jrn.PRNGKey(812786549)  # random.randint(0, 2 ** 32 - 1))
+    key = jrn.PRNGKey(random.randint(0, 2 ** 32 - 1))
 
     key, subkey = jrn.split(key)
     state = init.state(subkey, player_total, history_size)
@@ -419,7 +419,7 @@ def main() -> None:
     print("roles", *state["roles"][0])
 
     for _ in range(3):
-        state = utils.push_state(state)
+        state = util.push_state(state)
 
         key, subkey = jrn.split(key)
         state |= propose_jit(key=key, logprobs=probs, **state)
