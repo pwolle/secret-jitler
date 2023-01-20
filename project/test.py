@@ -1,26 +1,27 @@
+import jax
+import unittest
 import jax.random as jrn
 
-from game.run import dummy_history
+from game import tests
 
 
-def vote_data(history, player: int):
-    winner = 0
+class TestDummyHistory(unittest.TestCase):
 
-    #actions = history["voted"]
-    pass
+    def test_works(self):
+        # jit the function
+        test_jit = jax.jit(tests.test_dummy_history, static_argnames=["player_total", "game_len"])
+
+        # let it run once for faster loop afterwards
+        key = jrn.PRNGKey(34527)
+        test_jit(key=key)
+
+        # test for 1000 random keys
+        for i in range(10000):
+            key = jrn.PRNGKey(8127346 - i)
+            key, subkey = jrn.split(key)
+            result = test_jit(key=subkey)
+            self.assertTrue(result)
 
 
-def main():
-    # key = jrn.PRNGKey(0)
-
-    # history = dummy_history(key, 5, 30)
-
-    # print(history["voted"].shape)
-
-    # vote_data(history, 0)
-    pass
-
-
-if __name__ == "__main__":
-    from game.run import main
-    main()
+if __name__ == '__main__':
+    unittest.main()
