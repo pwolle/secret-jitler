@@ -374,85 +374,24 @@ def dummy_history(
         state = util.push_state(state)
 
         key, subkey = jrn.split(key)
-        state |= propose(key=key, logprobs=logprobs, **state)
+        state |= propose(key=subkey, logprobs=logprobs, **state)
 
         key, subkey = jrn.split(key)
-        state |= vote(key=key, probs=probs + prob_vote, **state)
+        state |= vote(key=subkey, probs=probs + prob_vote, **state)
 
         key, subkey = jrn.split(key)
-        state |= presi_disc(key=key, probs=probs + prob_discard, **state)
+        state |= presi_disc(key=subkey, probs=probs + prob_discard, **state)
 
         key, subkey = jrn.split(key)
-        state |= chanc_disc(key=key, probs=probs + prob_discard, **state)
+        state |= chanc_disc(key=subkey, probs=probs + prob_discard, **state)
 
         key, subkey = jrn.split(key)
-        state |= shoot(key=key, logprobs=logprobs, **state)
+        state |= shoot(key=subkey, logprobs=logprobs, **state)
 
         for k, v in state.items():
             history[k] = history[k].at[i + 1].set(v)
 
     return history
-
-
-def bot_closure(
-    player_total: int,
-    history_size: int,
-    propose_bot,
-    vote_bot,
-    presi_disc_bot,
-    chanc_disc_bot,
-    shoot_bot,
-):
-    """
-    """
-
-    def run(
-        key: T.key,
-        propose_params,
-        vote_params,
-        presi_disc_params,
-        chanc_disc_params,
-        shoot_params,
-    ):
-        key, subkey = jrn.split(key)
-        state = init.state(subkey, player_total, history_size)
-
-        for _ in range(3):
-            state = util.push_state(state)
-
-            key, subkey = jrn.split(key)
-            probs = propose_bot(subkey, propose_params, state)
-
-            key, subkey = jrn.split(key)
-            state |= propose(key=key, logprobs=probs, **state)
-
-            key, subkey = jrn.split(key)
-            probs = vote_bot(subkey, vote_params, state)
-
-            key, subkey = jrn.split(key)
-            state |= vote(key=key, probs=probs, **state)
-
-            key, subkey = jrn.split(key)
-            probs = presi_disc_bot(subkey, presi_disc_params, state)
-
-            key, subkey = jrn.split(key)
-            state |= presi_disc(key=key, probs=probs, **state)
-
-            key, subkey = jrn.split(key)
-            probs = chanc_disc_bot(subkey, chanc_disc_params, state)
-
-            key, subkey = jrn.split(key)
-            state |= chanc_disc(key=key, probs=probs, **state)
-
-            key, subkey = jrn.split(key)
-            probs = shoot_bot(subkey, shoot_params, state)
-
-            key, subkey = jrn.split(key)
-            state |= shoot(key=key, logprobs=probs, **state)
-
-        return state
-
-    return run
 
 
 @jaxtyped
@@ -483,19 +422,19 @@ def main() -> None:
         state = util.push_state(state)
 
         key, subkey = jrn.split(key)
-        state |= propose_jit(key=key, logprobs=probs, **state)
+        state |= propose_jit(key=subkey, logprobs=probs, **state)
 
         key, subkey = jrn.split(key)
-        state |= vote_jit(key=key, probs=probs[0] + 0.9, **state)
+        state |= vote_jit(key=subkey, probs=probs[0] + 0.9, **state)
 
         key, subkey = jrn.split(key)
-        state |= presi_discard_jit(key=key, probs=probs[0] + 0.5, **state)
+        state |= presi_discard_jit(key=subkey, probs=probs[0] + 0.5, **state)
 
         key, subkey = jrn.split(key)
-        state |= chanc_discard_jit(key=key, probs=probs[0] + 0.5, **state)
+        state |= chanc_discard_jit(key=subkey, probs=probs[0] + 0.5, **state)
 
         key, subkey = jrn.split(key)
-        state |= shoot_jit(key=key, logprobs=probs, **state)
+        state |= shoot_jit(key=subkey, logprobs=probs, **state)
 
         print("board  ", *state["board"][0])
         print("killed ", *state["killed"][0].astype(int))
