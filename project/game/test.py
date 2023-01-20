@@ -1,6 +1,9 @@
-import jaxtyping as jtp
+import unittest
+
+import jax
 import jax.numpy as jnp
 import jax.random as jrn
+import jaxtyping as jtp
 from jaxtyping import jaxtyped
 from typeguard import typechecked
 
@@ -25,7 +28,7 @@ def test_unchanged(
     for i in range(1, arr[0].shape[0]):
         unchanged *= (arr[i - 1][:-1] == arr[i][1:]).all()
 
-    return unchanged
+    return unchanged  # type: ignore
 
 
 @jaxtyped
@@ -167,9 +170,11 @@ def test_cards(
     right_sum_L = (draw[..., 0] + disc[..., 0] + board[..., 0] == 6).all()
     right_sum_F = (draw[..., 1] + disc[..., 1] + board[..., 1] == 11).all()
 
-    unchanged = test_unchanged(arr=draw) * test_unchanged(arr=disc) * test_unchanged(arr=board)
+    unchanged = test_unchanged(
+        arr=draw) * test_unchanged(arr=disc) * test_unchanged(arr=board)
 
-    works = right_interval_draw * right_interval_disc * right_interval_board * right_sum_L * right_sum_F * unchanged
+    works = right_interval_draw * right_interval_disc * \
+        right_interval_board * right_sum_L * right_sum_F * unchanged
 
     return works
 
@@ -191,7 +196,8 @@ def test_presi_shown(*, presi_shown: jtp.Int[jnp.ndarray, "historyy history 2"])
     """
     right_entries = jnp.logical_and(presi_shown >= 0, presi_shown <= 3).all()
 
-    right_sum = (jnp.logical_or(presi_shown.sum(axis=-1) == 3, presi_shown.sum(axis=-1) == 0)).all()
+    right_sum = (jnp.logical_or(presi_shown.sum(axis=-1) ==
+                 3, presi_shown.sum(axis=-1) == 0)).all()
 
     unchanged = test_unchanged(arr=presi_shown)
 
@@ -217,7 +223,8 @@ def test_chanc_shown(*, chanc_shown: jtp.Int[jnp.ndarray, "historyy history 2"])
     """
     right_entries = jnp.logical_and(chanc_shown >= 0, chanc_shown <= 2).all()
 
-    right_sum = (jnp.logical_or(chanc_shown.sum(axis=-1) == 2, chanc_shown.sum(axis=-1) == 0)).all()
+    right_sum = (jnp.logical_or(chanc_shown.sum(axis=-1) ==
+                 2, chanc_shown.sum(axis=-1) == 0)).all()
 
     unchanged = test_unchanged(arr=chanc_shown)
 
@@ -291,17 +298,21 @@ def test_dummy_history(
 
     roles_work = test_roles(player_total=player_total, roles=dic['roles'])
 
-    presi_works = test_presi_chanc_or_proposed(player_total=player_total, arr=dic['presi'])
+    presi_works = test_presi_chanc_or_proposed(
+        player_total=player_total, arr=dic['presi'])
 
-    chanc_works = test_presi_chanc_or_proposed(player_total=player_total, arr=dic['chanc'])
+    chanc_works = test_presi_chanc_or_proposed(
+        player_total=player_total, arr=dic['chanc'])
 
-    proposed_works = test_presi_chanc_or_proposed(player_total=player_total, arr=dic['proposed'])
+    proposed_works = test_presi_chanc_or_proposed(
+        player_total=player_total, arr=dic['proposed'])
 
     voted_works = test_unchanged(arr=dic['voted'])
 
     tracker_works = test_tracker(tracker=dic['tracker'])
 
-    cards_work = test_cards(draw=dic['draw'], disc=dic['disc'], board=dic['board'])
+    cards_work = test_cards(
+        draw=dic['draw'], disc=dic['disc'], board=dic['board'])
 
     presi_shown_works = test_presi_shown(presi_shown=dic['presi_shown'])
 
@@ -312,15 +323,34 @@ def test_dummy_history(
     winner_works = test_winner(winner=dic['winner'])
 
     works = roles_work \
-            * presi_works \
-            * chanc_works \
-            * proposed_works \
-            * voted_works \
-            * cards_work \
-            * presi_shown_works \
-            * chanc_shown_works \
-            * tracker_works \
-            * killed_works \
-            * winner_works
+        * presi_works \
+        * chanc_works \
+        * proposed_works \
+        * voted_works \
+        * cards_work \
+        * presi_shown_works \
+        * chanc_shown_works \
+        * tracker_works \
+        * killed_works \
+        * winner_works
 
     return jnp.logical_or(works, dic['winner'].sum()).all()
+
+
+class TestDummyHistory(unittest.TestCase):
+
+    def test_works(self):
+        # jit the function
+        test_jit = jax.jit(test_dummy_history, static_argnames=[
+                           "player_total", "game_len"])
+
+        # let it run once for faster loop afterwards
+        key = jrn.PRNGKey(34527)
+        test_jit(key=key)
+
+        # test for 1000 random keys
+        for i in range(10000):
+            key = jrn.PRNGKey(8127346 - i)
+            key, subkey = jrn.split(key)
+            result = test_jit(key=subkey)
+            self.assertTrue(result)

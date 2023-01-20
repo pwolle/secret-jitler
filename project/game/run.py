@@ -187,7 +187,7 @@ def vote(
 
 @jaxtyped
 @typechecked
-def presi_discard(
+def presi_disc(
     key: T.key,
     tracker: T.tracker,
     presi: T.presi,
@@ -230,7 +230,7 @@ def presi_discard(
 
 @jaxtyped
 @typechecked
-def chanc_discard(
+def chanc_disc(
     key: T.key,
     disc: T.disc,
     tracker: T.tracker,
@@ -380,10 +380,10 @@ def dummy_history(
         state |= vote(key=key, probs=probs + prob_vote, **state)
 
         key, subkey = jrn.split(key)
-        state |= presi_discard(key=key, probs=probs + prob_discard, **state)
+        state |= presi_disc(key=key, probs=probs + prob_discard, **state)
 
         key, subkey = jrn.split(key)
-        state |= chanc_discard(key=key, probs=probs + prob_discard, **state)
+        state |= chanc_disc(key=key, probs=probs + prob_discard, **state)
 
         key, subkey = jrn.split(key)
         state |= shoot(key=key, logprobs=logprobs, **state)
@@ -394,6 +394,67 @@ def dummy_history(
     return history
 
 
+def bot_closure(
+    player_total: int,
+    history_size: int,
+    propose_bot,
+    vote_bot,
+    presi_disc_bot,
+    chanc_disc_bot,
+    shoot_bot,
+):
+    """
+    """
+
+    def run(
+        key: T.key,
+        propose_params,
+        vote_params,
+        presi_disc_params,
+        chanc_disc_params,
+        shoot_params,
+    ):
+        key, subkey = jrn.split(key)
+        state = init.state(subkey, player_total, history_size)
+
+        for _ in range(3):
+            state = util.push_state(state)
+
+            key, subkey = jrn.split(key)
+            probs = propose_bot(subkey, propose_params, state)
+
+            key, subkey = jrn.split(key)
+            state |= propose(key=key, logprobs=probs, **state)
+
+            key, subkey = jrn.split(key)
+            probs = vote_bot(subkey, vote_params, state)
+
+            key, subkey = jrn.split(key)
+            state |= vote(key=key, probs=probs, **state)
+
+            key, subkey = jrn.split(key)
+            probs = presi_disc_bot(subkey, presi_disc_params, state)
+
+            key, subkey = jrn.split(key)
+            state |= presi_disc(key=key, probs=probs, **state)
+
+            key, subkey = jrn.split(key)
+            probs = chanc_disc_bot(subkey, chanc_disc_params, state)
+
+            key, subkey = jrn.split(key)
+            state |= chanc_disc(key=key, probs=probs, **state)
+
+            key, subkey = jrn.split(key)
+            probs = shoot_bot(subkey, shoot_params, state)
+
+            key, subkey = jrn.split(key)
+            state |= shoot(key=key, logprobs=probs, **state)
+
+        return state
+
+    return run
+
+
 @jaxtyped
 @typechecked
 def main() -> None:
@@ -402,8 +463,8 @@ def main() -> None:
 
     propose_jit = jax.jit(propose)
     vote_jit = jax.jit(vote)
-    presi_discard_jit = jax.jit(presi_discard)
-    chanc_discard_jit = jax.jit(chanc_discard)
+    presi_discard_jit = jax.jit(presi_disc)
+    chanc_discard_jit = jax.jit(chanc_disc)
     shoot_jit = jax.jit(shoot)
 
     player_total = 5
