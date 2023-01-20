@@ -5,27 +5,27 @@ import jax
 from game.bot import closure
 
 
-def propose_bot(key, params, state):
+def propose_bot(state, **_):
     player_total = state["roles"].shape[-1]
     return jnp.zeros([player_total, player_total])
 
 
-def vote_bot(key, params, state):
+def vote_bot(state, **_):
     player_total = state["roles"].shape[-1]
     return jnp.zeros([player_total]) + 0.99
 
 
-def presi_disc_bot(key, params, state):
+def presi_disc_bot(state, **_):
     player_total = state["roles"].shape[-1]
-    return jnp.zeros([player_total]) + 0.99
+    return jnp.zeros([player_total]) + 0.5
 
 
-def chanc_disc_bot(key, params, state):
+def chanc_disc_bot(state, **_):
     player_total = state["roles"].shape[-1]
-    return jnp.zeros([player_total]) + 0.99
+    return jnp.zeros([player_total]) + 0.5
 
 
-def shoot_bot(key, params, state):
+def shoot_bot(state, **_):
     player_total = state["roles"].shape[-1]
     return jnp.zeros([player_total, player_total])
 
