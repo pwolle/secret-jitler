@@ -37,7 +37,7 @@ def main():
     import random
     from pprint import pprint
 
-    player_total = 5
+    player_total = 10
     history_size = 3
     game_length = 4
 
@@ -57,7 +57,7 @@ def main():
         fuse_bots(
             bots.vote_yes,
             bots.vote_no,
-            bots.vote_no,
+            bots.vote_yes,
         ),
         presi_disc_bot,
         chanc_disc_bot,
