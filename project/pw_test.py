@@ -38,8 +38,8 @@ def main():
     from pprint import pprint
 
     player_total = 10
-    history_size = 3
-    game_length = 4
+    history_size = 8
+    game_length = 30
 
     batch_size = 16
 
@@ -48,12 +48,6 @@ def main():
         history_size,
         game_length,
         propose_bot,
-        # vote_bot,
-        # fuse_bots(
-        #     bots.propose_random,
-        #     bots.propose_random,
-        #     bots.propose_random
-        # ),
         fuse_bots(
             bots.vote_yes,
             bots.vote_no,

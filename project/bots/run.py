@@ -1,7 +1,3 @@
-# TODO test fuse_bots
-# TODO type the different methods
-
-
 import jax.random as jrn
 import jax.numpy as jnp
 import jax.lax as jla
@@ -37,11 +33,10 @@ def fuse_bots(
             player=player,
             key=key,
             params=params,
+
             state=state
         )
 
-        # print(state["roles"].shape)
-        # exit()
         role = state["roles"][0, player]
         propose = role_0_probs
 
@@ -55,14 +50,6 @@ def fuse_bots(
     def fused_auto(key, params, state):
         player_total = state["killed"].shape[-1]
         players = jnp.arange(player_total)
-
-        # print(f"players {players.shape=}")
-
-        # for k, v in state.items():
-        #     print(f"{k=}, {v.shape=}")
-
-        # exit()
-
         return fused_vmap(players, key, params, state)  # type: ignore
 
     return fused_auto
