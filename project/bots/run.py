@@ -67,6 +67,7 @@ def closure(
     jit_turn=True,
 ):
     """
+    TODO create version that breaks iff all games have a winner for faster jit-ing
     """
 
     def turn(
@@ -77,6 +78,7 @@ def closure(
         presi_disc_params,
         chanc_disc_params,
         shoot_params,
+        **_
     ):
         state = util.push_state(state)
 
@@ -148,4 +150,43 @@ def closure(
 
         return state
 
-    return run
+    @jax.jit
+    def turn2(
+        while_dict,
+    ):
+        key, subkey = jrn.split(while_dict["key"])
+
+        while_dict["state"] = turn(**while_dict | {"key": subkey})
+
+        return while_dict | {"key": key}
+
+    def cond(while_dict):
+        return jnp.all(while_dict["state"]["winner"] == 0)
+
+    @jax.jit
+    def run2(
+        key: T.key,
+        propose_params,
+        vote_params,
+        presi_disc_params,
+        chanc_disc_params,
+        shoot_params,
+    ):
+        key, subkey = jrn.split(key)
+        state = init.state(subkey, player_total, history_size)
+
+        while_dict = {
+            "key": key,
+            "state": state,
+            "propose_params": propose_params,
+            "vote_params": vote_params,
+            "presi_disc_params": presi_disc_params,
+            "chanc_disc_params": chanc_disc_params,
+            "shoot_params": shoot_params,
+        }
+
+        while_dict = jla.while_loop(cond, turn2, while_dict)
+
+        return while_dict["state"]
+
+    return run2

@@ -35,13 +35,14 @@ def shoot_bot(state, **_):
 
 def main():
     import random
+    import jax.tree_util as jtu
     from pprint import pprint
 
     player_total = 10
-    history_size = 8
+    history_size = 30
     game_length = 30
 
-    batch_size = 16
+    batch_size = 1024
 
     game_run = closure(
         player_total,
@@ -66,6 +67,7 @@ def main():
         winner = state["winner"][0]
         return winner.sum() + winner.argmax()
 
+    @jax.jit
     def game_winner_vmapped(key):
         key = jrn.split(key, batch_size)
         key = jnp.stack(key)  # type: ignore
@@ -75,18 +77,21 @@ def main():
 
     key = jax.random.PRNGKey(random.randint(0, 2 ** 32))
 
-    # for _ in trange(10000):
-    # key, subkey = jrn.split(key)
-    # winners = game_winner_vmapped(subkey)
+    for _ in trange(10000):
+        key, subkey = jrn.split(key)
+        winners = game_winner_vmapped(subkey)
+
+        winners.block_until_ready()
 
     # winners = jnp.array([winners == 0, winners == 1, winners == 2])
 
     # print(winners.mean(-1))
 
-    state = game_run_partial(key)
+    # state = game_run_partial(key)
 
-    print(state["voted"].astype(int))
-    print(state["roles"])
+    # print(state["voted"].astype(int))
+    # print(state["roles"])
+    # print(state["winner"].astype(int))
 
 
 if __name__ == "__main__":
