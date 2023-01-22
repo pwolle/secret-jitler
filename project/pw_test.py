@@ -2,40 +2,42 @@ import jax.random as jrn
 import jax.numpy as jnp
 import jax
 
-from game.bot import closure
+from tqdm import trange
+
+from bots.run import closure
 
 
 def propose_bot(state, **_):
-    player_total = state["roles"].shape[-1]
+    player_total = state["killed"].shape[-1]
     return jnp.zeros([player_total, player_total])
 
 
 def vote_bot(state, **_):
-    player_total = state["roles"].shape[-1]
+    player_total = state["killed"].shape[-1]
     return jnp.zeros([player_total]) + 0.99
 
 
 def presi_disc_bot(state, **_):
-    player_total = state["roles"].shape[-1]
+    player_total = state["killed"].shape[-1]
     return jnp.zeros([player_total]) + 0.5
 
 
 def chanc_disc_bot(state, **_):
-    player_total = state["roles"].shape[-1]
+    player_total = state["killed"].shape[-1]
     return jnp.zeros([player_total]) + 0.5
 
 
 def shoot_bot(state, **_):
-    player_total = state["roles"].shape[-1]
+    player_total = state["killed"].shape[-1]
     return jnp.zeros([player_total, player_total])
 
 
 def main():
     from pprint import pprint
 
-    player_total = 5
-    history_size = 8
-    game_length = 8
+    player_total = 10
+    history_size = 30
+    game_length = 30
 
     batch_size = 1024
 
@@ -66,11 +68,14 @@ def main():
         return game_winner_vmap(key)
 
     key = jax.random.PRNGKey(0)
-    winners = game_winner_vmapped(key)
 
-    winners = jnp.array([winners == 0, winners == 1, winners == 2])
+    for _ in trange(10000):
+        key, subkey = jrn.split(key)
+        winners = game_winner_vmapped(subkey)
 
-    print(winners.mean(-1))
+    # winners = jnp.array([winners == 0, winners == 1, winners == 2])
+
+    # print(winners.mean(-1))
 
 
 if __name__ == "__main__":
