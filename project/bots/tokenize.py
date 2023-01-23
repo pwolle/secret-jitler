@@ -73,9 +73,12 @@ def killed_tokenize(killed, **_):
     return killed.astype("float32")
 
 
-def tokenize(state):
-    """ tokenize players """
+def players_tokenize(players, roles, **_):
+    player_total = roles.shape[-1]
+    return one_hot(players, player_total)
 
+
+def tokenize(state):
     def tokenize_state(state):
         return {
             "roles": roles_tokenize(**state),
@@ -88,6 +91,7 @@ def tokenize(state):
             "chanc_shown": chanc_shown_tokenize(**state),
             "board": board_tokenize(**state),
             "killed": killed_tokenize(**state),
+            "players": players_tokenize(**state),
         }
 
     tokenize_state_vmap = jax.vmap(tokenize_state, in_axes=0)

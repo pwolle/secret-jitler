@@ -55,7 +55,7 @@ def mask(state):
             else:
                 masked[k] = v
 
-        return masked | {"player": player}
+        return masked | {"players": player}
 
     mask_state_vmap = jax.vmap(mask_state, in_axes=(0, None))
 

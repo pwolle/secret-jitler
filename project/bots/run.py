@@ -62,18 +62,14 @@ def closure(
     history_size: int,
     propose_bot,
     vote_bot,
-    presi_disc_bot,
-    chanc_disc_bot,
+    presi_bot,
+    chanc_bot,
     shoot_bot,
 ):
     def turn(
         key: T.key,
         state,
-        propose_params,
-        vote_params,
-        presi_disc_params,
-        chanc_disc_params,
-        shoot_params,
+        params,
         **_
     ):
         state = util.push_state(state)
@@ -81,7 +77,7 @@ def closure(
         key, botkey, simkey = jrn.split(key, 3)
         probs = propose_bot(
             key=botkey,
-            params=propose_params,
+            params=params["propose"],
             state=mask(state)
         )
         state |= propose(key=simkey, logprobs=probs, **state)
@@ -89,23 +85,23 @@ def closure(
         key, botkey, simkey = jrn.split(key, 3)
         probs = vote_bot(
             key=botkey,
-            params=vote_params,
+            params=params["vote"],
             state=mask(state)
         )
         state |= vote(key=simkey, probs=probs, **state)
 
         key, botkey, simkey = jrn.split(key, 3)
-        probs = presi_disc_bot(
+        probs = presi_bot(
             key=botkey,
-            params=presi_disc_params,
+            params=params["presi"],
             state=mask(state)
         )
         state |= presi_disc(key=simkey, probs=probs, **state)
 
         key, botkey, simkey = jrn.split(key, 3)
-        probs = chanc_disc_bot(
+        probs = chanc_bot(
             key=botkey,
-            params=chanc_disc_params,
+            params=params["chanc"],
             state=mask(state)
         )
         state |= chanc_disc(key=simkey, probs=probs, **state)
@@ -113,7 +109,7 @@ def closure(
         key, botkey, simkey = jrn.split(key, 3)
         probs = shoot_bot(
             key=botkey,
-            params=shoot_params,
+            params=params["shoot"],
             state=mask(state)
         )
         state |= shoot(key=simkey, logprobs=probs, **state)
@@ -123,39 +119,42 @@ def closure(
         return jnp.all(while_dict["state"]["winner"] == 0)
 
     @jax.jit
-    def run(
-        key: T.key,
-        propose_params,
-        vote_params,
-        presi_disc_params,
-        chanc_disc_params,
-        shoot_params,
-    ):
-
+    def run(key: T.key, params):
         def turn_partial(while_dict):
-            key, state = while_dict["key"], while_dict["state"]
+            key = while_dict["key"]
+            state = while_dict["state"]
 
-            state = turn(
-                key,
-                state,
-                propose_params,
-                vote_params,
-                presi_disc_params,
-                chanc_disc_params,
-                shoot_params
-            )
+            key, subkey = jrn.split(key)
+            state = turn(subkey, state, params)
 
-            return while_dict | {"key": key, "state": state}
+            while_dict["key"] = key
+            while_dict["state"] = state
+
+            return while_dict
 
         key, subkey = jrn.split(key)
         state = init.state(subkey, player_total, history_size)
 
-        while_dict = {
-            "key": key,
-            "state": state,
-        }
-
+        while_dict = {"key": key, "state": state}
         while_dict = jla.while_loop(cond_fun, turn_partial, while_dict)
+
         return while_dict["state"]
 
     return run
+
+
+def evaluate(run_func, batch_size: int):
+    """
+    """
+
+    def run_winner(key: T.key, params):
+        return run_func(key, params)["winner"][0]
+
+    run_winner_vmap = jax.vmap(run_winner, (0, None))
+
+    def evaluate_func(key: T.key, params):
+        keys = jrn.split(key, batch_size)
+        keys = jnp.stack(keys)  # type: ignore
+        return run_winner_vmap(keys, params).argmax(-1)
+
+    return evaluate_func
