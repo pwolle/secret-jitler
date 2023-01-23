@@ -22,29 +22,59 @@ def propose(
     **_
 ) -> dict[str, T.presi | T.proposed]:
     """
+    Takes a logprobability from the current president to propose a new chancellor.
+    Args:
+        key: T.key
+            Random key for PRNG
+           
+        presi: T.presi
+            president history of gamestate index 0 holds current turn
+            
+        killed: T.killed
+            killed history of gamestate index 0 holds current turn
+            
+        proposed: T.proposed
+            proposed chancellor history of gamestate index 0 holds current turn
+            
+        chanc: T.chanc
+            chancellor history of gamestate index 0 holds current turn
+            
+        logprobs: jtp.Float[jnp.ndarray, "players players"]
+            logprobability given the players
+        
+        **_
+            accepts arbitrary keyword arguments
+    
+    Returns:
+        updated gamestate history
     """
-    # find next presi
+    
+    # get player_total with history shape
     player_total = killed.shape[1]
-
+    
+    # find next president
     succesor = presi[1]
     feasible = 1
 
+    # check if succesor is dead if so select next
     for _ in range(1, player_total):
         succesor += feasible
         succesor %= player_total
         feasible *= killed[0, succesor]
 
+    # update current president
     presi = presi.at[0].set(succesor)
 
-    # propose_chanc
+    # get logprobability of current president
     logprob = logprobs[presi[0]]
 
+    # create mask to avoid invalid moves
     mask = jnp.ones_like(logprob, dtype=bool)
 
-    # mask current presi
+    # mask current president
     mask &= mask.at[presi[0]].set(False)
 
-    # mask ex presi if not undefined (-1)
+    # mask ex president if not undefined (-1)
     ex_presi = presi[1]
     mask &= mask.at[ex_presi].set(ex_presi == -1)
 
@@ -60,8 +90,11 @@ def propose(
 
     # sample next chanc
     proposal = jrn.categorical(key, logprob, shape=None)  # type: ignore
+    
+    # update proposed chancellor
     proposed = proposed.at[0].set(proposal)
 
+    # update gamestate history
     return {"presi": presi, "proposed": proposed}
 
 
@@ -96,27 +129,95 @@ def vote(
     | T.chanc_shown
 ]:
     """
+    Takes a logprobability from the current president to propose a new chancellor.
+    Args:
+        key: T.key
+            Random key for PRNG
+        
+        draw: T.draw
+            draw pile history of gamestate index 0 holds current turn
+            pile which policies can be drawn
+            
+        disc: T.disc
+            discard pile history of gamestate index 0 holds current turn
+            pile which policies have been discarded
+            
+        board: T.board
+            board history of gamestate index 0 holds current turn
+            pile which policies have been enacted
+            
+        voted: T.voted
+            voted history of gamestate index 0 holds current turn
+            contains True or False wether player voted for proposed chancellor
+            
+        proposed: T.proposed
+            proposed chancellor history of gamestate index 0 holds current turn
+            
+        chanc: T.chanc
+            chancellor history of gamestate index 0 holds current turn
+            
+        killed: T.killed
+            killed history of gamestate index 0 holds current turn
+            
+        tracker: T.tracker
+            election tracker history of gamestate index 0 holds current turn
+            inceases if proposed chancellor vote fails
+            
+        winner: T.winner
+            winner history of gamestate index 0 holds current turn
+            True at 0 when liberals won
+            True at 1 when fascist/hitler won
+            
+        roles: T.roles
+            roles history of gamestate index 0 holds current turn
+            index i:
+                0 if player i is liberal
+                1 if player i is fascist
+                2 if player i is hitler
+                
+        presi_shown: T.presi_shown
+            policies shown to president history of gamestate index 0 holds current turn
+            at index 0 amount of liberal policies
+            at index 1 amount of fascist policies
+            
+        chanc_shown: T.chanc_shown
+            policies shown to chancellor history of gamestate index 0 holds current turn
+            at index 0 amount of liberal policies
+            at index 1 amount of fascist policies
+            
+        probs: jtp.Float[jnp.ndarray, "players"]
+            probabilities of players with which they vote for proposed chancellor
+    
+        **_
+            accepts arbitrary keyword arguments
+    
+    Returns:
+        updated gamestate history
     """
+    # limit probability to interval [0, 1]
     probs = jnp.clip(probs, 0., 1.)
+    # get votes of players
     votes = jrn.bernoulli(key, probs)
 
     # mask dead players
     votes &= ~killed[0]
+    # update vote history
     voted = voted.at[0].set(votes)
 
-    # check if majority voted yes
+    # get players which are alive
     alive = jnp.sum(~killed[0])
 
+    # check if majority voted yes
     works = votes.sum() > alive // 2
 
-    # if majority voted yes, set chanc
+    # if majority voted yes, set chancellor
     chanc = chanc.at[0].set(jla.select(
         works,
         proposed[0],
         chanc[0],  # otherwise do not update
     ))
 
-    # if chanc has role 2 and there is no winner yet F wins
+    # if chanc has role 2 and there is no winner yet fascists wins
     winner_done = winner.sum().astype(bool)
     winner_cond = roles[0, chanc[0]] == 2
     winner_cond &= board[0, 1] >= 3
@@ -127,24 +228,24 @@ def vote(
         winner[0, 1],
     ))
 
-    # reset tracker, iff last round was skipped
+    # reset tracker, if last round was skipped (if tracker was 3 at last round)
     tracker = tracker.at[0].mul(tracker[1] != 3)
 
     # update tracker: set to 0 if majority voted yes, otherwise increment
     tracker = tracker.at[0].add(1)
     tracker = tracker.at[0].mul(~works)
 
-    # skip
+    # skip if chancellor was declined
     presi_shown_skip = presi_shown.at[0].set(0)
     chanc_shown_skip = chanc_shown.at[0].set(0)
     draw_skip = draw
     disc_skip = disc
 
-    # force
+    # force if chancellor vote failed 3 times in a row
     policy_force, draw_force, disc_force = util.draw_policy(key, draw, disc)
     board_force = board.at[0, policy_force.astype(int)].add(1)
 
-    # draw 3
+    # draw 3 policies from draw pile
     policies = jnp.zeros((2,), dtype=presi_shown.dtype)
 
     for _ in range(3):
@@ -164,7 +265,7 @@ def vote(
     disc = jla.select(works, disc, disc_skip)
     # chanc_shown = jla.select(~works, chanc_shown_skip, chanc_shown)
 
-    # if force (force => ~works=skip)
+    # if force (force => ~works=skip) then update variables
     force = tracker[0] == 3
 
     board = jla.select(force, board_force, board)
@@ -172,6 +273,7 @@ def vote(
     draw = jla.select(force, draw_force, draw)
     disc = jla.select(force, disc_force, disc)
 
+    # update gamestate history
     return {
         "draw": draw,
         "disc": disc,
@@ -189,32 +291,70 @@ def vote(
 @typechecked
 def presi_disc(
     key: T.key,
+    disc: T.disc,
     tracker: T.tracker,
     presi: T.presi,
     presi_shown: T.presi_shown,
-    disc: T.disc,
     chanc_shown: T.chanc_shown,
     probs: jtp.Float[jnp.ndarray, "players"],
     **_
 ) -> dict[str, T.chanc_shown | T.disc]:
     """
+    Takes a logprobability from the current president to propose a new chancellor.
+    Args:
+        key: T.key
+            Random key for PRNG
+        
+        disc: T.disc
+            discard pile history of gamestate index 0 holds current turn
+            pile which policies have been discarded
+            
+        tracker: T.tracker
+            election tracker history of gamestate index 0 holds current turn
+            inceases if proposed chancellor vote fails
+            
+        presi_shown: T.presi_shown
+            policies shown to president history of gamestate index 0 holds current turn
+            at index 0 amount of liberal policies
+            at index 1 amount of fascist policies
+            
+        chanc_shown: T.chanc_shown
+            policies shown to chancellor history of gamestate index 0 holds current turn
+            at index 0 amount of liberal policies
+            at index 1 amount of fascist policies
+            
+        probs: jtp.Float[jnp.ndarray, "players"]
+            probabilities of players with which they discard policy
+    
+        **_
+            accepts arbitrary keyword arguments
+    
+    Returns:
+        updated gamestate history
     """
+    # get policies shown to player (president)
     policies = presi_shown[0]
 
+    # get probability of player (president)
     prob = probs[presi[0]]
     prob = jnp.clip(prob, 0., 1.)
+    
+    # check if the player even has a choice or all 3 policies are the same
     prob = jla.select(policies[0] == 0, 1., prob)
     prob = jla.select(policies[1] == 0, 0., prob)
 
+    # split key and draw at random with probability
     key, subkey = jrn.split(key)
     to_disc = jrn.bernoulli(subkey, prob)
 
+    # remove policy which president discarded
     policies = policies.at[to_disc.astype(int)].add(-1)
 
     # only update if tracker has not incremented
     skip = tracker[0] > tracker[1]
     skip |= (tracker[0] == 1) & (tracker[1] == 3)
 
+    # update history
     disc = disc.at[0, to_disc.astype(int)].add(~skip)
     chanc_shown = jla.select(
         skip,
@@ -222,6 +362,7 @@ def presi_disc(
         chanc_shown.at[0].set(policies)
     )
 
+    # update gamestate history
     return {
         "chanc_shown": chanc_shown,
         "disc": disc,
@@ -233,8 +374,8 @@ def presi_disc(
 def chanc_disc(
     key: T.key,
     disc: T.disc,
-    tracker: T.tracker,
     board: T.board,
+    tracker: T.tracker,
     chanc: T.chanc,
     winner: T.winner,
     chanc_shown: T.chanc_shown,
@@ -242,25 +383,72 @@ def chanc_disc(
     **_
 ) -> dict[str, T.disc | T.board | T.winner]:
     """
+    Takes a logprobability from the current president to propose a new chancellor.
+    Args:
+        key: T.key
+            Random key for PRNG
+ 
+        disc: T.disc
+            discard pile history of gamestate index 0 holds current turn
+            pile which policies have been discarded
+        
+        board: T.board
+            board history of gamestate index 0 holds current turn
+            pile which policies have been enacted
+            
+        tracker: T.tracker
+            election tracker history of gamestate index 0 holds current turn
+            inceases if proposed chancellor vote fails
+     
+        chanc: T.chanc
+            chancellor history of gamestate index 0 holds current turn
+            
+        winner: T.winner
+            winner history of gamestate index 0 holds current turn
+            True at 0 when liberals won
+            True at 1 when fascist/hitler won
+   
+        chanc_shown: T.chanc_shown
+            policies shown to chancellor history of gamestate index 0 holds current turn
+            at index 0 amount of liberal policies
+            at index 1 amount of fascist policies
+            
+        probs: jtp.Float[jnp.ndarray, "players"]
+            probabilities of players with which they discard policy
+    
+        **_
+            accepts arbitrary keyword arguments
+    
+    Returns:
+        updated gamestate history
     """
+    # get policies shown to player (chancellor)
     policies = chanc_shown[0]
 
+    # get probability of player (chancellor)
     prob = probs[chanc[0]]
     prob = jnp.clip(prob, 0., 1.)
+    
+    # check if the player even has a choice or all 2 policies are the same
     prob = jla.select(policies[0] == 0, 1., prob)
     prob = jla.select(policies[1] == 0, 0., prob)
 
+    # split key and draw at random with probability
     key, subkey = jrn.split(key)
     to_disc = jrn.bernoulli(subkey, prob)
+    
+    # remove policy which president discarded
     policies = policies.at[to_disc.astype(int)].add(-1)
 
+    # only update if tracker has not incremented
     skip = tracker[0] > tracker[1]
     skip |= (tracker[0] == 1) & (tracker[1] == 3)
-
+    
+    # update history
     disc = disc.at[0, to_disc.astype(int)].add(~skip)
     board = board.at[0, policies.argmax()].add(~skip)
 
-    # L win if board[0, 0] == 5
+    # liberals win if board[0, 0] == 5
     winner_done = winner.sum().astype(bool)
     winner_cond = board[0, 0] == 5
 
@@ -270,7 +458,7 @@ def chanc_disc(
         winner[0, 0],
     ))
 
-    # F win if board[0, 1] == 6
+    # fascists win if board[0, 1] == 6
     winner_done = winner.sum().astype(bool)
     winner_cond = board[0, 1] == 6
 
@@ -280,6 +468,7 @@ def chanc_disc(
         winner[0, 1],
     ))
 
+    # update gamestate history
     return {"disc": disc, "board": board, "winner": winner}
 
 
@@ -297,8 +486,51 @@ def shoot(
     **_
 ) -> dict[str, T.killed | T.winner]:
     """
+    Takes a logprobability from the current president to propose a new chancellor.
+    Args:
+        key: T.key
+            Random key for PRNG
+        
+        board: T.board
+            board history of gamestate index 0 holds current turn
+            pile which policies have been enacted
+ 
+        tracker: T.tracker
+            election tracker history of gamestate index 0 holds current turn
+            inceases if proposed chancellor vote fails
+        
+        board: T.board
+            board history of gamestate index 0 holds current turn
+            pile which policies have been enacted
+            
+        killed: T.killed
+            killed history of gamestate index 0 holds current turn
+     
+        presi: T.presi
+            president history of gamestate index 0 holds current turn
+            
+        winner: T.winner
+            winner history of gamestate index 0 holds current turn
+            True at 0 when liberals won
+            True at 1 when fascist/hitler won
+            
+        roles: T.roles
+            roles history of gamestate index 0 holds current turn
+            index i:
+                0 if player i is liberal
+                1 if player i is fascist
+                2 if player i is hitler
+   
+        logprobs: jtp.Float[jnp.ndarray, "players players"]
+            logprobability given the players which player to shoot
+    
+        **_
+            accepts arbitrary keyword arguments
+    
+    Returns:
+        updated gamestate history
     """
-    # only shoot if a F policy has been enacted
+    # only shoot if a fascist policy has been enacted
     enacted = board[0, 1] > board[1, 1]
 
     # only shoot if the enacted policy is the 4th or 5th
@@ -310,6 +542,7 @@ def shoot(
     # condition for shooting
     skip = ~enacted | ~timing | force
 
+    # get logprobability
     logprob = logprobs[presi[0]]
 
     # shooteable players
@@ -332,17 +565,19 @@ def shoot(
         killed.at[0, kill].set(True)
     )
 
-    # if kill has role 2 L win
+    # if kill has role 2 (Hitler) liberals win
     winner_done = winner.sum().astype(bool)
     killed_roles = roles[0] * killed[0]
     killed_role2 = jnp.any(killed_roles == 2)
 
+    # update winner
     winner = winner.at[0, 0].set(jla.select(
         killed_role2 & ~winner_done,
         True,
         winner[0, 0]
     ))
 
+    # update gamestate history
     return {"killed": killed, "winner": winner}
 
 
@@ -356,6 +591,25 @@ def dummy_history(
     prob_discard: float | jtp.Float[jnp.ndarray, ""] = 0.5,
 ) -> dict[str, jtp.Shaped[jnp.ndarray, "..."]]:
     """
+    runs the whole game and returns a example history
+    Args:
+        key: T.key
+            Random key for PRNG
+            
+        player_total: int
+            amount of players
+            
+        game_len: int
+            length of game
+            
+        prob_vote: float | jtp.Float[jnp.ndarray, ""] = 0.7
+            probability which the players use for vote
+        
+        prob_discard: float | jtp.Float[jnp.ndarray, ""] = 0.5
+            probability which the players use to discard
+    
+    Returns:
+        updated gamestate history       
     """
     key, subkey = jrn.split(key)
     state = init.state(subkey, player_total, game_len)
