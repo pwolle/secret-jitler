@@ -33,7 +33,6 @@ def mask_chanc_shown(player: int, chanc, chanc_shown, **_):
 
 def mask(state):
     """
-    TODO add the players positions
     """
 
     def mask_state(player: int, state):

@@ -15,31 +15,31 @@ def main():
 
     batch_size = 16
 
-    propose_bot = fuse_bots(
+    propose_bot = fuse(
         bots.propose_random,
         bots.propose_random,
         bots.propose_random,
     )
 
-    vote_bot = fuse_bots(
+    vote_bot = fuse(
         bots.vote_yes,
         bots.vote_yes,
         bots.vote_yes,
     )
 
-    presi_bot = fuse_bots(
+    presi_bot = fuse(
         bots.discard_true,
         bots.discard_false,
         bots.discard_false,
     )
 
-    chanc_bot = fuse_bots(
+    chanc_bot = fuse(
         bots.discard_true,
         bots.discard_false,
         bots.discard_true,
     )
 
-    shoot_bot = fuse_bots(
+    shoot_bot = fuse(
         bots.shoot_random,
         bots.shoot_random,
         bots.shoot_random,

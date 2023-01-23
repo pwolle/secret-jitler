@@ -3,8 +3,6 @@ import jax.numpy as jnp
 import jax.lax as jla
 import jax
 
-import functools
-
 from game import init
 from game import stype as T
 from game import util
@@ -13,31 +11,21 @@ from game.run import chanc_disc, presi_disc, propose, shoot, vote
 from .mask import mask
 
 
-def fuse_bots(
-    role_0,
-    role_1,
-    role_2,
-):
-    def fused(player: int, key, params, state):
-        role_0_probs = role_0(
-            player=player,
-            key=key,
-            params=params,
-            state=state
-        )
-        role_1_probs = role_1(
-            player=player,
-            key=key,
-            params=params,
-            state=state
-        )
-        role_2_probs = role_2(
-            player=player,
-            key=key,
-            params=params,
+def fuse(role_0, role_1, role_2):
+    """
+    """
 
-            state=state
-        )
+    def fused(player: int, key, params, state):
+        kwargs = {
+            "player": player,
+            "key": key,
+            "params": params,
+            "state": state,
+        }
+
+        role_0_probs = role_0(**kwargs)
+        role_1_probs = role_1(**kwargs)
+        role_2_probs = role_2(**kwargs)
 
         role = state["roles"][0, player]
         propose = role_0_probs
@@ -116,6 +104,7 @@ def closure(
         return state
 
     def cond_fun(while_dict):
+        # TODO simplify
         return jnp.all(while_dict["state"]["winner"] == 0)
 
     @jax.jit
