@@ -74,9 +74,7 @@ def killed_tokenize(killed, **_):
 
 
 def tokenize(state):
-    """
-    TODO tokenize the players positions
-    """
+    """ tokenize players """
 
     def tokenize_state(state):
         return {

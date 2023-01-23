@@ -24,4 +24,4 @@ def discard_false(**_):
 
 def shoot_random(state, **_):
     player_total = state["killed"].shape[-1]
-    return jnp.zeros([player_total, player_total])
+    return jnp.zeros([player_total])

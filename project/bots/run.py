@@ -3,6 +3,8 @@ import jax.numpy as jnp
 import jax.lax as jla
 import jax
 
+import functools
+
 from game import init
 from game import stype as T
 from game import util
@@ -58,18 +60,12 @@ def fuse_bots(
 def closure(
     player_total: int,
     history_size: int,
-    game_length: int,
     propose_bot,
     vote_bot,
     presi_disc_bot,
     chanc_disc_bot,
     shoot_bot,
-    jit_turn=True,
 ):
-    """
-    TODO create version that breaks iff all games have a winner for faster jit-ing
-    """
-
     def turn(
         key: T.key,
         state,
@@ -88,7 +84,6 @@ def closure(
             params=propose_params,
             state=mask(state)
         )
-        # print(probs.shape, probs.dtype)
         state |= propose(key=simkey, logprobs=probs, **state)
 
         key, botkey, simkey = jrn.split(key, 3)
@@ -124,8 +119,10 @@ def closure(
         state |= shoot(key=simkey, logprobs=probs, **state)
         return state
 
-    turn = jax.jit(turn) if jit_turn else turn
+    def cond_fun(while_dict):
+        return jnp.all(while_dict["state"]["winner"] == 0)
 
+    @jax.jit
     def run(
         key: T.key,
         propose_params,
@@ -134,10 +131,10 @@ def closure(
         chanc_disc_params,
         shoot_params,
     ):
-        key, subkey = jrn.split(key)
-        state = init.state(subkey, player_total, history_size)
 
-        for _ in range(game_length):
+        def turn_partial(while_dict):
+            key, state = while_dict["key"], while_dict["state"]
+
             state = turn(
                 key,
                 state,
@@ -145,48 +142,20 @@ def closure(
                 vote_params,
                 presi_disc_params,
                 chanc_disc_params,
-                shoot_params,
+                shoot_params
             )
 
-        return state
+            return while_dict | {"key": key, "state": state}
 
-    @jax.jit
-    def turn2(
-        while_dict,
-    ):
-        key, subkey = jrn.split(while_dict["key"])
-
-        while_dict["state"] = turn(**while_dict | {"key": subkey})
-
-        return while_dict | {"key": key}
-
-    def cond(while_dict):
-        return jnp.all(while_dict["state"]["winner"] == 0)
-
-    @jax.jit
-    def run2(
-        key: T.key,
-        propose_params,
-        vote_params,
-        presi_disc_params,
-        chanc_disc_params,
-        shoot_params,
-    ):
         key, subkey = jrn.split(key)
         state = init.state(subkey, player_total, history_size)
 
         while_dict = {
             "key": key,
             "state": state,
-            "propose_params": propose_params,
-            "vote_params": vote_params,
-            "presi_disc_params": presi_disc_params,
-            "chanc_disc_params": chanc_disc_params,
-            "shoot_params": shoot_params,
         }
 
-        while_dict = jla.while_loop(cond, turn2, while_dict)
-
+        while_dict = jla.while_loop(cond_fun, turn_partial, while_dict)
         return while_dict["state"]
 
-    return run2
+    return run
