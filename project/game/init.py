@@ -127,6 +127,10 @@ def state(
 ) -> dict[str, jtp.Shaped[jnp.ndarray, "history *_"]]:
     """
     """
+
+    if player_total not in range(5, 11):
+        raise ValueError("player_total must be 5, 6, 7, 8, 9, or 10")
+
     state = {}
 
     for name, init in inits.items():
