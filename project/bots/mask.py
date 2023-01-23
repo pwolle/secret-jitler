@@ -2,6 +2,10 @@ import jax.numpy as jnp
 import jax.lax as jla
 import jax
 
+import game.stype as T
+
+from typing import Any
+
 
 def mask_roles(player: int, roles, **_):
     # roles do not change over time
@@ -31,11 +35,11 @@ def mask_chanc_shown(player: int, chanc, chanc_shown, **_):
     return chanc_shown * mask[:, None]
 
 
-def mask(state):
+def mask(state: T.state) -> T.state:
     """
     """
 
-    def mask_state(player: int, state):
+    def mask_state(player: int, state) -> dict[str, Any]:
         masked = {}
 
         for k, v in state.items():

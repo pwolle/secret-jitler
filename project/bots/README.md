@@ -28,7 +28,7 @@ After fusing bots like above for each of the 5 actions we are ready to simulate 
 ``` python
 run_func = bots.run.closure(
     10, # the number of players
-    30, # the length of history being recorded/available of the bots to see
+    30, # the length of history being recorded/available for the bots to see
     propose_bot,
     vote_bot,
     presi_bot,

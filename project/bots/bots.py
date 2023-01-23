@@ -1,3 +1,7 @@
+"""
+This module contains some example bots.
+"""
+
 import jax.numpy as jnp
 
 

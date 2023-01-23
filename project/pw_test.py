@@ -9,7 +9,6 @@ from bots.run import *
 
 
 def main():
-
     player_total = 5
     history_size = 2
 
