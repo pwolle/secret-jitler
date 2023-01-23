@@ -12,6 +12,7 @@ from typeguard import typechecked
 def done(policies: shtypes.board) -> shtypes.winner:
     """
     checks if one of the parties won.
+    
     Args:
         policies: shtypes.board
             - the current policy-standings
