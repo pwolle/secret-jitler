@@ -48,13 +48,34 @@ params = {
     "shoot": 0
 }
 
-# the state at the end of the simulation
-state = run_func(key, params) 
+state = run_func(key, params) # the state at the end of the simulation
+print("state")
 ```
 
 ## Benchmarking bots
 
-TODO
+Using `run_func` from above, we can evaluate the bots winrate agains each other:
+
+``` python
+winner_func = bot.run.evaluate(
+    run_func, # see "Running Bots" above
+    1024      # the number of runs to do in parallel
+)
+
+# choose your random seed
+key = jax.random.PRNGKey(42)
+
+# `results` will be a boolean array of shape (1024, 2)
+# `results[i, 0]` will be iff the liberal party won the `i`th game
+# `results[i, 1]` will be iff the facist party won the `i`th game
+results = winner_func(key)
+
+# get the win rates by calculating the mean over the first axis
+results = results.mean(axis=0)
+
+print(f"liberals won {results[0]} of games")
+print(f"facists won {results[1]} of games")
+```
 
 ## Creating your own bots
 
