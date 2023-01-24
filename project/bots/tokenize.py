@@ -1,10 +1,19 @@
+"""
+Convert the game state into a more easily digestible format for learning algorithms:
+- Most values of the state dict are just one-hot encoded along the last axis
+- the history axis remains unchanged
+- shown policies are uniquely identified by the number of facist policies
+- "voted" and "killed" are converted to floats
+"""
+
+
 import jax.numpy as jnp
 import jax
 
 from .mask import mask
 
 
-def one_hot(x, maxval, minval=0):
+def one_hot(x, maxval: int, minval: int = 0):
     return jnp.eye(maxval - minval)[x - minval]
 
 

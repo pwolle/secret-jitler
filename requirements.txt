@@ -1,0 +1,7 @@
+jax>=0.4.1
+jaxlib>=0.4.1
+jaxtyping>=0.2.11
+typeguard>=2.13.3
+tqdm>=4.64.1
+pprintpp>=0.4.0
+typing-extensions>=4.4.0

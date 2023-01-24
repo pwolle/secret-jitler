@@ -6,10 +6,10 @@ from tqdm import trange
 import bots.bots as bots
 
 from bots.run import *
+from bots import interactive
 
 
 def main():
-
     player_total = 5
     history_size = 2
 
@@ -45,17 +45,17 @@ def main():
         bots.shoot_random,
     )
 
-    game_run = closure(
-        player_total,
-        history_size,
-        propose_bot,
-        vote_bot,
-        presi_bot,
-        chanc_bot,
-        shoot_bot,
-    )
+    # game_run = closure(
+    #     player_total,
+    #     history_size,
+    #     propose_bot,
+    #     vote_bot,
+    #     presi_bot,
+    #     chanc_bot,
+    #     shoot_bot,
+    # )
 
-    winner_func = evaluate(game_run, batch_size)
+    # winner_func = evaluate(game_run, batch_size)
 
     params = {
         "propose": 0,
@@ -65,9 +65,23 @@ def main():
         "shoot": 0
     }
 
+    # key = jrn.PRNGKey(random.randint(0, 2 ** 32 - 1))
+
+    # print(winner_func(key, params))
+
+    game_run = interactive.closure(
+        player_total,
+        history_size,
+        propose_bot,
+        vote_bot,
+        presi_bot,
+        chanc_bot,
+        shoot_bot,
+    )
+
     key = jrn.PRNGKey(random.randint(0, 2 ** 32 - 1))
 
-    print(winner_func(key, params))
+    game_run(key, 1, params)  # type: ignore
 
 
 if __name__ == "__main__":
