@@ -1,3 +1,4 @@
+from typing import Any
 import jax.lax as jla
 import jax.numpy as jnp
 import jax.random as jrn
@@ -81,7 +82,7 @@ def vote(
     presi_shown: T.presi_shown,
     chanc_shown: T.chanc_shown,
     probs: jtp.Float[jnp.ndarray, "players"],
-    **_
+    **_: Any
 ) -> dict[
     str,
     T.draw

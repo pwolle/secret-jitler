@@ -47,16 +47,16 @@ def estimate_facists(state):
 
 def shoot_next_liberal_president(state, **_):
     otherwise = shoot_liberals(state)
-    player_total = otherwise.shape[-1]  # type: ignore
+    player_total = otherwise.shape[-1]
 
     succesor = (state["presi"][0] + 1) % player_total
     works = state["roles"][0][succesor] == 0
     works &= state["killed"][0][succesor] == 0
 
-    probs = jnp.zeros_like(otherwise) - jnp.inf  # type: ignore
+    probs = jnp.zeros_like(otherwise) - jnp.inf
     probs = probs.at[succesor].set(0.0)
 
-    return jla.select(works, probs, otherwise)  # type: ignore
+    return jla.select(works, probs, otherwise)
 
 
 def main():
@@ -113,11 +113,11 @@ def main():
     params = {"propose": 0, "vote": 0, "presi": 0, "chanc": 0, "shoot": 0}
 
     key = jrn.PRNGKey(random.randint(0, 2**32 - 1))
-    winners = [winner_func(key, params)]  # type: ignore
+    winners = [winner_func(key, params)]
 
     for _ in trange(1000):
         key, subkey = jrn.split(key)
-        winners.append(winner_func(subkey, params))  # type: ignore
+        winners.append(winner_func(subkey, params))
 
     winner = jnp.array(winners)
 
