@@ -21,15 +21,14 @@ def propose(
     logprobs: jtp.Float[jnp.ndarray, "players players"],
     **_
 ) -> dict[str, T.presi | T.proposed]:
-    """
-    """
+    """ """
     # find next presi
     player_total = killed.shape[1]
 
     succesor = presi[1]
     feasible = 1
 
-    for _ in range(1, player_total):
+    for _ in range(1, 4):
         succesor += feasible
         succesor %= player_total
         feasible *= killed[0, succesor]
@@ -93,11 +92,10 @@ def vote(
     | T.winner
     | T.tracker
     | T.presi_shown
-    | T.chanc_shown
+    | T.chanc_shown,
 ]:
-    """
-    """
-    probs = jnp.clip(probs, 0., 1.)
+    """ """
+    probs = jnp.clip(probs, 0.0, 1.0)
     votes = jrn.bernoulli(key, probs)
 
     # mask dead players
@@ -110,22 +108,26 @@ def vote(
     works = votes.sum() > alive // 2
 
     # if majority voted yes, set chanc
-    chanc = chanc.at[0].set(jla.select(
-        works,
-        proposed[0],
-        chanc[0],  # otherwise do not update
-    ))
+    chanc = chanc.at[0].set(
+        jla.select(
+            works,
+            proposed[0],
+            chanc[0],  # otherwise do not update
+        )
+    )
 
     # if chanc has role 2 and there is no winner yet F wins
     winner_done = winner.sum().astype(bool)
     winner_cond = roles[0, chanc[0]] == 2
     winner_cond &= board[0, 1] >= 3
 
-    winner = winner.at[0, 1].set(jla.select(
-        winner_cond & ~winner_done,
-        True,
-        winner[0, 1],
-    ))
+    winner = winner.at[0, 1].set(
+        jla.select(
+            winner_cond & ~winner_done,
+            True,
+            winner[0, 1],
+        )
+    )
 
     # reset tracker, iff last round was skipped
     tracker = tracker.at[0].mul(tracker[1] != 3)
@@ -149,9 +151,7 @@ def vote(
 
     for _ in range(3):
         key, subkey = jrn.split(key)
-        policy, draw, disc = util.draw_policy(
-            subkey, draw, disc
-        )
+        policy, draw, disc = util.draw_policy(subkey, draw, disc)
 
         policies = policies.at[policy.astype(int)].add(1)
 
@@ -197,14 +197,13 @@ def presi_disc(
     probs: jtp.Float[jnp.ndarray, "players"],
     **_
 ) -> dict[str, T.chanc_shown | T.disc]:
-    """
-    """
+    """ """
     policies = presi_shown[0]
 
     prob = probs[presi[0]]
-    prob = jnp.clip(prob, 0., 1.)
-    prob = jla.select(policies[0] == 0, 1., prob)
-    prob = jla.select(policies[1] == 0, 0., prob)
+    prob = jnp.clip(prob, 0.0, 1.0)
+    prob = jla.select(policies[0] == 0, 1.0, prob)
+    prob = jla.select(policies[1] == 0, 0.0, prob)
 
     key, subkey = jrn.split(key)
     to_disc = jrn.bernoulli(subkey, prob)
@@ -216,11 +215,7 @@ def presi_disc(
     skip |= (tracker[0] == 1) & (tracker[1] == 3)
 
     disc = disc.at[0, to_disc.astype(int)].add(~skip)
-    chanc_shown = jla.select(
-        skip,
-        chanc_shown,
-        chanc_shown.at[0].set(policies)
-    )
+    chanc_shown = jla.select(skip, chanc_shown, chanc_shown.at[0].set(policies))
 
     return {
         "chanc_shown": chanc_shown,
@@ -241,14 +236,13 @@ def chanc_disc(
     probs: jtp.Float[jnp.ndarray, "players"],
     **_
 ) -> dict[str, T.disc | T.board | T.winner]:
-    """
-    """
+    """ """
     policies = chanc_shown[0]
 
     prob = probs[chanc[0]]
-    prob = jnp.clip(prob, 0., 1.)
-    prob = jla.select(policies[0] == 0, 1., prob)
-    prob = jla.select(policies[1] == 0, 0., prob)
+    prob = jnp.clip(prob, 0.0, 1.0)
+    prob = jla.select(policies[0] == 0, 1.0, prob)
+    prob = jla.select(policies[1] == 0, 0.0, prob)
 
     key, subkey = jrn.split(key)
     to_disc = jrn.bernoulli(subkey, prob)
@@ -264,21 +258,25 @@ def chanc_disc(
     winner_done = winner.sum().astype(bool)
     winner_cond = board[0, 0] == 5
 
-    winner = winner.at[0, 0].set(jla.select(
-        winner_cond & ~winner_done,
-        True,
-        winner[0, 0],
-    ))
+    winner = winner.at[0, 0].set(
+        jla.select(
+            winner_cond & ~winner_done,
+            True,
+            winner[0, 0],
+        )
+    )
 
     # F win if board[0, 1] == 6
     winner_done = winner.sum().astype(bool)
     winner_cond = board[0, 1] == 6
 
-    winner = winner.at[0, 1].set(jla.select(
-        winner_cond & ~winner_done,
-        True,
-        winner[0, 1],
-    ))
+    winner = winner.at[0, 1].set(
+        jla.select(
+            winner_cond & ~winner_done,
+            True,
+            winner[0, 1],
+        )
+    )
 
     return {"disc": disc, "board": board, "winner": winner}
 
@@ -296,8 +294,7 @@ def shoot(
     logprobs: jtp.Float[jnp.ndarray, "players players"],
     **_
 ) -> dict[str, T.killed | T.winner]:
-    """
-    """
+    """ """
     # only shoot if a F policy has been enacted
     enacted = board[0, 1] > board[1, 1]
 
@@ -326,22 +323,16 @@ def shoot(
 
     kill = jrn.categorical(key, logprob)  # type: ignore
 
-    killed = jla.select(
-        skip,
-        killed,
-        killed.at[0, kill].set(True)
-    )
+    killed = jla.select(skip, killed, killed.at[0, kill].set(True))
 
     # if kill has role 2 L win
     winner_done = winner.sum().astype(bool)
     killed_roles = roles[0] * killed[0]
     killed_role2 = jnp.any(killed_roles == 2)
 
-    winner = winner.at[0, 0].set(jla.select(
-        killed_role2 & ~winner_done,
-        True,
-        winner[0, 0]
-    ))
+    winner = winner.at[0, 0].set(
+        jla.select(killed_role2 & ~winner_done, True, winner[0, 0])
+    )
 
     return {"killed": killed, "winner": winner}
 
@@ -355,8 +346,7 @@ def dummy_history(
     prob_vote: float | jtp.Float[jnp.ndarray, ""] = 0.7,
     prob_discard: float | jtp.Float[jnp.ndarray, ""] = 0.5,
 ) -> dict[str, jtp.Shaped[jnp.ndarray, "..."]]:
-    """
-    """
+    """ """
     key, subkey = jrn.split(key)
     state = init.state(subkey, player_total, game_len)
 
@@ -411,7 +401,7 @@ def main() -> None:
 
     probs = jnp.zeros((player_total, player_total), dtype=jnp.float32)
 
-    key = jrn.PRNGKey(random.randint(0, 2 ** 32 - 1))
+    key = jrn.PRNGKey(random.randint(0, 2**32 - 1))
 
     key, subkey = jrn.split(key)
     state = init.state(subkey, player_total, history_size)
