@@ -8,9 +8,11 @@ import bots.run as run
 from tqdm import trange
 
 
-def main(player_total=5, history_size=2, batch_size=1024 * 4):
+def main(player_total=5, history_size=2, batch_size=256):
     """
-    best performance on gtx 1060 6gb of 4.16e6 its/s at batch size 16384
+    Performance test for game implementation:
+    gtx 1060 : 2.9e6 it/s w/ batch size 131072
+    i7-6700  : 5.8e4 it/s w/ batch size 256
     """
     # the simplest bots
     propose_bot = run.fuse(*[bots.propose_random] * 3)
@@ -45,9 +47,7 @@ def main(player_total=5, history_size=2, batch_size=1024 * 4):
         winner = winner_func(key, params)  # type: ignore
         winner.block_until_ready()  # type: ignore
 
-
-    # does not seem to work with gpu
-
+    # # does not seem to work with gpu
     # itrs = 1000
     # time = timeit.timeit(test_func, number=itrs) / itrs / batch_size
     # print(f"performance: {1/time:.3g} games per second")
