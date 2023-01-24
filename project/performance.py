@@ -5,6 +5,8 @@ import timeit
 import bots.bots as bots
 import bots.run as run
 
+from tqdm import trange
+
 
 def main(player_total=5, history_size=2, batch_size=128):
     # the simplest bots
@@ -44,6 +46,9 @@ def main(player_total=5, history_size=2, batch_size=128):
     time = timeit.timeit(test_func, number=itrs) / itrs / batch_size
 
     print(f"performance: {1/time:.3g} games per second")
+
+    for _ in trange(100000):
+        test_func()
 
 
 if __name__ == "__main__":
