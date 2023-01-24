@@ -1,6 +1,5 @@
 import jax.random as jrn
 import jax
-import timeit
 
 import bots.bots as bots
 import bots.run as run
@@ -47,7 +46,8 @@ def main(player_total=5, history_size=2, batch_size=256):
         winner = winner_func(key, params)  # type: ignore
         winner.block_until_ready()  # type: ignore
 
-    # # does not seem to work with gpu
+    # # timeit does not seem to work with gpu very well
+    # import timeit
     # itrs = 1000
     # time = timeit.timeit(test_func, number=itrs) / itrs / batch_size
     # print(f"performance: {1/time:.3g} games per second")
