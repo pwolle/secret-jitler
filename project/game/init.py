@@ -206,7 +206,7 @@ def draw(history_size: int, **_) -> st.draw:
     """
     # return array of shape (history_size,2) with values [6,11] in each index
     #  in history_size
-    return jnp.tile(jnp.array((6, 11), dtype=jnp.int32), (history_size, 1))
+    return jnp.tile(jnp.array((8, 11), dtype=jnp.int32), (history_size, 1))
 
 
 @jaxtyped
