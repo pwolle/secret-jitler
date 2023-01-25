@@ -22,8 +22,49 @@ def propose(
     logprobs: jtp.Float[jnp.ndarray, "players players"],
     **_
 ) -> dict[str, T.presi | T.proposed]:
-    """ """
-    # find next presi
+    """
+    Updates the president to successor (next index alive)
+    Takes a logprobability from the current president
+    Masks the invalid proposals eg. same chancellor, dead people
+    Returns the proposed chancellor based on probability
+
+    Args:
+        key: T.key
+            Random key for PRNG
+
+        presi: T.presi
+            president history of gamestate index 0 holds current turn
+            index in history_size is the turn (0 is current)
+                value corresponds to player
+
+        killed: T.killed
+            killed history of gamestate index 0 holds current turn
+            index in history_size is the turn (0 is current)
+                index in player_total is the player
+                    True if player is dead
+                    False is player is alive
+
+        proposed: T.proposed
+            proposed chancellor history of gamestate index 0 holds current turn
+            index in history_size is the turn (0 is current)
+                value corresponds to player
+
+        chanc: T.chanc
+            chancellor history of gamestate index 0 holds current turn
+            index in history_size is the turn (0 is current)
+                value corresponds to player
+
+        logprobs: jtp.Float[jnp.ndarray, "players players"]
+            logprobability given the players
+
+        **_
+            accepts arbitrary keyword arguments
+
+    Returns:
+        updated gamestate history
+    """
+
+    # get player_total with history shape
     player_total = killed.shape[1]
 
     # find next president
