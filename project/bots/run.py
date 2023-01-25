@@ -19,10 +19,11 @@ from .mask import mask
 
 
 def fuse(role_0: T.Bot | Any, role_1: T.Bot | Any, role_2: T.Bot | Any) -> T.Bot:
-    """
-    """
+    """ """
 
-    def fused(player: int, key: T.key, params: jtp.PyTree, state: T.state) -> jtp.PyTree:
+    def fused(
+        player: int, key: T.key, params: jtp.PyTree, state: T.state
+    ) -> jtp.PyTree:
         kwargs = {
             "player": player,
             "key": key,
@@ -61,52 +62,32 @@ def closure(
     chanc_bot: T.Bot,
     shoot_bot: T.Bot,
 ) -> Callable[[T.key, T.params_dict], T.state]:
-    """
-    """
+    """ """
 
     def turn(key: T.key, state: T.state, params_dict: T.params_dict, **_) -> T.state:
-        """
-        """
+        """ """
         state = util.push_state(state)
 
         key, botkey, simkey = jrn.split(key, 3)
         probs = propose_bot(
-            key=botkey,
-            params=params_dict["propose"],
-            state=mask(state)
+            key=botkey, params=params_dict["propose"], state=mask(state)
         )
         state |= propose(key=simkey, logprobs=probs, **state)
 
         key, botkey, simkey = jrn.split(key, 3)
-        probs = vote_bot(
-            key=botkey,
-            params=params_dict["vote"],
-            state=mask(state)
-        )
+        probs = vote_bot(key=botkey, params=params_dict["vote"], state=mask(state))
         state |= vote(key=simkey, probs=probs, **state)
 
         key, botkey, simkey = jrn.split(key, 3)
-        probs = presi_bot(
-            key=botkey,
-            params=params_dict["presi"],
-            state=mask(state)
-        )
+        probs = presi_bot(key=botkey, params=params_dict["presi"], state=mask(state))
         state |= presi_disc(key=simkey, probs=probs, **state)
 
         key, botkey, simkey = jrn.split(key, 3)
-        probs = chanc_bot(
-            key=botkey,
-            params=params_dict["chanc"],
-            state=mask(state)
-        )
+        probs = chanc_bot(key=botkey, params=params_dict["chanc"], state=mask(state))
         state |= chanc_disc(key=simkey, probs=probs, **state)
 
         key, botkey, simkey = jrn.split(key, 3)
-        probs = shoot_bot(
-            key=botkey,
-            params=params_dict["shoot"],
-            state=mask(state)
-        )
+        probs = shoot_bot(key=botkey, params=params_dict["shoot"], state=mask(state))
         state |= shoot(key=simkey, logprobs=probs, **state)
         return state
 
@@ -140,15 +121,16 @@ def closure(
 
 
 def evaluate(run_func: Callable[[T.key, T.params_dict], T.state], batch_size: int):
-    """
-    """
+    """ """
 
     def run_winner(key: T.key, params_dict) -> jtp.Bool[jnp.ndarray, "..."]:
         return run_func(key, params_dict)["winner"][0]
 
     run_winner_vmap = jax.vmap(run_winner, (0, None))
 
-    def evaluate_func(key: T.key, params_dict: T.params_dict) -> jtp.Bool[jnp.ndarray, "..."]:
+    def evaluate_func(
+        key: T.key, params_dict: T.params_dict
+    ) -> jtp.Bool[jnp.ndarray, "..."]:
         keys = jrn.split(key, batch_size)
         keys = jnp.stack(keys)  # type: ignore
         return run_winner_vmap(keys, params_dict).argmax(-1)
