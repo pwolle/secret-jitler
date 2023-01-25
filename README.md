@@ -1,5 +1,5 @@
 # Secret-Jitler
-Secret-__J__itler a __j__ust-__i__n-__t__ime compiled python implementation of the popular parlor game [Secret Hitler](https://www.secrethitler.com/assets/Secret_Hitler_Rules.pdf).
+Secret-**J**itler a **j**ust-**i**n-**t**ime compiled python implementation of the popular parlor game [Secret Hitler](https://www.secrethitler.com/assets/Secret_Hitler_Rules.pdf).
 
 ## Features
 - ⚡ blazingly fast: gpu/tpu-compatible and arbitrarily parallelizeable
