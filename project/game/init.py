@@ -107,7 +107,9 @@ def chanc(history_size: int, **_) -> T.chanc:
 @typechecked
 def proposed(history_size: int, **_) -> T.proposed:
     """
-    Initializes the history of proposed_chancellors: Array with shape (history_size,) containing the proposed_chancellors of the turn initialized
+    Initializes the history of proposed_chancellors: Array with shape
+     (history_size,) containing the proposed_chancellors of the turn
+     initialized
      with -1
     index in history_size is the current turn
         value corresponds to the player who was proposed for chancellor or -1

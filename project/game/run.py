@@ -420,6 +420,7 @@ def presi_disc(
 
     # update history
     disc = disc.at[0, to_disc.astype(int)].add(~skip)
+    # TODO PEP8? 81 zeichen
     chanc_shown = jla.select(skip, chanc_shown, chanc_shown.at[0].set(policies))
 
     # update gamestate history
