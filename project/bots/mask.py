@@ -45,8 +45,7 @@ def mask_chanc_shown(player: int, chanc, chanc_shown, **_):
 
 
 def mask(state: T.state) -> T.state:
-    """
-    """
+    """ """
 
     def mask_state(player: int, state) -> dict[str, Any]:
         masked = {}
