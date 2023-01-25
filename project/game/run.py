@@ -6,21 +6,21 @@ from jaxtyping import jaxtyped
 from typeguard import typechecked
 
 from . import init
-from . import stype as T
+from . import stype as st
 from . import util
 
 
 @jaxtyped
 @typechecked
 def propose(
-    key: T.key,
-    presi: T.presi,
-    killed: T.killed,
-    proposed: T.proposed,
-    chanc: T.chanc,
+    key: st.key,
+    presi: st.presi,
+    killed: st.killed,
+    proposed: st.proposed,
+    chanc: st.chanc,
     logprobs: jtp.Float[jnp.ndarray, "players players"],
     **_
-) -> dict[str, T.presi | T.proposed]:
+) -> dict[str, st.presi | st.proposed]:
     """
     Updates the president to successor (next index alive)
     Takes a logprobability from the current president
@@ -28,28 +28,28 @@ def propose(
     Returns the proposed chancellor based on probability
 
     Args:
-        key: T.key
+        key: st.key
             Random key for PRNG
 
-        presi: T.presi
+        presi: st.presi
             president history of gamestate index 0 holds current turn
             index in history_size is the turn (0 is current)
                 value corresponds to player
 
-        killed: T.killed
+        killed: st.killed
             killed history of gamestate index 0 holds current turn
             index in history_size is the turn (0 is current)
                 index in player_total is the player
                     True if player is dead
                     False is player is alive
 
-        proposed: T.proposed
+        proposed: st.proposed
             proposed chancellor history of gamestate index 0 holds current
              turn
             index in history_size is the turn (0 is current)
                 value corresponds to player
 
-        chanc: T.chanc
+        chanc: st.chanc
             chancellor history of gamestate index 0 holds current turn
             index in history_size is the turn (0 is current)
                 value corresponds to player
@@ -72,7 +72,8 @@ def propose(
     feasible = 1
 
     # check if succesor is dead if so select next
-    for _ in range(1, player_total):
+    # there are at most 2 players dead, so we only need to iterate 3 times
+    for _ in range(1, 4):
         succesor += feasible
         succesor %= player_total
         feasible *= killed[0, succesor]
@@ -116,32 +117,32 @@ def propose(
 @jaxtyped
 @typechecked
 def vote(
-    key: T.key,
-    draw: T.draw,
-    disc: T.disc,
-    board: T.board,
-    voted: T.voted,
-    proposed: T.proposed,
-    chanc: T.chanc,
-    killed: T.killed,
-    tracker: T.tracker,
-    winner: T.winner,
-    roles: T.roles,
-    presi_shown: T.presi_shown,
-    chanc_shown: T.chanc_shown,
+    key: st.key,
+    draw: st.draw,
+    disc: st.disc,
+    board: st.board,
+    voted: st.voted,
+    proposed: st.proposed,
+    chanc: st.chanc,
+    killed: st.killed,
+    tracker: st.tracker,
+    winner: st.winner,
+    roles: st.roles,
+    presi_shown: st.presi_shown,
+    chanc_shown: st.chanc_shown,
     probs: jtp.Float[jnp.ndarray, "players"],
     **_
 ) -> dict[
     str,
-    T.draw
-    | T.disc
-    | T.board
-    | T.chanc
-    | T.voted
-    | T.winner
-    | T.tracker
-    | T.presi_shown
-    | T.chanc_shown,
+    st.draw
+    | st.disc
+    | st.board
+    | st.chanc
+    | st.voted
+    | st.winner
+    | st.tracker
+    | st.presi_shown
+    | st.chanc_shown,
 ]:
     """
     Takes probability of each player and vote for or against proposed
@@ -155,10 +156,10 @@ def vote(
      president
 
     Args:
-        key: T.key
+        key: st.key
             Random key for PRNG
 
-        draw: T.draw
+        draw: st.draw
             draw pile history of gamestate index 0 holds current turn
             pile which policies can be drawn
             index in history_size is the turn (0 is current)
@@ -166,7 +167,7 @@ def vote(
                     at index 0: amount of liberal policies
                     at index 1: amount of fascist policies
 
-        disc: T.disc
+        disc: st.disc
             discard pile history of gamestate index 0 holds current turn
             pile which policies have been discarded
             index in history_size is the turn (0 is current)
@@ -174,7 +175,7 @@ def vote(
                     at index 0: amount of liberal policies
                     at index 1: amount of fascist policies
 
-        board: T.board
+        board: st.board
             board history of gamestate index 0 holds current turn
             pile which policies have been enacted
             index in history_size is the turn (0 is current)
@@ -182,7 +183,7 @@ def vote(
                     at index 0: amount of liberal policies
                     at index 1: amount of fascist policies
 
-        voted: T.voted
+        voted: st.voted
             voted history of gamestate index 0 holds current turn
             contains True or False wether player voted for proposed chancellor
             index in history_size is the turn (0 is current)
@@ -190,49 +191,49 @@ def vote(
                 value True player at index voted for proposed chancellor
                 value False player at index voted against proposed chancellor
 
-        proposed: T.proposed
+        proposed: st.proposed
             proposed chancellor history of gamestate index 0 holds current
              turn
             index in history_size is the turn (0 is current)
                 value corresponds to player
 
-        chanc: T.chanc
+        chanc: st.chanc
             chancellor history of gamestate index 0 holds current turn
             index in history_size is the turn (0 is current)
                 value corresponds to player
 
-        killed: T.killed
+        killed: st.killed
             killed history of gamestate index 0 holds current turn
             index in history_size is the turn (0 is current)
                 index in player_total is the player
                     True if player is dead
                     False is player is alive
 
-        tracker: T.tracker
+        tracker: st.tracker
             election tracker history of gamestate index 0 holds current turn
             inceases if proposed chancellor vote fails
             index in history_size is the turn (0 is current)
                 value corresponds to amount in (0,1,2,3)
 
-        winner: T.winner
+        winner: st.winner
             winner history of gamestate index 0 holds current turn
             True at 0 when liberals won
             True at 1 when fascist/hitler won
 
-        roles: T.roles
+        roles: st.roles
             roles history of gamestate index 0 holds current turn
             index i:
                 0 if player i is liberal
                 1 if player i is fascist
                 2 if player i is hitler
 
-        presi_shown: T.presi_shown
+        presi_shown: st.presi_shown
             policies shown to president history of gamestate index 0 holds
              current turn
             at index 0 amount of liberal policies
             at index 1 amount of fascist policies
 
-        chanc_shown: T.chanc_shown
+        chanc_shown: st.chanc_shown
             policies shown to chancellor history of gamestate index 0 holds
              current turn
             at index 0 amount of liberal policies
@@ -345,23 +346,23 @@ def vote(
 @jaxtyped
 @typechecked
 def presi_disc(
-    key: T.key,
-    disc: T.disc,
-    tracker: T.tracker,
-    presi: T.presi,
-    presi_shown: T.presi_shown,
-    chanc_shown: T.chanc_shown,
+    key: st.key,
+    disc: st.disc,
+    tracker: st.tracker,
+    presi: st.presi,
+    presi_shown: st.presi_shown,
+    chanc_shown: st.chanc_shown,
     probs: jtp.Float[jnp.ndarray, "players"],
     **_
-) -> dict[str, T.chanc_shown | T.disc]:
+) -> dict[str, st.chanc_shown | st.disc]:
     """
     Takes a probability from the current president to discard a policy.
 
     Args:
-        key: T.key
+        key: st.key
             Random key for PRNG
 
-        disc: T.disc
+        disc: st.disc
             discard pile history of gamestate index 0 holds current turn
             pile which policies have been discarded
             index in history_size is the turn (0 is current)
@@ -369,19 +370,19 @@ def presi_disc(
                     at index 0: amount of liberal policies
                     at index 1: amount of fascist policies
 
-        tracker: T.tracker
+        tracker: st.tracker
             election tracker history of gamestate index 0 holds current turn
             inceases if proposed chancellor vote fails
             index in history_size is the turn (0 is current)
                 value corresponds to amount in (0,1,2,3)
 
-        presi_shown: T.presi_shown
+        presi_shown: st.presi_shown
             policies shown to president history of gamestate index 0 holds
              current turn
             at index 0 amount of liberal policies
             at index 1 amount of fascist policies
 
-        chanc_shown: T.chanc_shown
+        chanc_shown: st.chanc_shown
             policies shown to chancellor history of gamestate index 0 holds
              current turn
             at index 0 amount of liberal policies
@@ -433,24 +434,24 @@ def presi_disc(
 @jaxtyped
 @typechecked
 def chanc_disc(
-    key: T.key,
-    disc: T.disc,
-    board: T.board,
-    tracker: T.tracker,
-    chanc: T.chanc,
-    winner: T.winner,
-    chanc_shown: T.chanc_shown,
+    key: st.key,
+    disc: st.disc,
+    board: st.board,
+    tracker: st.tracker,
+    chanc: st.chanc,
+    winner: st.winner,
+    chanc_shown: st.chanc_shown,
     probs: jtp.Float[jnp.ndarray, "players"],
     **_
-) -> dict[str, T.disc | T.board | T.winner]:
+) -> dict[str, st.disc | st.board | st.winner]:
     """
     Takes a probability from the current chancellor to select a policy.
 
     Args:
-        key: T.key
+        key: st.key
             Random key for PRNG
 
-        disc: T.disc
+        disc: st.disc
             discard pile history of gamestate index 0 holds current turn
             pile which policies have been discarded
             index in history_size is the turn (0 is current)
@@ -458,7 +459,7 @@ def chanc_disc(
                     at index 0: amount of liberal policies
                     at index 1: amount of fascist policies
 
-        board: T.board
+        board: st.board
             board history of gamestate index 0 holds current turn
             pile which policies have been enacted
             index in history_size is the turn (0 is current)
@@ -466,23 +467,23 @@ def chanc_disc(
                     at index 0: amount of liberal policies
                     at index 1: amount of fascist policies
 
-        tracker: T.tracker
+        tracker: st.tracker
             election tracker history of gamestate index 0 holds current turn
             inceases if proposed chancellor vote fails
             index in history_size is the turn (0 is current)
                 value corresponds to amount in (0,1,2,3)
 
-        chanc: T.chanc
+        chanc: st.chanc
             chancellor history of gamestate index 0 holds current turn
             index in history_size is the turn (0 is current)
                 value corresponds to player
 
-        winner: T.winner
+        winner: st.winner
             winner history of gamestate index 0 holds current turn
             True at 0 when liberals won
             True at 1 when fascist/hitler won
 
-        chanc_shown: T.chanc_shown
+        chanc_shown: st.chanc_shown
             policies shown to chancellor history of gamestate index 0 holds
              current turn
             at index 0 amount of liberal policies
@@ -554,16 +555,16 @@ def chanc_disc(
 @jaxtyped
 @typechecked
 def shoot(
-    key: T.key,
-    board: T.board,
-    tracker: T.tracker,
-    killed: T.killed,
-    presi: T.presi,
-    winner: T.winner,
-    roles: T.roles,
+    key: st.key,
+    board: st.board,
+    tracker: st.tracker,
+    killed: st.killed,
+    presi: st.presi,
+    winner: st.winner,
+    roles: st.roles,
     logprobs: jtp.Float[jnp.ndarray, "players players"],
     **_
-) -> dict[str, T.killed | T.winner]:
+) -> dict[str, st.killed | st.winner]:
     """
     Takes a logprobability from the current president kill a player if the
      conditions are met.
@@ -571,10 +572,10 @@ def shoot(
     Don't allow if policy was forced
 
     Args:
-        key: T.key
+        key: st.key
             Random key for PRNG
 
-        board: T.board
+        board: st.board
             board history of gamestate index 0 holds current turn
             pile which policies have been enacted
             index in history_size is the turn (0 is current)
@@ -582,30 +583,30 @@ def shoot(
                     at index 0: amount of liberal policies
                     at index 1: amount of fascist policies
 
-        tracker: T.tracker
+        tracker: st.tracker
             election tracker history of gamestate index 0 holds current turn
             inceases if proposed chancellor vote fails
             index in history_size is the turn (0 is current)
                 value corresponds to amount in (0,1,2,3)
 
-        killed: T.killed
+        killed: st.killed
             killed history of gamestate index 0 holds current turn
             index in history_size is the turn (0 is current)
                 index in player_total is the player
                     True if player is dead
                     False is player is alive
 
-        presi: T.presi
+        presi: st.presi
             president history of gamestate index 0 holds current turn
             index in history_size is the turn (0 is current)
                 value corresponds to player
 
-        winner: T.winner
+        winner: st.winner
             winner history of gamestate index 0 holds current turn
             True at 0 when liberals won
             True at 1 when fascist/hitler won
 
-        roles: T.roles
+        roles: st.roles
             roles history of gamestate index 0 holds current turn
             index i:
                 0 if player i is liberal
@@ -669,7 +670,7 @@ def shoot(
 @jaxtyped
 @typechecked
 def dummy_history(
-    key: T.key,
+    key: st.key,
     player_total: int = 10,
     game_len: int = 30,
     prob_vote: float | jtp.Float[jnp.ndarray, ""] = 0.7,
@@ -679,7 +680,7 @@ def dummy_history(
     runs the whole game and returns a example history
 
     Args:
-        key: T.key
+        key: st.key
             Random key for PRNG
 
         player_total: int
@@ -732,72 +733,3 @@ def dummy_history(
             history[k] = history[k].at[i + 1].set(v)
 
     return history
-
-
-@jaxtyped
-@typechecked
-def main() -> None:
-    import random
-    import jax
-
-    propose_jit = jax.jit(propose)
-    vote_jit = jax.jit(vote)
-    presi_discard_jit = jax.jit(presi_disc)
-    chanc_discard_jit = jax.jit(chanc_disc)
-    shoot_jit = jax.jit(shoot)
-
-    player_total = 5
-    history_size = 3
-
-    probs = jnp.zeros((player_total, player_total), dtype=jnp.float32)
-
-    key = jrn.PRNGKey(random.randint(0, 2**32 - 1))
-
-    key, subkey = jrn.split(key)
-    state = init.state(subkey, player_total, history_size)
-
-    print("roles", *state["roles"][0])
-
-    for _ in range(3):
-        state = util.push_state(state)
-
-        key, subkey = jrn.split(key)
-        state |= propose_jit(key=subkey, logprobs=probs, **state)
-
-        key, subkey = jrn.split(key)
-        state |= vote_jit(key=subkey, probs=probs[0] + 0.9, **state)
-
-        key, subkey = jrn.split(key)
-        state |= presi_discard_jit(key=subkey, probs=probs[0] + 0.5, **state)
-
-        key, subkey = jrn.split(key)
-        state |= chanc_discard_jit(key=subkey, probs=probs[0] + 0.5, **state)
-
-        key, subkey = jrn.split(key)
-        state |= shoot_jit(key=subkey, logprobs=probs, **state)
-
-        print("board  ", *state["board"][0])
-        print("killed ", *state["killed"][0].astype(int))
-        print("tracker", *state["tracker"])
-        print("votes  ", *state["voted"][0].astype(int))
-        print("presi-s", *state["presi_shown"][0])
-        print("chanc-s", *state["chanc_shown"][0])
-        print("disc   ", *state["disc"][0])
-        print("board  ", *state["board"][0])
-        print("disc   ", *state["disc"][0])
-        print("presi  ", state["presi"][0])
-        print("elect  ", state["chanc"][0])
-        print("role   ", state["roles"][0][state["chanc"][0]])
-        print("winner ", *state["winner"][0].astype(int))
-        print("")
-
-    # print("presi_shown", state["presi_shown"])
-    # print("chanc_shown", state["chanc_shown"])
-
-    print("draw", state["draw"])
-    print("disc", state["disc"])
-    print("board", state["board"])
-
-
-if __name__ == "__main__":
-    main()
