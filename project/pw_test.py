@@ -61,8 +61,45 @@ def shoot_next_liberal_president(state, **_):
     return jla.select(works, probs, otherwise)  # type: ignore
 
 
-def shoot_next_liberal_presi2(state, **_):
+def next_presi(state, presi):
     killed = state["killed"][0]
+    player_total = killed.shape[-1]
+
+    succesor = presi
+    feasible = 1
+
+    for _ in range(1, 4):
+        succesor += feasible
+        succesor %= player_total
+        feasible *= killed[succesor]
+
+    return succesor
+
+
+def next_lib3(state, **_):
+    roles = state["roles"][0]
+    player_total = roles.shape[-1]
+
+    presi = state["presi"][0]
+    presis = jnp.zeros(player_total)
+    presi_roles = jnp.zeros(player_total)
+
+    for i in range(3):
+        presi = next_presi(state, presi)
+        presis = presis.at[i].set(presi)
+        presi_roles = presi_roles.at[i].set(roles[presi] == 0)
+
+    target = presis[jnp.argmax(presi_roles).astype(int)].astype(int)
+
+    probs = jnp.zeros_like(roles) - jnp.inf  # type: ignore
+    return probs.at[target].set(0.0)
+
+
+def shoot_next_liberal_presi2(state, **_):
+    otherwise = shoot_liberals(state)
+
+    killed = state["killed"][0]
+    roles = state["roles"][0]
     player_total = killed.shape[-1]
 
     presi = state["presi"][0]
@@ -73,19 +110,21 @@ def shoot_next_liberal_presi2(state, **_):
         succesor += feasible
         succesor %= player_total
 
-        # stop if successor is not killed
-        feasible *= killed[succesor]
+        # stop if (successor is not killed and liberal)
+        feasible *= killed[succesor]  # & (roles[succesor] != 0)
+
+    liberal = roles[succesor] == 0
 
     probs = jnp.zeros_like(killed) - jnp.inf  # type: ignore
     probs = probs.at[succesor].set(0.0)
 
-    return
+    return jla.select(liberal, probs, otherwise)  # type: ignore
 
 
 def main():
     history_size = 15
     player_total = 10
-    batch_size = 128
+    batch_size = 256
 
     propose_bot = bots.run.fuse(
         bots.bots.propose_random,
@@ -96,9 +135,9 @@ def main():
 
     vote_bot = bots.run.fuse(
         bots.bots.vote_yes,
-        # bots.bots.vote_yes,
-        vote_yes_facist_one,
-        bots.bots.vote_no,
+        # bots.bots.vote_no,
+        vote_yes_facist_presi,
+        bots.bots.vote_yes,
     )
 
     presi_bot = bots.run.fuse(
@@ -117,7 +156,9 @@ def main():
         bots.bots.shoot_random,
         # bots.bots.shoot_random,
         # shoot_liberals,
-        shoot_next_liberal_president,
+        # shoot_next_liberal_president,
+        # shoot_next_liberal_presi2,
+        next_lib3,
         bots.bots.shoot_random,
     )
 
@@ -136,6 +177,7 @@ def main():
     params = {"propose": 0, "vote": 0, "presi": 0, "chanc": 0, "shoot": 0}
 
     key = jrn.PRNGKey(random.randint(0, 2**32 - 1))
+    print("compiling...")
     winners = [winner_func(key, params)]  # type: ignore
 
     for _ in trange(1000):  # type: ignore
