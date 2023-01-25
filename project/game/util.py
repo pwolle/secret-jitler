@@ -1,17 +1,17 @@
 import jaxtyping as jtp
 import jax.numpy as jnp
 import jax.random as jrn
-import jax.lax as jla
 from jaxtyping import jaxtyped
 from typeguard import typechecked
 
-from . import stype as T
+from . import stype as st
 
 
 @jaxtyped
 @typechecked
-def push_state(state: dict[str, jtp.Shaped[jnp.ndarray, "history *_"]]) \
-        -> dict[str, jtp.Shaped[jnp.ndarray, "history *_"]]:
+def push_state(
+    state: dict[str, jtp.Shaped[jnp.ndarray, "history *_"]]
+) -> dict[str, jtp.Shaped[jnp.ndarray, "history *_"]]:
     """
     Updates the game state: Every history in state is shifted to the right
     values of state shifted like:
@@ -19,11 +19,11 @@ def push_state(state: dict[str, jtp.Shaped[jnp.ndarray, "history *_"]]) \
     [1,_] = [0,_]
     [2,_] = [1,_]
     ...
-    
+
     Args:
         state: dict[str, jtp.Shaped[jnp.ndarray, "history *_"]])
             gamestate of the game
-    
+
     Returns:
         state: dict[str, jtp.Shaped[jnp.ndarray, "history *_"]])
             gamestate of the game
@@ -40,29 +40,26 @@ def push_state(state: dict[str, jtp.Shaped[jnp.ndarray, "history *_"]]) \
 
 @jaxtyped
 @typechecked
-def discard_policy(
-    policy: jtp.Bool[jnp.ndarray, ""],
-    disc: T.disc
-) -> T.disc:
+def discard_policy(policy: jtp.Bool[jnp.ndarray, ""], disc: st.disc) -> st.disc:
     """
     Adds +1 to the policy which got discarded
     at index 0: liberal policy discarded
     at index 1: fascist policy discarded
-    
+
     Args:
         policy: jtp.Bool[jnp.ndarray, ""]
             policy which got discarded
             0 for liberal
             1 for fascist
-            
-        disc: T.disc
+
+        disc: st.disc
             discard history of game state
-    
+
     Returns:
-        disc: T.disc
+        disc: st.disc
             updated discard pile
     """
-    
+
     # adds +1 at current turn at policy (0 or 1)
     return disc.at[0, policy.astype(int)].add(1)
 
@@ -70,37 +67,37 @@ def discard_policy(
 @jaxtyped
 @typechecked
 def draw_policy(
-    key: T.key,
-    draw: T.draw,
-    disc: T.disc,
+    key: st.key,
+    draw: st.draw,
+    disc: st.disc,
 ) -> tuple[
     jtp.Bool[jnp.ndarray, ""],
     jtp.Int[jnp.ndarray, "history 2"],
-    jtp.Int[jnp.ndarray, "history 2"]
+    jtp.Int[jnp.ndarray, "history 2"],
 ]:
     """
     Draws a policy from the draw_pile. If the draw_pile is empty swap
      discard_pile and draw_pile.
     And updates said piles
-    
+
     Args:
-        key: T.key
+        key: st.key
             Random key for PRNG
-            
-        draw: T.draw,
+
+        draw: st.draw,
             Draw pile
-            
-        disc: T.disc,
+
+        disc: st.disc,
             Discard pile
-    
+
     Returns:
         tuple of:
             (policy: jtp.Bool[jnp.ndarray, ""],
                 policy randomly drawn
-                
+
              draw: jtp.Int[jnp.ndarray, "history 2"],
                 updated draw_pile
-                
+
              discard: jtp.Int[jnp.ndarray, "history 2"]
                 updated discard_pile
             )
@@ -128,8 +125,3 @@ def draw_policy(
 
     # return tuple of drawn policy and updated draw and discard pile
     return policy, draw, disc
-    
-    
-    
-    
-    
