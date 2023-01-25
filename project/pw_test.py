@@ -40,13 +40,6 @@ def vote_yes_facist_one(state, **_):
     return jla.select(chanc | presi, 1.0, 0.0)
 
 
-"""
-def estimate_facists(state):
-    estimates = jnp.zeros(state["roles"].shape[-1])
-    return estimates
-"""
-
-
 def shoot_next_liberal_president(state, **_):
     otherwise = shoot_liberals(state)
     player_total = otherwise.shape[-1]  # type: ignore
@@ -128,14 +121,12 @@ def main():
 
     propose_bot = bots.run.fuse(
         bots.bots.propose_random,
-        # bots.bots.propose_random,
         propose_facist,
         bots.bots.propose_random,
     )
 
     vote_bot = bots.run.fuse(
         bots.bots.vote_yes,
-        # bots.bots.vote_no,
         vote_yes_facist_presi,
         bots.bots.vote_yes,
     )
@@ -154,10 +145,6 @@ def main():
 
     shoot_bot = bots.run.fuse(
         bots.bots.shoot_random,
-        # bots.bots.shoot_random,
-        # shoot_liberals,
-        # shoot_next_liberal_president,
-        # shoot_next_liberal_presi2,
         next_lib3,
         bots.bots.shoot_random,
     )
