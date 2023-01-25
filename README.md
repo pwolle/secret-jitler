@@ -1,43 +1,51 @@
-# Secret Hitler
-----------
-This is a blazingly fast implementation of the popular parlor game [`Secret Hitler`](https://www.secrethitler.com/assets/Secret_Hitler_Rules.pdf). It contains a build-in AI to play against and learn from.
+# Secret-Jitler
+Secret-Jitler a just-in-time compiled python implementation of the popular parlor game [Secret Hitler](https://www.secrethitler.com/assets/Secret_Hitler_Rules.pdf).
+
+## Features
+- ⚡ blazingly fast: gpu/tpu-compatible and arbitrarily parallelizeable
+- 🤖 BYOB: Build your own bot 
+- 🛠️ comprehensive API for training bots
+- 🧠 play with a variety of AI-competitors
+- 🤯 see what's going on thanks to the narration 
+
+## Motivation
+As avid players of the game Secret Hitler, we are always discussing our stratiegies. Since we are programmmers, we decided to create a test these strategies in simulated games.
+
+## Installation
+
+### System requirements and download
+1. Make sure python 3.10 or newer is installed on your system, if you are not sure about your currently installed version, run `python --version`.
+2. Clone the repository with `git clone https://github.com/unitdeterminant/secret-jitler.git`, if `git` is not available download directly from [github](https://github.com/unitdeterminant/secret-jitler.git) and unzip it.
+3. Open a terminal in `secret-jitler`
+5. Make sure [pip](https://pip.pypa.io/en/stable/installation/) is installed and run `pip install -r requirements.txt` 
+
+Tested on MX-21.3, Debian 11.6 and Ubuntu 22.04 (LTS).
+
+### Running on GPU via Conda
+If you want to train a bot or run lots of games in parallel using a gpu is recommended. You can check, whether your gpu is cuda compatile [here](https://en.wikipedia.org/wiki/CUDA#GPUs_supported).
+1. Install [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
+2. Open a terminal in `secret-jitler`
+3. run `conda env create -f environment.yml`
+4. activate the environment via `conda activate jaxgpu`
+
+Tested on Manjaro 22.0.0 with a gtx 1060.
+
+### First steps
+If you want to play an interactive game:
+1.
 
 
-### Motivation
----------
-
-As avid players, we are always looking for new, promising strategies to win the game and analyse our oppnent's approaches, which caused some arguments about the best tactics. We couldn't find common ground for a while, so we decided - since we are programmers - to write some bots, let them play the game to find answers and/or new, (hopefully) better strategies.
+## API reference
+If you want to build a bot, take a look at the [documentation](https://github.com/unitdeterminant/secret-jitler/blob/main/project/bots/README.md) in `project/game/bots/README.md`.
 
 
-### Features
------
-- BYOB: Build your own bot
-	+ our comprehensive API makes it easy to design your own bot from scratch and train it
-- blazingly fast
-- play with or against a variety of AI-competitors
-- follow the bot game
-    + see what's going on thanks to our narrated history
+## Performance
+Performance numbers estimated using the script `project/performance.py`.
+| hardware | throuput in it/s | batch size |
+| - | - | - |
+| gtx 1060 | 2.9e6 | 131072 |
+| i7-6700  | 5.8e4 | 256 |
+| AMD 7 4700U | 7.1e4 | 128 |
 
-### Installation
-----
-##### System requirements and download
-
-- [ ] Make sure python 3.10 or newer is installed on your system.
-    + if you're not sure about your currently installed version, run `python --version`
-- [ ] Download the [github-repo](https://github.com/unitdeterminant/typed-lambda).
-- [ ] Run ```pip -r install requirements.txt```   
-
-Please note: These steps are tested under MX-21.3 and DEBIAN 11.6. Depending on your individual settings, some details might differ.
-
-
-##### First steps
-
-
-
-### API reference
-----
-If you want to build a bot, take a look at `README.md` at `game/bots`
-
-### Tests
----------
-This repo includes a `Test.py` file, which validates the game states for and a test file which checks the reasonability of the given bot-parameters given via standard input.
+## Tests
+This repo includes a `test.py` file to validate the game states. User inputs are always validated.

@@ -1,3 +1,7 @@
+"""
+contains all the types used in the game
+"""
+
 import jaxtyping as jtp
 import jax.numpy as jnp
 import jax.random as jrn
@@ -50,6 +54,7 @@ class Bot(Protocol):
 
 params = jtp.PyTree
 
+# what the colllection of bots require in bots.run
 params_dict = dict[
     Literal["propose"]
     | Literal["vote"]
