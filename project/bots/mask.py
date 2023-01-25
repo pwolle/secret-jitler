@@ -1,3 +1,12 @@
+"""
+Mask the game state so every player has only the information he should have
+the dimension changes to (player_total,history_size,...)
+    liberal player see only their role, fascist see every role, hitler sees only his role
+        every other role is assumed as liberla (0)
+    draw, disc, and winner are removed because no player can see those
+    presi_shown and chanc_shown should only see the player who was president/chancellor at that time
+"""
+
 import jax.numpy as jnp
 import jax.lax as jla
 import jax
@@ -36,8 +45,7 @@ def mask_chanc_shown(player: int, chanc, chanc_shown, **_):
 
 
 def mask(state: T.state) -> T.state:
-    """
-    """
+    """ """
 
     def mask_state(player: int, state) -> dict[str, Any]:
         masked = {}
