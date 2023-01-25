@@ -76,7 +76,7 @@ def propose(
     for _ in range(1, 4):
         succesor += feasible
         succesor %= player_total
-        feasible *= killed[0, succesor]
+        feasible *= killed[0, succesor]  # stop if succesor is not killed
 
     # update current president
     presi = presi.at[0].set(succesor)

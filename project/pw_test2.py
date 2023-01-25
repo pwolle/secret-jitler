@@ -40,11 +40,9 @@ def vote_yes_facist_one(state, **_):
     return jla.select(chanc | presi, 1.0, 0.0)
 
 
-"""
 def estimate_facists(state):
     estimates = jnp.zeros(state["roles"].shape[-1])
     return estimates
-"""
 
 
 def shoot_next_liberal_president(state, **_):
@@ -72,8 +70,6 @@ def shoot_next_liberal_presi2(state, **_):
     for _ in range(1, 4):
         succesor += feasible
         succesor %= player_total
-
-        # stop if successor is not killed
         feasible *= killed[succesor]
 
     probs = jnp.zeros_like(killed) - jnp.inf  # type: ignore
@@ -84,20 +80,18 @@ def shoot_next_liberal_presi2(state, **_):
 
 def main():
     history_size = 15
-    player_total = 10
+    player_total = 5
     batch_size = 128
 
     propose_bot = bots.run.fuse(
         bots.bots.propose_random,
-        # bots.bots.propose_random,
-        propose_facist,
+        bots.bots.propose_random,
         bots.bots.propose_random,
     )
 
     vote_bot = bots.run.fuse(
         bots.bots.vote_yes,
-        # bots.bots.vote_yes,
-        vote_yes_facist_one,
+        bots.bots.vote_yes,
         bots.bots.vote_no,
     )
 
@@ -115,9 +109,9 @@ def main():
 
     shoot_bot = bots.run.fuse(
         bots.bots.shoot_random,
-        # bots.bots.shoot_random,
+        bots.bots.shoot_random,
         # shoot_liberals,
-        shoot_next_liberal_president,
+        # shoot_next_liberal_president,
         bots.bots.shoot_random,
     )
 
@@ -131,23 +125,16 @@ def main():
         shoot_bot,
     )
 
-    winner_func = bots.run.evaluate(game_run, batch_size)
-
     params = {"propose": 0, "vote": 0, "presi": 0, "chanc": 0, "shoot": 0}
 
     key = jrn.PRNGKey(random.randint(0, 2**32 - 1))
-    winners = [winner_func(key, params)]  # type: ignore
+    state = game_run(key, params)  # type: ignore
 
-    for _ in trange(1000):  # type: ignore
-        key, subkey = jrn.split(key)  # type: ignore
-        winners.append(winner_func(subkey, params))  # type: ignore
+    print(state["presi"])
+    print(state["killed"].astype(int))
 
-    winner = jnp.array(winners)
-
-    winrate = winner.mean()
-    deviation = winner.std() / jnp.sqrt(batch_size)
-
-    print(f"Winrate: {winrate:.2%} ± {deviation:.3%}")
+    # import game.narrate
+    # game.narrate.narrated_game(state)
 
 
 if __name__ == "__main__":
