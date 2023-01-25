@@ -13,7 +13,6 @@ def main(player_total=5, history_size=2, batch_size=128):
     gtx 1060: 2.9e6 it/s at batch size 131072
     i7-6700: 5.8e4 it/s at batch size 256
     AMD 7 4700U: 7.1e4 it/s at batch size 128
-
     """
     # the simplest bots
     propose_bot = run.fuse(*[bots.propose_random] * 3)
