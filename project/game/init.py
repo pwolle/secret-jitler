@@ -11,7 +11,8 @@ from . import stype as T
 @typechecked
 def roles(key: T.key, player_total: int, history_size: int, **_) -> T.roles:
     """
-    Initializes the history of roles: Array with shape (history_size, player_total) containing the roles of the players
+    Initializes the history of roles: Array with shape 
+     (history_size, player_total) containing the roles of the players
     index in history_size is the current turn
     index in player_total the player
         0 stands for liberal
@@ -35,7 +36,8 @@ def roles(key: T.key, player_total: int, history_size: int, **_) -> T.roles:
         roles: T.roles
     """
     
-    # creates an dictonary containing the amount of roles for corresponding player_totals
+    # creates an dictonary containing the amount of roles for corresponding
+    #  player_totals
     # 0 for liberal
     # 1 for fascist
     # 2 for hitler
@@ -49,7 +51,8 @@ def roles(key: T.key, player_total: int, history_size: int, **_) -> T.roles:
     }
     # generate random permutation to shuffle roles
     roles = jrn.permutation(key, prototypes[player_total])
-    # returns array of shape (history_size, player_total) containing the roles for each index in history_size
+    # returns array of shape (history_size, player_total) containing the roles
+    #  for each index in history_size
     return jnp.tile(roles, (history_size, 1))
 
 
@@ -57,7 +60,8 @@ def roles(key: T.key, player_total: int, history_size: int, **_) -> T.roles:
 @typechecked
 def presi(history_size: int, **_) -> T.presi:
     """
-    Initializes the history of presidents: Array with shape (history_size,) containing the presidents of the turn initialized with -1
+    Initializes the history of presidents: Array with shape (history_size,)
+     containing the presidents of the turn initialized with -1
     index in history_size is the current turn
         value corresponds to player who was president
     
@@ -71,7 +75,7 @@ def presi(history_size: int, **_) -> T.presi:
     Returns:
         presidents: T.presi
     """
-    # return array of shape (history_size,) with values -1 for no president set
+    # return array of shape (history_size,) with values -1 for no president
     return jnp.zeros((history_size,), dtype=jnp.int32) - 1
 
 
@@ -79,9 +83,11 @@ def presi(history_size: int, **_) -> T.presi:
 @typechecked
 def chanc(history_size: int, **_) -> T.chanc:
     """
-    Initializes the history of chancellors: Array with shape (history_size,) containing the chancellors of the turn initialized with -1
+    Initializes the history of chancellors: Array with shape (history_size,)
+     containing the chancellors of the turn initialized with -1
     index in history_size is the current turn
-        value corresponds to the player who was chancellor or -1 if ther was none
+        value corresponds to the player who was chancellor or -1 if ther was
+         none
     
     Args:
         history_size: int
@@ -101,9 +107,11 @@ def chanc(history_size: int, **_) -> T.chanc:
 @typechecked
 def proposed(history_size: int, **_) -> T.proposed:
     """
-    Initializes the history of proposed_chancellors: Array with shape (history_size,) containing the proposed_chancellors of the turn initialized with -1
+    Initializes the history of proposed_chancellors: Array with shape (history_size,) containing the proposed_chancellors of the turn initialized
+     with -1
     index in history_size is the current turn
-        value corresponds to the player who was proposed for chancellor or -1 if ther was none
+        value corresponds to the player who was proposed for chancellor or -1
+         if ther was none
     
     Args:
         history_size: int
@@ -126,7 +134,9 @@ def proposed(history_size: int, **_) -> T.proposed:
 @typechecked
 def voted(player_total: int, history_size: int, **_) -> T.voted:
     """
-    Initializes the history of votes: Array with shape (history_size, player_total) containing the votes of each player for the proposed chancellor
+    Initializes the history of votes: Array with shape
+     (history_size, player_total) containing the votes of each player 
+     for the proposed chancellor
     index in history_size is the current turn
     index in player_total the player
         value True player at index voted for proposed chancellor
@@ -145,7 +155,8 @@ def voted(player_total: int, history_size: int, **_) -> T.voted:
     Returns:
         votes: T.voted
     """
-    # return array of shape (history_size, player_total) with values 0 (dead people vote 0, False)
+    # return array of shape (history_size, player_total) with values 0
+    #  (dead people vote 0, False)
     return jnp.zeros((history_size, player_total), dtype=bool)
 
 
@@ -153,7 +164,8 @@ def voted(player_total: int, history_size: int, **_) -> T.voted:
 @typechecked
 def tracker(history_size: int, **_) -> T.tracker:
     """
-    Initializes the history of the election_tracker: Array with shape (history_size,) containing the election_tracker for each turn
+    Initializes the history of the election_tracker: Array with shape
+     (history_size,) containing the election_tracker for each turn
     increases when proposed_chancellor is declined
     index in history_size is the current turn
         value in [0,1,2,3] amount of turns without chancellor
@@ -176,7 +188,8 @@ def tracker(history_size: int, **_) -> T.tracker:
 @typechecked
 def draw(history_size: int, **_) -> T.draw:
     """
-    Initializes the history of the draw pile: Array with shape (history_size, 2) containing the amount of policies for each turn
+    Initializes the history of the draw pile: Array with shape
+     (history_size, 2) containing the amount of policies for each turn
     index in history_size is the current turn
     second dimension:
         at index 0: amount of liberal policies
@@ -192,7 +205,8 @@ def draw(history_size: int, **_) -> T.draw:
     Returns:
         draw_pile: T.draw
     """
-    # return array of shape (history_size,2) with values [6,11] in each index in history_size
+    # return array of shape (history_size,2) with values [6,11] in each index
+    #  in history_size
     return jnp.tile(jnp.array((6, 11), dtype=jnp.int32), (history_size, 1))
 
 
@@ -200,7 +214,10 @@ def draw(history_size: int, **_) -> T.draw:
 @typechecked
 def disc(history_size: int, **_) -> T.disc:
     """
-    Initializes the history of the discard pile: Array with shape (history_size, 2) containing the amount of discarded policies for each turn
+    Initializes the history of the discard pile: Array with shape
+     (history_size, 2) containing the amount of discarded policies for each
+     turn
+    
     index in history_size is the current turn
     second dimension:
         at index 0: amount of liberal policies
@@ -224,7 +241,9 @@ def disc(history_size: int, **_) -> T.disc:
 @typechecked
 def presi_shown(history_size: int, **_) -> T.presi_shown:
     """
-    Initializes the history of which policies was shown to the president: Array with shape (history_size, 2) containing the amount of shown policies for each turn
+    Initializes the history of which policies was shown to the president:
+     Array with shape (history_size, 2) containing the amount of shown
+     policies for each turn
     index in history_size is the current turn
     second dimension:
         at index 0: amount of liberal policies
@@ -248,7 +267,9 @@ def presi_shown(history_size: int, **_) -> T.presi_shown:
 @typechecked
 def chanc_shown(history_size: int, **_) -> T.chanc_shown:
     """
-    Initializes the history of which policies was shown to the chancellor: Array with shape (history_size, 2) containing the amount of shown policies for each turn
+    Initializes the history of which policies was shown to the chancellor:
+     Array with shape (history_size, 2) containing the amount of shown
+     policies for each turn
     index in history_size is the current turn
     second dimension:
         at index 0: amount of liberal policies
@@ -283,7 +304,8 @@ def forced(history_size: int, **_) -> T.forced:
 @typechecked
 def board(history_size: int, **_) -> T.board:
     """
-    Initializes the history of the board: Array with shape (history_size, 2) containing the amount of enacted policies
+    Initializes the history of the board: Array with shape (history_size, 2)
+     containing the amount of enacted policies
     index in history_size is the current turn
     second dimension:
         at index 0: amount of liberal policies
@@ -307,7 +329,8 @@ def board(history_size: int, **_) -> T.board:
 @typechecked
 def killed(player_total: int, history_size: int, ** _) -> T.killed:
     """
-    Initializes the history of killed peoply: Array with shape (history_size, player_total) containing booleans for each player
+    Initializes the history of killed peoply: Array with shape
+     (history_size, player_total) containing booleans for each player
     index in history_size is the current turn
     index in player_total is the player
         True if player is dead
@@ -334,7 +357,8 @@ def killed(player_total: int, history_size: int, ** _) -> T.killed:
 @typechecked
 def winner(history_size: int, **_) -> T.winner:
     """
-    Initializes the history of winner team: Array with shape (history_size, 2) containing which team won
+    Initializes the history of winner team: Array with shape (history_size, 2)
+     containing which team won
     index in history_size is the current turn
     second dimension:
         at index 0 True: liberals won
@@ -380,7 +404,8 @@ def state(
     history_size: int
 ) -> dict[str, jtp.Shaped[jnp.ndarray, "history *_"]]:
     """
-    Initializes the state of the game: Dictionary with every relevant game state
+    Initializes the state of the game: Dictionary with every relevant game
+     state
     key: history of key
     "roles": roles,
     "presi": presi,
@@ -410,20 +435,20 @@ def state(
             accepts arbitrary keyword arguments
     
     Returns:
-        state: dict {   "roles": jtp.Int[jnp.ndarray, "history player_total"],
-                        "presi": jtp.Int[jnp.ndarray, "history"],
-                        "proposed": jtp.Int[jnp.ndarray, "history"],
-                        "chanc": jtp.Int[jnp.ndarray, "history"],
-                        "voted": jtp.Bool[jnp.ndarray, "history"],
-                        "tracker": jtp.Int[jnp.ndarray, "history"],
-                        "draw": jtp.Int[jnp.ndarray, "history 2"],
-                        "disc": jtp.Int[jnp.ndarray, "history 2"],
-                        "presi_shown": jtp.Int[jnp.ndarray, "history 2"],
-                        "chanc_shown": jtp.Int[jnp.ndarray, "history 2"],
-                        "board": jtp.Int[jnp.ndarray, "history 2"],
-                        "killed": jtp.Int[jnp.ndarray, "history player_total"],
+       state: dict {"roles": jtp.Int[jnp.ndarray, "history player_total"],
+                    "presi": jtp.Int[jnp.ndarray, "history"],
+                    "proposed": jtp.Int[jnp.ndarray, "history"],
+                    "chanc": jtp.Int[jnp.ndarray, "history"],
+                    "voted": jtp.Bool[jnp.ndarray, "history"],
+                    "tracker": jtp.Int[jnp.ndarray, "history"],
+                    "draw": jtp.Int[jnp.ndarray, "history 2"],
+                    "disc": jtp.Int[jnp.ndarray, "history 2"],
+                    "presi_shown": jtp.Int[jnp.ndarray, "history 2"],
+                    "chanc_shown": jtp.Int[jnp.ndarray, "history 2"],
+                    "board": jtp.Int[jnp.ndarray, "history 2"],
+                    "killed": jtp.Int[jnp.ndarray, "history player_total"],
                         "winner": jtp.Int[jnp.ndarray, "history 2"]
-                    }
+                   }
     """
 
     if player_total not in range(5, 11):
