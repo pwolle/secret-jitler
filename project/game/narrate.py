@@ -163,8 +163,6 @@ def narrated_game(game):
         print("\nThe votes came in: ")
 
         for j in range(player_count):
-            if j == game['proposed'][-i - 1]:
-                continue
             if game['voted'][-i - 1][j]:
                 print(player_highlighted(game, j), "voted yes.")
             else:

@@ -1,55 +1,56 @@
 import jax.random as jrn
-import jax.numpy as jnp
-from pprint import pp
+from bots import bots, run, interactive
 
-from game import narrate
-import bots.bots as bots
-from bots.run import closure, fuse_bots
-
-player_total = 5
-history_size = 20
-
-game_run = closure(
-    player_total,
-    history_size,
-    fuse_bots(
-        bots.propose_random,
-        bots.propose_random,
-        bots.propose_random,
-    ),
-    fuse_bots(
-        bots.vote_yes,
-        bots.vote_yes,
-        bots.vote_yes,
-    ),
-    fuse_bots(
-        bots.discard_true,
-        bots.discard_false,
-        bots.discard_false,
-    ),
-    fuse_bots(
-        bots.discard_true,
-        bots.discard_false,
-        bots.discard_true,
-    ),
-    fuse_bots(
-        bots.shoot_random,
-        bots.shoot_random,
-        bots.shoot_random,
-    )
-)
-
-
-def game_run_partial(key):
-    key, subkey = jrn.split(key)
-    v = jrn.uniform(subkey, [])
-    return game_run(key, v, v, v, v, v)
-
-
-key = jrn.PRNGKey(2 ** 42 - 5)
+key = jrn.PRNGKey(12834762)
 key, subkey = jrn.split(key)
 
-game = game_run_partial(subkey)
+propose_bot = run.fuse(
+    bots.propose_random,
+    bots.propose_random,
+    bots.propose_random
+)
 
-narrate.narrated_game(game)
+vote_bot = run.fuse(
+    bots.vote_yes,
+    bots.vote_yes,
+    bots.vote_yes
+)
+
+presi_bot = run.fuse(
+    bots.discard_true,
+    bots.discard_false,
+    bots.discard_false,
+)
+
+chanc_bot = run.fuse(
+    bots.discard_true,
+    bots.discard_false,
+    bots.discard_false
+)
+
+shoot_bot = run.fuse(
+    bots.shoot_random,
+    bots.shoot_random,
+    bots.shoot_random
+)
+
+run_func = interactive.closure(
+    10,
+    30,
+    propose_bot=propose_bot,
+    vote_bot=vote_bot,
+    presi_bot=presi_bot,
+    chanc_bot=chanc_bot,
+    shoot_bot=shoot_bot
+)
+
+params = {
+    'propose': 10**3 - 1,
+    'vote': 10**3 - 1,
+    'presi': 10**3 - 1,
+    'chanc': 10**3 - 1,
+    'shoot': 10**3 - 1
+}
+
+state = run_func(subkey, 10, params)
 
