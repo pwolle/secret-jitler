@@ -19,7 +19,23 @@ from .mask import mask
 
 
 def fuse(role_0: T.Bot | Any, role_1: T.Bot | Any, role_2: T.Bot | Any) -> T.Bot:
-    """ """
+    """ 
+    A function to fuse choosen 'base'-bots (see README for more information)
+    
+    Args:
+    	role_0: T.Bot | Any    	    
+    	     the bot which applies in the l case iE if the assigned role is l
+    	
+    	role_1: T.Bot | Any    	    
+    	     the bot which applies in the f case iE if the assigned role is f
+    	   	
+    	role_2: T.Bot | Any	    
+    	     the bot which applies in the h case iE if the assigned role is H
+    	     
+    Retuns:
+        fused_auto: T.Bot
+             the fused bot
+    """
 
     def fused(
         player: int, key: T.key, params: jtp.PyTree, state: T.state
@@ -62,10 +78,42 @@ def closure(
     chanc_bot: T.Bot,
     shoot_bot: T.Bot,
 ) -> Callable[[T.key, T.params_dict], T.state]:
-    """ """
+    """ 
+    Build a jit-able bot-function.
+    This funcion gets 'one-action-bots' iE one bot for voting descisions etc 
+    and returns a function which simulates the game with the given bots.
+    
+    Args: 
+    	player_total: int
+    	     total number of players   
+    	
+    	history_size: int
+    	     length of known history
+    	 	
+    	propose_bot: T.Bot   	    
+    	     partial Bot responsible for proposal descisions
+    	    	
+    	vote_bot: T.Bot    	    
+    	     partial Bot responsible for voting descisions
+                
+        presi_bot: T.Bot	
+	     partial Bot responsible for presidential descisions
+                
+        chanc_bot: T.Bot	 
+	     partial Bot responsible for chancellor-related descision
+    	
+    	shoot_bot: T.Bot    	    
+    	     partial Bot responsible for kill descisions
+    	    
+    Returns:
+    	run: Callable[[T.key, T.params_dict], T.state]
+    	     a function as described above
+
+    
+    """
 
     def turn(key: T.key, state: T.state, params_dict: T.params_dict, **_) -> T.state:
-        """ """
+
         state = util.push_state(state)
 
         key, botkey, simkey = jrn.split(key, 3)
@@ -121,7 +169,22 @@ def closure(
 
 
 def evaluate(run_func: Callable[[T.key, T.params_dict], T.state], batch_size: int):
-    """ """
+    """ 
+    Function which obtains winner information and evaluates them.
+    
+    Args:
+        run_func: Callable[[T.key, T.params_dict], T.state]
+            the 
+        
+        batch_size: int
+            number of played rounds
+        
+    Returns:
+    	evaluate_func: Callable[[key: T.key, params_dict: T.params_dict], jtp.Bool[jnp.ndarray, "..."]]
+    	    funciton to evaluate the given game simulation.
+            
+        
+    """
 
     def run_winner(key: T.key, params_dict) -> jtp.Bool[jnp.ndarray, "..."]:
         return run_func(key, params_dict)["winner"][0]
@@ -136,3 +199,4 @@ def evaluate(run_func: Callable[[T.key, T.params_dict], T.state], batch_size: in
         return run_winner_vmap(keys, params_dict).argmax(-1)
 
     return evaluate_func
+
