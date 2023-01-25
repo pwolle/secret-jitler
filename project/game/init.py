@@ -12,6 +12,11 @@ from . import stype as T
 def roles(key: T.key, player_total: int, history_size: int, **_) -> T.roles:
     """
     Initializes the history of roles: Array with shape (history_size, player_total) containing the roles of the players
+    index in history_size is the current turn
+    index in player_total the player
+        0 stands for liberal
+        1 stands for fascist
+        2 stands for hitler
     
     Args:
         key: T.key
@@ -53,6 +58,8 @@ def roles(key: T.key, player_total: int, history_size: int, **_) -> T.roles:
 def presi(history_size: int, **_) -> T.presi:
     """
     Initializes the history of presidents: Array with shape (history_size,) containing the presidents of the turn initialized with -1
+    index in history_size is the current turn
+        value corresponds to player who was president
     
     Args:
         history_size: int
@@ -73,6 +80,8 @@ def presi(history_size: int, **_) -> T.presi:
 def chanc(history_size: int, **_) -> T.chanc:
     """
     Initializes the history of chancellors: Array with shape (history_size,) containing the chancellors of the turn initialized with -1
+    index in history_size is the current turn
+        value corresponds to the player who was chancellor or -1 if ther was none
     
     Args:
         history_size: int
@@ -93,6 +102,8 @@ def chanc(history_size: int, **_) -> T.chanc:
 def proposed(history_size: int, **_) -> T.proposed:
     """
     Initializes the history of proposed_chancellors: Array with shape (history_size,) containing the proposed_chancellors of the turn initialized with -1
+    index in history_size is the current turn
+        value corresponds to the player who was proposed for chancellor or -1 if ther was none
     
     Args:
         history_size: int
@@ -116,6 +127,10 @@ def proposed(history_size: int, **_) -> T.proposed:
 def voted(player_total: int, history_size: int, **_) -> T.voted:
     """
     Initializes the history of votes: Array with shape (history_size, player_total) containing the votes of each player for the proposed chancellor
+    index in history_size is the current turn
+    index in player_total the player
+        value True player at index voted for proposed chancellor
+        value False player at index voted against proposed chancellor
     
     Args:
         player_total: int
@@ -140,6 +155,8 @@ def tracker(history_size: int, **_) -> T.tracker:
     """
     Initializes the history of the election_tracker: Array with shape (history_size,) containing the election_tracker for each turn
     increases when proposed_chancellor is declined
+    index in history_size is the current turn
+        value in [0,1,2,3] amount of turns without chancellor
     
     Args:
         history_size: int
@@ -160,8 +177,10 @@ def tracker(history_size: int, **_) -> T.tracker:
 def draw(history_size: int, **_) -> T.draw:
     """
     Initializes the history of the draw pile: Array with shape (history_size, 2) containing the amount of policies for each turn
-    at index 0: amount of liberal policies
-    at index 1: amount of fascist policies
+    index in history_size is the current turn
+    second dimension:
+        at index 0: amount of liberal policies
+        at index 1: amount of fascist policies
     
     Args:
         history_size: int
@@ -182,8 +201,10 @@ def draw(history_size: int, **_) -> T.draw:
 def disc(history_size: int, **_) -> T.disc:
     """
     Initializes the history of the discard pile: Array with shape (history_size, 2) containing the amount of discarded policies for each turn
-    at index 0: amount of liberal policies
-    at index 1: amount of fascist policies
+    index in history_size is the current turn
+    second dimension:
+        at index 0: amount of liberal policies
+        at index 1: amount of fascist policies
     
     Args:
         history_size: int
@@ -204,8 +225,10 @@ def disc(history_size: int, **_) -> T.disc:
 def presi_shown(history_size: int, **_) -> T.presi_shown:
     """
     Initializes the history of which policies was shown to the president: Array with shape (history_size, 2) containing the amount of shown policies for each turn
-    at index 0: amount of liberal policies
-    at index 1: amount of fascist policies
+    index in history_size is the current turn
+    second dimension:
+        at index 0: amount of liberal policies
+        at index 1: amount of fascist policies
     
     Args:
         history_size: int
@@ -226,8 +249,10 @@ def presi_shown(history_size: int, **_) -> T.presi_shown:
 def chanc_shown(history_size: int, **_) -> T.chanc_shown:
     """
     Initializes the history of which policies was shown to the chancellor: Array with shape (history_size, 2) containing the amount of shown policies for each turn
-    at index 0: amount of liberal policies
-    at index 1: amount of fascist policies
+    index in history_size is the current turn
+    second dimension:
+        at index 0: amount of liberal policies
+        at index 1: amount of fascist policies
     
     Args:
         history_size: int
@@ -259,8 +284,10 @@ def forced(history_size: int, **_) -> T.forced:
 def board(history_size: int, **_) -> T.board:
     """
     Initializes the history of the board: Array with shape (history_size, 2) containing the amount of enacted policies
-    at index 0: amount of liberal policies
-    at index 1: amount of fascist policies
+    index in history_size is the current turn
+    second dimension:
+        at index 0: amount of liberal policies
+        at index 1: amount of fascist policies
     
     Args:
         history_size: int
@@ -281,8 +308,10 @@ def board(history_size: int, **_) -> T.board:
 def killed(player_total: int, history_size: int, ** _) -> T.killed:
     """
     Initializes the history of killed peoply: Array with shape (history_size, player_total) containing booleans for each player
-    False: player is alive
-    True: player is dead
+    index in history_size is the current turn
+    index in player_total is the player
+        True if player is dead
+        False is player is alive
     
     Args:
         player_total: int
@@ -306,8 +335,10 @@ def killed(player_total: int, history_size: int, ** _) -> T.killed:
 def winner(history_size: int, **_) -> T.winner:
     """
     Initializes the history of winner team: Array with shape (history_size, 2) containing which team won
-    at index 0 True: liberals won
-    at index 1 True: fascists/hitler won
+    index in history_size is the current turn
+    second dimension:
+        at index 0 True: liberals won
+        at index 1 True: fascists/hitler won
     
     Args:
         history_size: int

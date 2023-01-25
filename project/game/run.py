@@ -22,22 +22,36 @@ def propose(
     **_
 ) -> dict[str, T.presi | T.proposed]:
     """
-    Takes a logprobability from the current president to propose a new chancellor.
+    Updates the president to successor (next index alive)
+    Takes a logprobability from the current president
+    Masks the invalid proposals eg. same chancellor, dead people
+    Returns the proposed chancellor based on probability
+    
     Args:
         key: T.key
             Random key for PRNG
            
         presi: T.presi
             president history of gamestate index 0 holds current turn
+            index in history_size is the turn (0 is current)
+                value corresponds to player
             
         killed: T.killed
             killed history of gamestate index 0 holds current turn
+            index in history_size is the turn (0 is current)
+                index in player_total is the player
+                    True if player is dead
+                    False is player is alive
             
         proposed: T.proposed
             proposed chancellor history of gamestate index 0 holds current turn
+            index in history_size is the turn (0 is current)
+                value corresponds to player
             
         chanc: T.chanc
             chancellor history of gamestate index 0 holds current turn
+            index in history_size is the turn (0 is current)
+                value corresponds to player
             
         logprobs: jtp.Float[jnp.ndarray, "players players"]
             logprobability given the players
@@ -129,7 +143,14 @@ def vote(
     | T.chanc_shown
 ]:
     """
-    Takes a logprobability from the current president to propose a new chancellor.
+    Takes probability of each player and vote for or against proposed chancellor
+    Mask irrelevant moves from dead people
+    Check if majority voted for proposed chancellor
+        if set new chancellor
+        else incease election_tracker by one
+    if election_tacker is == 3 force a policy from the draw_pile
+    if vote for chancellor was successful draw 3 policies and show them to president
+    
     Args:
         key: T.key
             Random key for PRNG
@@ -137,31 +158,57 @@ def vote(
         draw: T.draw
             draw pile history of gamestate index 0 holds current turn
             pile which policies can be drawn
+            index in history_size is the turn (0 is current)
+                second dimension:
+                    at index 0: amount of liberal policies
+                    at index 1: amount of fascist policies
             
         disc: T.disc
             discard pile history of gamestate index 0 holds current turn
             pile which policies have been discarded
+            index in history_size is the turn (0 is current)
+                second dimension:
+                    at index 0: amount of liberal policies
+                    at index 1: amount of fascist policies
             
         board: T.board
             board history of gamestate index 0 holds current turn
             pile which policies have been enacted
+            index in history_size is the turn (0 is current)
+                second dimension:
+                    at index 0: amount of liberal policies
+                    at index 1: amount of fascist policies
             
         voted: T.voted
             voted history of gamestate index 0 holds current turn
             contains True or False wether player voted for proposed chancellor
+            index in history_size is the turn (0 is current)
+            index in player_total the player
+                value True player at index voted for proposed chancellor
+                value False player at index voted against proposed chancellor
             
         proposed: T.proposed
             proposed chancellor history of gamestate index 0 holds current turn
+            index in history_size is the turn (0 is current)
+                value corresponds to player
             
         chanc: T.chanc
             chancellor history of gamestate index 0 holds current turn
+            index in history_size is the turn (0 is current)
+                value corresponds to player
             
         killed: T.killed
             killed history of gamestate index 0 holds current turn
+            index in history_size is the turn (0 is current)
+                index in player_total is the player
+                    True if player is dead
+                    False is player is alive
             
         tracker: T.tracker
             election tracker history of gamestate index 0 holds current turn
             inceases if proposed chancellor vote fails
+            index in history_size is the turn (0 is current)
+                value corresponds to amount in (0,1,2,3)
             
         winner: T.winner
             winner history of gamestate index 0 holds current turn
@@ -300,7 +347,8 @@ def presi_disc(
     **_
 ) -> dict[str, T.chanc_shown | T.disc]:
     """
-    Takes a logprobability from the current president to propose a new chancellor.
+    Takes a probability from the current president to discard a policy.
+    
     Args:
         key: T.key
             Random key for PRNG
@@ -308,10 +356,16 @@ def presi_disc(
         disc: T.disc
             discard pile history of gamestate index 0 holds current turn
             pile which policies have been discarded
+            index in history_size is the turn (0 is current)
+                second dimension:
+                    at index 0: amount of liberal policies
+                    at index 1: amount of fascist policies
             
         tracker: T.tracker
             election tracker history of gamestate index 0 holds current turn
             inceases if proposed chancellor vote fails
+            index in history_size is the turn (0 is current)
+                value corresponds to amount in (0,1,2,3)
             
         presi_shown: T.presi_shown
             policies shown to president history of gamestate index 0 holds current turn
@@ -383,7 +437,8 @@ def chanc_disc(
     **_
 ) -> dict[str, T.disc | T.board | T.winner]:
     """
-    Takes a logprobability from the current president to propose a new chancellor.
+    Takes a probability from the current chancellor to select a policy.
+    
     Args:
         key: T.key
             Random key for PRNG
@@ -391,17 +446,29 @@ def chanc_disc(
         disc: T.disc
             discard pile history of gamestate index 0 holds current turn
             pile which policies have been discarded
+            index in history_size is the turn (0 is current)
+                second dimension:
+                    at index 0: amount of liberal policies
+                    at index 1: amount of fascist policies
         
         board: T.board
             board history of gamestate index 0 holds current turn
             pile which policies have been enacted
+            index in history_size is the turn (0 is current)
+                second dimension:
+                    at index 0: amount of liberal policies
+                    at index 1: amount of fascist policies
             
         tracker: T.tracker
             election tracker history of gamestate index 0 holds current turn
             inceases if proposed chancellor vote fails
+            index in history_size is the turn (0 is current)
+                value corresponds to amount in (0,1,2,3)
      
         chanc: T.chanc
             chancellor history of gamestate index 0 holds current turn
+            index in history_size is the turn (0 is current)
+                value corresponds to player
             
         winner: T.winner
             winner history of gamestate index 0 holds current turn
@@ -486,7 +553,10 @@ def shoot(
     **_
 ) -> dict[str, T.killed | T.winner]:
     """
-    Takes a logprobability from the current president to propose a new chancellor.
+    Takes a logprobability from the current president kill a player if the conditions are met.
+    only if a fascist policy was enacted and it was 4th or 5th one.
+    Don't allow if policy was forced
+    
     Args:
         key: T.key
             Random key for PRNG
@@ -494,20 +564,28 @@ def shoot(
         board: T.board
             board history of gamestate index 0 holds current turn
             pile which policies have been enacted
+            index in history_size is the turn (0 is current)
+                second dimension:
+                    at index 0: amount of liberal policies
+                    at index 1: amount of fascist policies
  
         tracker: T.tracker
             election tracker history of gamestate index 0 holds current turn
             inceases if proposed chancellor vote fails
-        
-        board: T.board
-            board history of gamestate index 0 holds current turn
-            pile which policies have been enacted
+            index in history_size is the turn (0 is current)
+                value corresponds to amount in (0,1,2,3)
             
         killed: T.killed
             killed history of gamestate index 0 holds current turn
+            index in history_size is the turn (0 is current)
+                index in player_total is the player
+                    True if player is dead
+                    False is player is alive
      
         presi: T.presi
             president history of gamestate index 0 holds current turn
+            index in history_size is the turn (0 is current)
+                value corresponds to player
             
         winner: T.winner
             winner history of gamestate index 0 holds current turn
@@ -592,6 +670,7 @@ def dummy_history(
 ) -> dict[str, jtp.Shaped[jnp.ndarray, "..."]]:
     """
     runs the whole game and returns a example history
+    
     Args:
         key: T.key
             Random key for PRNG
