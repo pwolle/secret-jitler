@@ -79,7 +79,8 @@ def draw_policy(
     jtp.Int[jnp.ndarray, "history 2"]
 ]:
     """
-    Draws a policy from the draw_pile. If the draw_pile is empty swap discard_pile and draw_pile.
+    Draws a policy from the draw_pile. If the draw_pile is empty swap
+     discard_pile and draw_pile.
     And updates said piles
     
     Args:

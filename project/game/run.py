@@ -44,7 +44,8 @@ def propose(
                     False is player is alive
             
         proposed: T.proposed
-            proposed chancellor history of gamestate index 0 holds current turn
+            proposed chancellor history of gamestate index 0 holds current
+             turn
             index in history_size is the turn (0 is current)
                 value corresponds to player
             
@@ -143,13 +144,15 @@ def vote(
     | T.chanc_shown
 ]:
     """
-    Takes probability of each player and vote for or against proposed chancellor
+    Takes probability of each player and vote for or against proposed
+     chancellor
     Mask irrelevant moves from dead people
     Check if majority voted for proposed chancellor
         if set new chancellor
         else incease election_tracker by one
     if election_tacker is == 3 force a policy from the draw_pile
-    if vote for chancellor was successful draw 3 policies and show them to president
+    if vote for chancellor was successful draw 3 policies and show them to
+     president
     
     Args:
         key: T.key
@@ -188,7 +191,8 @@ def vote(
                 value False player at index voted against proposed chancellor
             
         proposed: T.proposed
-            proposed chancellor history of gamestate index 0 holds current turn
+            proposed chancellor history of gamestate index 0 holds current
+             turn
             index in history_size is the turn (0 is current)
                 value corresponds to player
             
@@ -223,17 +227,20 @@ def vote(
                 2 if player i is hitler
                 
         presi_shown: T.presi_shown
-            policies shown to president history of gamestate index 0 holds current turn
+            policies shown to president history of gamestate index 0 holds
+             current turn
             at index 0 amount of liberal policies
             at index 1 amount of fascist policies
             
         chanc_shown: T.chanc_shown
-            policies shown to chancellor history of gamestate index 0 holds current turn
+            policies shown to chancellor history of gamestate index 0 holds
+             current turn
             at index 0 amount of liberal policies
             at index 1 amount of fascist policies
             
         probs: jtp.Float[jnp.ndarray, "players"]
-            probabilities of players with which they vote for proposed chancellor
+            probabilities of players with which they vote for proposed
+             chancellor
     
         **_
             accepts arbitrary keyword arguments
@@ -275,7 +282,7 @@ def vote(
         winner[0, 1],
     ))
 
-    # reset tracker, if last round was skipped (if tracker was 3 at last round)
+    # reset tracker, if last round was skipped(if tracker was 3 at last round)
     tracker = tracker.at[0].mul(tracker[1] != 3)
 
     # update tracker: set to 0 if majority voted yes, otherwise increment
@@ -368,12 +375,14 @@ def presi_disc(
                 value corresponds to amount in (0,1,2,3)
             
         presi_shown: T.presi_shown
-            policies shown to president history of gamestate index 0 holds current turn
+            policies shown to president history of gamestate index 0 holds
+             current turn
             at index 0 amount of liberal policies
             at index 1 amount of fascist policies
             
         chanc_shown: T.chanc_shown
-            policies shown to chancellor history of gamestate index 0 holds current turn
+            policies shown to chancellor history of gamestate index 0 holds
+             current turn
             at index 0 amount of liberal policies
             at index 1 amount of fascist policies
             
@@ -476,7 +485,8 @@ def chanc_disc(
             True at 1 when fascist/hitler won
    
         chanc_shown: T.chanc_shown
-            policies shown to chancellor history of gamestate index 0 holds current turn
+            policies shown to chancellor history of gamestate index 0 holds
+             current turn
             at index 0 amount of liberal policies
             at index 1 amount of fascist policies
             
@@ -553,7 +563,8 @@ def shoot(
     **_
 ) -> dict[str, T.killed | T.winner]:
     """
-    Takes a logprobability from the current president kill a player if the conditions are met.
+    Takes a logprobability from the current president kill a player if the
+     conditions are met.
     only if a fascist policy was enacted and it was 4th or 5th one.
     Don't allow if policy was forced
     
