@@ -114,7 +114,7 @@ def player_highlighted(game, round_num, value=None):
     return string
 
 
-def narrated_game(game):
+def narrate_game(game):
     """
     Narrate one game using print statements.
 
@@ -136,6 +136,8 @@ def narrated_game(game):
     print(f"\t\t\033[4mA new game with {player_count} players starts!\033[0m\n")
 
     print("The roles have been assigned:")
+
+    dead_players = []
 
     for i in range(player_count):
         if game['roles'][0][i] == 0:
@@ -163,7 +165,9 @@ def narrated_game(game):
         print("\nThe votes came in: ")
 
         for j in range(player_count):
-            if game['voted'][-i - 1][j]:
+            if j in dead_players:
+                continue
+            elif game['voted'][-i - 1][j]:
                 print(player_highlighted(game, j), "voted yes.")
             else:
                 print(player_highlighted(game, j), "voted no.")
@@ -179,7 +183,8 @@ def narrated_game(game):
 
         if game['roles'][0][game['chanc'][-i - 1]] == 2 and game['board'][-i - 1][1] >= 3:
             print("Hitler was voted chancellor.")
-            continue
+            print("\nThe \x1b[31mFascists\x1b[0m have won!")
+            exit()
 
         print("\nThe election went through.\n\n"
               "Now the president will provide two policies of their choice to the chancellor.\n")
@@ -192,6 +197,22 @@ def narrated_game(game):
 
         print("\nThe chancellor has decided and enacts a policy.\nThe board state is\n")
         print_board(game['board'][-i - 1])
+
+        shooting_necessary = jnp.logical_or(
+            ((game['board'][-i - 1][1], game['board'][-i][1]) == (3, 4)),
+            ((game['board'][-i - 1][1], game['board'][-i][1]) == (4, 5))
+        )
+
+        if shooting_necessary and not game['winner'][-i - 1].any():
+            print(f"As {game['board'][-i - 1][1]} F policies have been "
+                  "enacted already it is time for some action. The President"
+                  " brought a gun and can now formally execute a Player of "
+                  "their choice.\n")
+            dead_player = jnp.argmax(
+                game['killed'][-i - 1].astype(int) - game['killed'][-i].astype(int)
+            )
+            dead_players.append(dead_player)
+            print(f"Their choice was {player_highlighted(game, dead_player)}.")
 
 
     

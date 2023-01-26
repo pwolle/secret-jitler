@@ -1,7 +1,8 @@
 import jax.random as jrn
+from game import narrate
 from bots import bots, run, interactive
 
-key = jrn.PRNGKey(12834762)
+key = jrn.PRNGKey(1283722)
 key, subkey = jrn.split(key)
 
 propose_bot = run.fuse(
@@ -11,9 +12,9 @@ propose_bot = run.fuse(
 )
 
 vote_bot = run.fuse(
-    bots.vote_yes,
-    bots.vote_yes,
-    bots.vote_yes
+    bots.vote_no,
+    bots.vote_no,
+    bots.vote_no
 )
 
 presi_bot = run.fuse(
@@ -34,7 +35,17 @@ shoot_bot = run.fuse(
     bots.shoot_random
 )
 
-run_func = interactive.closure(
+run_func = run.closure(
+    10,
+    30,
+    propose_bot=propose_bot,
+    vote_bot=vote_bot,
+    presi_bot=presi_bot,
+    chanc_bot=chanc_bot,
+    shoot_bot=shoot_bot
+)
+
+run_func_interactive = interactive.closure(
     10,
     30,
     propose_bot=propose_bot,
@@ -52,5 +63,8 @@ params = {
     'shoot': 10**3 - 1
 }
 
-state = run_func(subkey, 10, params)
+#state = run_func(subkey, params)
 
+state = run_func_interactive(subkey, 7, params)
+
+#narrate.narrate_game(state)
