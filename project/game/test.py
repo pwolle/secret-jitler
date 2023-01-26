@@ -78,7 +78,8 @@ def test_roles(
 def test_presi_chanc_or_proposed(
         *,
         player_total: int,
-        arr: jtp.Int[jnp.ndarray, "historyy history"]
+        arr: jtp.Int[jnp.ndarray, "historyy history"],
+        killed: jtp.Bool[jnp.ndarray, "historyy history players"]
 ) -> jtp.Bool[jnp.ndarray, ""]:
     """
     Test the presi, chanc or proposed history array.
@@ -96,9 +97,11 @@ def test_presi_chanc_or_proposed(
     """
     right_interval = jnp.logical_and(arr >= -1, arr <= player_total - 1).all()
 
+    undead = jnp.logical_not(killed[..., arr].any())
+
     unchanged = test_unchanged(arr=arr)
 
-    works = right_interval * unchanged
+    works = right_interval * undead * unchanged
 
     return works
 
@@ -299,10 +302,10 @@ def test_dummy_history(
     roles_work = test_roles(player_total=player_total, roles=dic['roles'])
 
     presi_works = test_presi_chanc_or_proposed(
-        player_total=player_total, arr=dic['presi'])
+        player_total=player_total, arr=dic['presi'], killed=dic['killed'])
 
     chanc_works = test_presi_chanc_or_proposed(
-        player_total=player_total, arr=dic['chanc'])
+        player_total=player_total, arr=dic['chanc'], killed=dic['killed'])
 
     proposed_works = test_presi_chanc_or_proposed(
         player_total=player_total, arr=dic['proposed'])
