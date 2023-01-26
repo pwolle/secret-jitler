@@ -72,7 +72,7 @@ def closure(
 
             player_propose = "a"
             # check if the input is valid
-            while player_propose not in players_string:
+            while player_propose not in players_string or len(player_propose) != 1:
                 print_typewriter("\nYour Party is still on the fence about "
                                  "their Presidential Candidate. Nonetheless "
                                  "you ask yourself: 'Assuming I am the "
@@ -267,7 +267,9 @@ def closure(
                 valid_shot = False
 
                 while not valid_shot:
-                    while player_shoot not in players_string:
+                    while player_shoot \
+                            not in players_string \
+                            and len(player_shoot) != 1:
                         print_typewriter("\nPresident! You have to decide "
                                          "which Player to shoot! "
                                          "(enter a number between 0-"

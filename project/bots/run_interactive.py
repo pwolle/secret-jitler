@@ -1,9 +1,11 @@
 import jax.random as jrn
-from bots import bots, run, interactive
+from . import bots, run, interactive
 
-key = jrn.PRNGKey(1213722)
+# create a random key using some seed
+key = jrn.PRNGKey(1213727)
 key, subkey = jrn.split(key)
 
+# fuse bots from bots.bots
 propose_bot = run.fuse(
     bots.propose_random,
     bots.propose_random,
@@ -34,9 +36,10 @@ shoot_bot = run.fuse(
     bots.shoot_random
 )
 
+# create run function
 run_func_interactive = interactive.closure(
-    7,
-    30,
+    10,  # number of players
+    30,  # history size
     propose_bot=propose_bot,
     vote_bot=vote_bot,
     presi_bot=presi_bot,
@@ -44,12 +47,19 @@ run_func_interactive = interactive.closure(
     shoot_bot=shoot_bot
 )
 
+# create some bot parameters
 params = {
-    'propose': 10**2 - 1,
-    'vote': 10**3 - 1,
-    'presi': 10**2 - 1,
-    'chanc': 10**3 - 1,
-    'shoot': 10**2 - 1
+    'propose': 10 ** 2 - 1,
+    'vote': 10 ** 3 - 1,
+    'presi': 10 ** 2 - 1,
+    'chanc': 10 ** 3 - 1,
+    'shoot': 10 ** 2 - 1
 }
 
-state = run_func_interactive(subkey, 3, params, 1.0)
+# run the game
+state = run_func_interactive(
+    subkey,  # key created above
+    4,  # player number of the human player
+    params,
+    1.0  # change this value down/up if the game should run faster/slower
+)
