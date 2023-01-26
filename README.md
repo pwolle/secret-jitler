@@ -9,7 +9,7 @@ Secret-**Jit**ler a **j**ust-**i**n-**t**ime compiled python implementation of t
 - 🤯 see what's going on thanks to the narration 
 
 ## Motivation
-As avid players of the game Secret Hitler, we are always discussing our stratiegies. Since we are programmmers, we decided to create a test these strategies in simulated games.
+As avid players of the game Secret Hitler, we are always discussing our stratiegies. Since we are programmmers, we decided to create a test for these strategies in simulated games.
 
 ## Installation
 
@@ -17,7 +17,7 @@ As avid players of the game Secret Hitler, we are always discussing our stratieg
 1. Make sure python 3.10 or newer is installed on your system, if you are not sure about your currently installed version, run `python --version`.
 2. Clone the repository with `git clone https://github.com/unitdeterminant/secret-jitler.git`, if `git` is not available download directly from [github](https://github.com/unitdeterminant/secret-jitler.git) and unzip it.
 3. Open a terminal in `secret-jitler`
-5. Make sure [pip](https://pip.pypa.io/en/stable/installation/) is installed and run `pip install -r requirements.txt` 
+4. Make sure [pip](https://pip.pypa.io/en/stable/installation/) is installed and run `pip install -r requirements.txt` 
 
 Tested on MX-21.3, Debian 11.6 and Ubuntu 22.04 (LTS).
 
