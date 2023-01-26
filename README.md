@@ -49,3 +49,10 @@ Performance numbers estimated using the script `project/performance.py`.
 
 ## Tests
 This repo includes a `test.py` file to validate the game states. User inputs are always validated.
+
+
+## Contributions
+- __Uncreative-Nickanme__ executive session, documentation
+- __OhKjell__ testing, narration, interactive
+- __JannisRow__ elective session, documentation
+- __unitdeterminant__ legislative session, refactoring, performance
