@@ -19,7 +19,7 @@ As avid players of the game Secret Hitler, we are always discussing our stratieg
 3. Open a terminal in `secret-jitler`
 4. Make sure [pip](https://pip.pypa.io/en/stable/installation/) is installed and run `pip install -r requirements.txt` 
 
-Tested on MX-21.3, Debian 11.6 and Ubuntu 22.04 (LTS).
+Tested on Ubuntu 22.04 (LTS), Debian 11.6, MX-21.3 and [gwdg jupyter](https://jupyter-cloud.gwdg.de).
 
 ### Running on GPU via Conda
 If you want to train a bot or run lots of games in parallel using a gpu is recommended. You can check, whether your gpu is cuda compatile [here](https://en.wikipedia.org/wiki/CUDA#GPUs_supported).
