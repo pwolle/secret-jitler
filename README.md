@@ -31,7 +31,7 @@ If you want to train a bot or run lots of games in parallel using a gpu is recom
 Tested on Manjaro 22.0.0 with a gtx 1060.
 
 ### First steps
-If you want to play an interactive game, open a terminal to `project` and run `python run_interactive.py
+If you want to play an interactive game, open a terminal to `project` and run `python run_interactive.py`.
 
 
 ## API reference
