@@ -6,8 +6,8 @@ import jax.random as jrn
 import jax.numpy as jnp
 
 import sys
-from time import sleep
-from random import uniform
+import random
+import time
 
 # from typing import Callable
 
@@ -22,20 +22,66 @@ from game import run
 from .mask import mask
 
 
-def print_typewriter(string, sleep_max=0.1):
+def print_typewriter(string, sleep_max=0.001):
     for char in string:
         print(char, end="")
         sys.stdout.flush()
-        sleep(uniform(0, sleep_max))
+        time.sleep(random.uniform(0, sleep_max))
 
 
-# def propose(
-#     player_position: int,
-#     dead_players,
-#     probs,
+def player_repr(value, player):
+    if value == player:
+        return "\033[4mYou\033[0m"
 
-# ):
-#     return
+    return f"Player {value}"
+
+
+def propose(player_position: int, state, probs, speed=0.1):
+    if state["killed"][0, player_position]:
+        return probs
+
+    succesor = run.propose(key=jrn.PRNGKey(0), logprobs=probs, **state)
+    succesor = succesor["presi"][0]
+
+    if succesor != player_position:
+        return probs
+
+    player_total = state["roles"].shape[-1]
+
+    texts = [
+        "\nYour Party is still on the fence about "
+        "their Presidential Candidate. Nonetheless "
+        "you ask yourself: 'Assuming I am the "
+        "Presidential Candidate. Which eligible "
+        "Chancellor Candidate would I choose?' "
+        "(enter a number "
+        f"from 0-{player_total - 1})\n",
+    ]
+
+    proposal = None
+
+    while proposal not in range(player_total):
+        print_typewriter(random.choice(texts), speed)
+
+        try:
+            proposal = input()
+            proposal = int(proposal)
+        except ValueError:
+            proposal = None
+
+    return probs.at[player_position, proposal].set(jnp.inf)
+
+
+def propose_announce(pos, state):
+    print_typewriter(
+        f'\n{player_repr(pos, state["presi"][0])} is the Presidential Candidate.'
+        f'They have proposed {player_repr(state["proposed"][0], pos)} as their '
+        f"Chancellor.\n"
+    )
+
+
+def vote():
+    raise NotImplementedError
 
 
 def closure(
@@ -70,54 +116,10 @@ def closure(
         probs = propose_bot(
             key=botkey, params=params_dict["propose"], state=mask(state)
         )
-
-        # get input from the president
-        if player_position not in dead_players:
-
-            player_propose = "a"
-            # check if the input is valid
-            while player_propose not in players_string or len(player_propose) != 1:
-                print_typewriter(
-                    "\nYour Party is still on the fence about "
-                    "their Presidential Candidate. Nonetheless "
-                    "you ask yourself: 'Assuming I am the "
-                    "Presidential Candidate. Which eligible "
-                    "Chancellor Candidate would I choose?' "
-                    "(enter a number "
-                    f"from 0-{player_total - 1})\n",
-                    sleep_max=0.1 * typewriter_speed,
-                )
-                player_propose = input()
-
-            player_propose = int(player_propose)
-        else:
-            player_propose = 0
-        probs = probs.at[player_position, player_propose].set(jnp.inf)
-
+        probs = propose(player_position, state, probs)
         state |= run.propose(key=simkey, logprobs=probs, **state)
 
-        if state["proposed"][0] == player_position:
-            print_typewriter(
-                f"\nPlayer {state['presi'][0]} is the "
-                f"Presidential Candidate. They have proposed "
-                f"\033[4myou\033[0m as their Chancellor.\n",
-                sleep_max=0.1 * typewriter_speed,
-            )
-        elif state["presi"][0] == player_position:
-            print_typewriter(
-                "\n\033[4mYou\033[0m are the Presidential "
-                "Candidate. You have proposed Player "
-                f"{state['proposed'][0]} as your Chancellor.\n",
-                sleep_max=0.1 * typewriter_speed,
-            )
-        else:
-            print_typewriter(
-                f"\nPlayer {state['presi'][0]} is the "
-                "Presidential Candidate. They have proposed"
-                f" Player {state['proposed'][0]} as their "
-                f"Chancellor.\n",
-                sleep_max=0.1 * typewriter_speed,
-            )
+        propose_announce(player_position, state)
 
         key, botkey, simkey = jrn.split(key, 3)
         probs = vote_bot(key=botkey, params=params_dict["vote"], state=mask(state))
