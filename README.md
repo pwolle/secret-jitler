@@ -46,6 +46,7 @@ Performance numbers estimated using the script `project/performance.py`.
 | gtx 1060 | 2.9e6 | 131072 |
 | i7-6700  | 5.8e4 | 256 |
 | AMD 7 4700U | 7.1e4 | 128 |
+| [gwdg jupyter](https://jupyter-cloud.gwdg.de) | 3.9e4 | 128 |
 
 ## Tests
 This repo includes a `test.py` file to validate the game states. User inputs are always validated.
