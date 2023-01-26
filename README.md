@@ -39,7 +39,7 @@ If you want to play an interactive game:
 If you want to build a bot, take a look at the [documentation](https://github.com/unitdeterminant/secret-jitler/blob/main/project/bots/README.md) in `project/game/bots/README.md`.
 
 
-## Performance
+## Performance 🥵
 Performance numbers estimated using the script `project/performance.py`.
 | hardware | throuput in it/s | batch size |
 | - | - | - |
