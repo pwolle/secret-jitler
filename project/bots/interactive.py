@@ -72,7 +72,7 @@ def closure(
 
             player_propose = "a"
             # check if the input is valid
-            while player_propose not in players_string:
+            while player_propose not in players_string or len(player_propose) != 1:
                 print_typewriter("\nYour Party is still on the fence about "
                                  "their Presidential Candidate. Nonetheless "
                                  "you ask yourself: 'Assuming I am the "
@@ -120,8 +120,8 @@ def closure(
             player_vote = ""
             # check for valid inputs
             while player_vote not in ["0", "1"]:
-                print_typewriter("\nWhat is your decision?"
-                                 " (enter 0 for No or 1 for Yes)\n",
+                print_typewriter("\nWhat is your decision? (enter 0 for Nein!"
+                                 " (no) or 1 for Ja! (yes))\n",
                                  sleep_max=0.1 * typewriter_speed)
                 player_vote = input()
 
@@ -140,10 +140,10 @@ def closure(
             if j in dead_players:
                 continue
             elif state['voted'][0][j]:
-                print_typewriter(f"Player {j} voted yes.\n",
+                print_typewriter(f"Player {j} voted Ja! (yes).\n",
                                  sleep_max=0.1 * typewriter_speed)
             else:
-                print_typewriter(f"Player {j} voted no.\n",
+                print_typewriter(f"Player {j} voted Nein! (no).\n",
                                  sleep_max=0.1 * typewriter_speed)
 
         # update on the election tracker
@@ -183,8 +183,8 @@ def closure(
                                  sleep_max=0.1 * typewriter_speed)
                 narrate.print_cards(state['presi_shown'][0])
                 print_typewriter("\nWhat type of card do you want to "
-                                 "discard? (enter 0 for L or 1 for "
-                                 "F)\n",
+                                 "discard? (enter 0 for Liberal or 1 for "
+                                 "Fascist)\n",
                                  sleep_max=0.1 * typewriter_speed)
                 player_presi = input()
 
@@ -218,14 +218,15 @@ def closure(
                              sleep_max=0.1 * typewriter_speed)
             narrate.print_cards(state['chanc_shown'][0])
             print_typewriter("\nAs Chancellor your job is to decide which of "
-                             "those two policies to enact.\n",
+                             "those two policies to enact and which one to "
+                             "discard.\n",
                              sleep_max=0.1 * typewriter_speed)
 
             player_chanc = ""
 
             while player_chanc not in ["0", "1"]:
                 print_typewriter("\nWhat kind of card do you want to discard?"
-                                 " (enter 0 for L or 1 for F)\n",
+                                 " (enter 0 for Liberal or 1 for Fascist)\n",
                                  sleep_max=0.1 * typewriter_speed)
                 player_chanc = input()
 
@@ -266,7 +267,9 @@ def closure(
                 valid_shot = False
 
                 while not valid_shot:
-                    while player_shoot not in players_string:
+                    while player_shoot \
+                            not in players_string \
+                            and len(player_shoot) != 1:
                         print_typewriter("\nPresident! You have to decide "
                                          "which Player to shoot! "
                                          "(enter a number between 0-"
@@ -292,9 +295,15 @@ def closure(
                 state['killed'][0].astype(int)
                 - state['killed'][1].astype(int)
             )
-
-            print_typewriter(f"\nPlayer {dead_player} was shot.\n",
-                             sleep_max=0.1 * typewriter_speed)
+            if state['roles'][0][dead_player]:
+                print_typewriter(
+                    "\nHitler was shot.\n",
+                    sleep_max=0.1 * typewriter_speed
+                )
+            else:
+                print_typewriter(
+                    f"\nPlayer {dead_player} was shot.\n",
+                    sleep_max=0.1 * typewriter_speed)
 
             dead_players.append(dead_player)
 
@@ -354,7 +363,7 @@ def closure(
             print_typewriter("\nYou have secretly been assigned the role "
                              "\033[4m\x1b[31mHitler\x1b[0m\033[0m. "
                              "In order to win you have to make sure that six "
-                             "fascist policies are enacted or Hitler gets "
+                             "fascist policies are enacted or you get "
                              "elected after three fascist policies have been "
                              "enacted.\n",
                              sleep_max=0.1 * typewriter_speed)
@@ -375,10 +384,10 @@ def closure(
             i += 1
 
         if state['winner'][0][0]:
-            print_typewriter("\nThe \x1b[34mLiberals\x1b[0m have won!",
+            print_typewriter("\nThe \x1b[34mLiberals\x1b[0m have won!\n",
                              sleep_max=0.1 * typewriter_speed)
         else:
-            print_typewriter("\nThe \x1b[31mFascists\x1b[0m have won!",
+            print_typewriter("\nThe \x1b[31mFascists\x1b[0m have won!\n",
                              sleep_max=0.1 * typewriter_speed)
 
         return state
