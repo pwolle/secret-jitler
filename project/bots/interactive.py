@@ -9,20 +9,18 @@ import sys
 import random
 import time
 
-# from typing import Callable
 
 from game import init
 from game import stype as sh
 from game import util
 from game import narrate
 
-# from game.run import chanc_disc, presi_disc, propose, shoot, vote
 from game import run
 
 from .mask import mask
 
 
-def print_typewriter(string, sleep_max=0.001):
+def print_typewriter(string, sleep_max=0.0):
     for char in string:
         print(char, end="")
         sys.stdout.flush()
@@ -36,7 +34,21 @@ def player_repr(value, player):
     return f"Player {value}"
 
 
-def propose(player_position: int, state, probs, speed=0.1):
+def validated_input(expected: dict, speed=0.0):
+    expected = {str(k).upper(): v for k, v in expected.items()}
+    texts = ["try again\n"]
+
+    while True:
+        read = input().upper()
+
+        try:
+            return expected[read]
+
+        except KeyError:
+            print_typewriter(random.choice(texts), speed)
+
+
+def propose(player_position: int, state, probs, speed=0.0):
     if state["killed"][0, player_position]:
         return probs
 
@@ -58,30 +70,168 @@ def propose(player_position: int, state, probs, speed=0.1):
         f"from 0-{player_total - 1})\n",
     ]
 
-    proposal = None
-
-    while proposal not in range(player_total):
-        print_typewriter(random.choice(texts), speed)
-
-        try:
-            proposal = input()
-            proposal = int(proposal)
-        except ValueError:
-            proposal = None
+    print_typewriter(random.choice(texts))
+    proposal = validated_input({i: i for i in range(player_total)}, speed)
 
     return probs.at[player_position, proposal].set(jnp.inf)
 
 
-def propose_announce(pos, state):
+def propose_announce(pos, state, speed=0.0):
     print_typewriter(
         f'\n{player_repr(pos, state["presi"][0])} is the Presidential Candidate.'
         f'They have proposed {player_repr(state["proposed"][0], pos)} as their '
-        f"Chancellor.\n"
+        f"Chancellor.\n",
+        speed,
     )
 
 
-def vote():
-    raise NotImplementedError
+def vote(
+    player_position: int,
+    state,
+    probs,
+    speed=0.0,
+):
+    if state["killed"][0, player_position]:
+        return probs
+
+    texts = [
+        "\nLet us cast our votes. The People await guidance."
+        "\nWhat is your decision? (enter 0 for Nein! (no) or 1 for Ja! (yes))\n",
+    ]
+
+    print_typewriter(random.choice(texts), speed)
+
+    player_vote = validated_input(
+        {
+            0: 0,
+            1: 1,
+            "n": 0,
+            "y": 1,
+            "no": 0,
+            "yes": 1,
+            "nein": 0,
+            "ja": 1,
+        },
+        speed,
+    )
+
+    return probs.at[player_position].set(player_vote)
+
+
+def vote_announce(pos, state, speed=0.0):
+    print_typewriter("\nThe votes came in: \n", speed)
+
+    votes = state["voted"][0]
+    killed = state["killed"][0]
+
+    for i, vote in enumerate(votes):
+        if killed[i]:
+            continue
+
+        if vote:
+            print_typewriter(f"\n{player_repr(i, pos)} voted Ja!", speed)
+
+        else:
+            print_typewriter(f"\n{player_repr(i, pos)} voted Nein!", speed)
+
+    print_typewriter("\n", speed)
+
+    if state["tracker"][0] == 0:
+        if state["roles"][0][state["chanc"][0]] == 2 and state["board"][0][1] >= 3:
+            print_typewriter(
+                "\nHitler was elected Chancellor.\n\nThe "
+                "\x1b[31mFascists\x1b[0m have won!",
+                speed,
+            )
+            sys.exit()
+
+        print_typewriter("\nThe vote passed. We have a new Chancellor.\n", speed)
+        return False
+
+    if state["tracker"][0] == 3:
+        print_typewriter(
+            "\nThree elections in a row have been "
+            "rejected. The country is thrown into chaos "
+            "and the first policy drawn gets enacted "
+            "without votes.\n",
+            speed,
+        )
+
+        return True
+
+    print_typewriter(
+        "\nThe vote failed. The Presidential "
+        "Candidate missed this chance. The Election "
+        "Tracker advances to "
+        f"{state['tracker'][0]}\n",
+        speed,
+    )
+
+    return True
+
+
+def presi_disc(player_position, state, probs, speed=0.0):
+    if state["killed"][0, player_position]:
+        return probs
+
+    if state["presi"][0] != player_position:
+        print_typewriter(
+            "\n The President draws three policies, discards one and hands the"
+            " other two to the Chancellor."
+        )
+        return probs
+
+    print_typewriter(
+        "\nAs you are the President it is your duty "
+        "to give two of three Policies to the "
+        "Chancellor. Your choice looks like this: ",
+        speed,
+    )
+    narrate.print_cards(state["presi_shown"][0])
+
+    print_typewriter(
+        "\nWhat type of card do you want to "
+        "discard? (enter 0 for Liberal or 1 for "
+        "Fascist)\n",
+        speed,
+    )
+
+    discard = validated_input(
+        {0: 0, 1: 1, "l": 0, "f": 1, "liberal": 0, "fascist": 1}, speed
+    )
+
+    return probs.at[player_position].set(discard)
+
+
+def chanc_disc(player_position, state, probs, speed=0.0):
+    if state["killed"][0, player_position]:
+        return probs
+
+    if state["chanc"][0] != player_position:
+        print_typewriter(
+            "\nThe Chancellor chooses one of the two to "
+            "enact and discards the other.\n",
+            speed,
+        )
+        return probs
+
+    print_typewriter(
+        "\nYou take a look at the Policies and see: ",
+        speed,
+    )
+    narrate.print_cards(state["chanc_shown"][0])
+    print_typewriter(
+        "\nAs Chancellor your job is to decide which of "
+        "those two policies to enact and which one to "
+        "discard.\n",
+        speed,
+    )
+
+    discard = validated_input(
+        {0: 0, 1: 1, "l": 0, "f": 1, "liberal": 0, "fascist": 1}, speed
+    )
+
+    return probs.at[player_position].set(discard)
 
 
 def closure(
@@ -123,151 +273,21 @@ def closure(
 
         key, botkey, simkey = jrn.split(key, 3)
         probs = vote_bot(key=botkey, params=params_dict["vote"], state=mask(state))
-
-        if player_position not in dead_players:
-            print_typewriter(
-                "\nLet us cast our votes. The People await guidance.",
-                sleep_max=0.1 * typewriter_speed,
-            )
-            player_vote = ""
-            # check for valid inputs
-            while player_vote not in ["0", "1"]:
-                print_typewriter(
-                    "\nWhat is your decision? (enter 0 for Nein!"
-                    " (no) or 1 for Ja! (yes))\n",
-                    sleep_max=0.1 * typewriter_speed,
-                )
-                player_vote = input()
-
-            player_vote = int(player_vote)
-        else:
-            player_vote = 0
-
-        probs = probs.at[player_position].set(player_vote)
-
+        probs = vote(player_position, state, probs)
         state |= run.vote(key=simkey, probs=probs, **state)
 
-        print_typewriter("\nThe votes came in: \n\n", sleep_max=0.1 * typewriter_speed)
-
-        for j in range(player_total):
-            if j in dead_players:
-                continue
-
-            if state["voted"][0][j]:
-                print_typewriter(
-                    f"Player {j} voted Ja! (yes).\n", sleep_max=0.1 * typewriter_speed
-                )
-            else:
-                print_typewriter(
-                    f"Player {j} voted Nein! (no).\n", sleep_max=0.1 * typewriter_speed
-                )
-
-        # update on the election tracker
-        if state["tracker"][0] != 0:
-            vote_passed = False
-            if state["tracker"][0] == 3:
-                print_typewriter(
-                    "\nThree elections in a row have been "
-                    "rejected. The country is thrown into chaos "
-                    "and the first policy drawn gets enacted "
-                    "without votes.\n",
-                    sleep_max=0.1 * typewriter_speed,
-                )
-            else:
-                print_typewriter(
-                    "\nThe vote failed. The Presidential "
-                    "Candidate missed this chance. The Election "
-                    "Tracker advances to "
-                    f"{state['tracker'][0]}\n",
-                    sleep_max=0.1 * typewriter_speed,
-                )
-        else:
-            vote_passed = True
-            print_typewriter(
-                "\nThe vote passed. " "We have a new Chancellor.\n",
-                sleep_max=0.1 * typewriter_speed,
-            )
+        skip = vote_announce(player_position, state)
+        if skip:
+            return state, dead_players
 
         key, botkey, simkey = jrn.split(key, 3)
         probs = presi_bot(key=botkey, params=params_dict["presi"], state=mask(state))
-        if state["presi"][0] == player_position and vote_passed:
-            player_presi = ""
-
-            while player_presi not in ["0", "1"]:
-                print_typewriter(
-                    "\nAs you are the President it is your duty "
-                    "to give two of three Policies to the "
-                    "Chancellor. Your choice looks like this: ",
-                    sleep_max=0.1 * typewriter_speed,
-                )
-                narrate.print_cards(state["presi_shown"][0])
-                print_typewriter(
-                    "\nWhat type of card do you want to "
-                    "discard? (enter 0 for Liberal or 1 for "
-                    "Fascist)\n",
-                    sleep_max=0.1 * typewriter_speed,
-                )
-                player_presi = input()
-
-            player_presi = int(player_presi)
-
-            probs = probs.at[player_position].set(player_presi)
-
+        probs = presi_disc(player_position, state, probs)
         state |= run.presi_disc(key=simkey, probs=probs, **state)
-
-        if (
-            vote_passed
-            and state["roles"][0][state["chanc"][0]] == 2
-            and state["board"][0][1] >= 3
-        ):
-            print_typewriter(
-                "\nHitler was elected Chancellor.\n\nThe "
-                "\x1b[31mFascists\x1b[0m have won!",
-                sleep_max=0.1 * typewriter_speed,
-            )
-            sys.exit()
-
-        if vote_passed:
-            print_typewriter(
-                "\nThe Chancellor gets handed two Policies by their President.\n",
-                sleep_max=0.1 * typewriter_speed,
-            )
 
         key, botkey, simkey = jrn.split(key, 3)
         probs = chanc_bot(key=botkey, params=params_dict["chanc"], state=mask(state))
-        if state["chanc"][0] == player_position and vote_passed:
-            print_typewriter(
-                "\nYou take a look at the Policies and see: ",
-                sleep_max=0.1 * typewriter_speed,
-            )
-            narrate.print_cards(state["chanc_shown"][0])
-            print_typewriter(
-                "\nAs Chancellor your job is to decide which of "
-                "those two policies to enact and which one to "
-                "discard.\n",
-                sleep_max=0.1 * typewriter_speed,
-            )
-
-            player_chanc = ""
-
-            while player_chanc not in ["0", "1"]:
-                print_typewriter(
-                    "\nWhat kind of card do you want to discard?"
-                    " (enter 0 for Liberal or 1 for Fascist)\n",
-                    sleep_max=0.1 * typewriter_speed,
-                )
-                player_chanc = input()
-
-            player_chanc = int(player_chanc)
-
-            probs = probs.at[player_position].set(player_chanc)
-        elif vote_passed:
-            print_typewriter(
-                "\nThe Chancellor chooses one of the two to "
-                "enact and discards the other.\n",
-                sleep_max=0.1 * typewriter_speed,
-            )
-
+        probs = chanc_disc(player_position, state, probs)
         state |= run.chanc_disc(key=simkey, probs=probs, **state)
 
         # narrate board state
