@@ -60,7 +60,7 @@ def propose(player_position: int, state, probs, speed=0.0):
 
     player_total = state["roles"].shape[-1]
 
-    texts = [
+    print_typewriter(
         "\nYour Party is still on the fence about "
         "their Presidential Candidate. Nonetheless "
         "you ask yourself: 'Assuming I am the "
@@ -68,9 +68,8 @@ def propose(player_position: int, state, probs, speed=0.0):
         "Chancellor Candidate would I choose?' "
         "(enter a number "
         f"from 0-{player_total - 1})\n",
-    ]
-
-    print_typewriter(random.choice(texts))
+        speed,
+    )
     proposal = validated_input({i: i for i in range(player_total)}, speed)
 
     return probs.at[player_position, proposal].set(jnp.inf)
@@ -94,12 +93,11 @@ def vote(
     if state["killed"][0, player_position]:
         return probs
 
-    texts = [
+    print_typewriter(
         "\nLet us cast our votes. The People await guidance."
         "\nWhat is your decision? (enter 0 for Nein! (no) or 1 for Ja! (yes))\n",
-    ]
-
-    print_typewriter(random.choice(texts), speed)
+        speed,
+    )
 
     player_vote = validated_input(
         {
@@ -234,6 +232,59 @@ def chanc_disc(player_position, state, probs, speed=0.0):
     return probs.at[player_position].set(discard)
 
 
+def shoot(player_position, state, probs, speed=0.0):
+    necessary = jnp.logical_or(
+        ((state["board"][0][1], state["board"][1][1]) == (4, 3)),
+        ((state["board"][0][1], state["board"][1][1]) == (5, 4)),
+    )
+    if not necessary:
+        return probs
+
+    print_typewriter(
+        f"\nAs {state['board'][0][1]} F Policies have "
+        "been enacted already it is time for some action"
+        ". The President brought a gun and can now "
+        "formally execute a Player of their choice.\n",
+        speed,
+    )
+
+    if state["presi"][0] != player_position:
+        return probs
+
+    player_total = state["roles"].shape[-1]
+
+    print_typewriter(
+        "\nPresident! You have to decide "
+        "which Player to shoot! "
+        "(enter a number between 0-"
+        f"{player_total - 1} to kill that "
+        f"Player)\n",
+        speed,
+    )
+
+    target = validated_input({i: i for i in jnp.arange(player_total)}, speed)
+    return probs.at[player_position, target].set(jnp.inf)
+
+
+def shoot_announce(state, speed=0.0):
+    necessary = jnp.logical_or(
+        ((state["board"][0][1], state["board"][1][1]) == (4, 3)),
+        ((state["board"][0][1], state["board"][1][1]) == (5, 4)),
+    )
+    if not necessary:
+        return
+
+    dead_player = jnp.argmax(
+        state["killed"][0].astype(int) - state["killed"][1].astype(int)
+    )
+
+    if state["roles"][0][dead_player] == 2:
+        print_typewriter("\nHitler was shot!\n\nThe \x1b[34mLiberals\x1b[0m have won!")
+        sys.exit()
+
+    print_typewriter(f"\nPlayer {dead_player} was shot.\n", speed)
+
+
 def closure(
     player_total: int,
     history_size: int,
@@ -298,64 +349,9 @@ def closure(
 
         key, botkey, simkey = jrn.split(key, 3)
         probs = shoot_bot(key=botkey, params=params_dict["shoot"], state=mask(state))
-        shooting_necessary = jnp.logical_or(
-            ((state["board"][0][1], state["board"][1][1]) == (4, 3)),
-            ((state["board"][0][1], state["board"][1][1]) == (5, 4)),
-        )
-
-        if shooting_necessary:
-            print_typewriter(
-                f"\nAs {state['board'][0][1]} F Policies have "
-                "been enacted already it is time for some action"
-                ". The President brought a gun and can now "
-                "formally execute a Player of their choice.\n",
-                sleep_max=0.1 * typewriter_speed,
-            )
-            if state["presi"][0] == player_position:
-                player_shoot = "a"
-                valid_shot = False
-
-                while not valid_shot:
-                    while player_shoot not in players_string and len(player_shoot) != 1:
-                        print_typewriter(
-                            "\nPresident! You have to decide "
-                            "which Player to shoot! "
-                            "(enter a number between 0-"
-                            f"{player_total - 1} to kill that "
-                            f"Player)\n",
-                            sleep_max=0.1 * typewriter_speed,
-                        )
-                        player_shoot = input()
-
-                    player_shoot = int(player_shoot)
-                    if state["killed"][0][player_shoot]:
-                        print_typewriter(
-                            "\nThat Player is already dead.\n",
-                            sleep_max=0.1 * typewriter_speed,
-                        )
-                        player_shoot = str(player_shoot)
-                    else:
-                        valid_shot = True
-
-                probs = probs.at[player_position, player_shoot].set(jnp.inf)
-
+        probs = shoot(player_position, state, probs)
         state |= run.shoot(key=simkey, logprobs=probs, **state)
-
-        if shooting_necessary:
-            dead_player = jnp.argmax(
-                state["killed"][0].astype(int) - state["killed"][1].astype(int)
-            )
-            if state["roles"][0][dead_player]:
-                print_typewriter(
-                    "\nHitler was shot.\n", sleep_max=0.1 * typewriter_speed
-                )
-            else:
-                print_typewriter(
-                    f"\nPlayer {dead_player} was shot.\n",
-                    sleep_max=0.1 * typewriter_speed,
-                )
-
-            dead_players.append(dead_player)
+        shoot_announce(state)
 
         return state, dead_players
 
