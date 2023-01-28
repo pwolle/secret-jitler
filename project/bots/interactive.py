@@ -55,34 +55,31 @@ def get_input(expected, message, typewriter_speed):
     """
     input_string = "a"
     while input_string not in expected:
-        print_typewriter(
-            message,
-            sleep_max=0.1 * typewriter_speed
-        )
+        print_typewriter(message, sleep_max=0.1 * typewriter_speed)
         input_string = input()
 
     return int(input_string)
 
 
 def closure(
-        player_total: int,
-        history_size: int,
-        propose_bot: sh.Bot,
-        vote_bot: sh.Bot,
-        presi_bot: sh.Bot,
-        chanc_bot: sh.Bot,
-        shoot_bot: sh.Bot,
+    player_total: int,
+    history_size: int,
+    propose_bot: sh.Bot,
+    vote_bot: sh.Bot,
+    presi_bot: sh.Bot,
+    chanc_bot: sh.Bot,
+    shoot_bot: sh.Bot,
 ):
     """ """
 
     def turn(
-            key: sh.key,
-            player_position: int,
-            state: sh.state,
-            params_dict: sh.params_dict,
-            dead_players: list,
-            typewriter_speed: float,
-            **_,
+        key: sh.key,
+        player_position: int,
+        state: sh.state,
+        params_dict: sh.params_dict,
+        dead_players: list,
+        typewriter_speed: float,
+        **_,
     ):
         """ """
 
@@ -101,12 +98,13 @@ def closure(
         # get chancellor proposition from the player
         if player_position not in dead_players:
 
-            message = "\nYour Party is still on the fence about their " \
-                      "Presidential Candidate. Nonetheless you ask yourself" \
-                      ": 'Assuming I am the Presidential Candidate. Which " \
-                      "eligible Chancellor Candidate would I choose?' " \
-                      f"(enter a number from 0-{player_total - 1})\n"
-
+            message = (
+                "\nYour Party is still on the fence about their "
+                "Presidential Candidate. Nonetheless you ask yourself"
+                ": 'Assuming I am the Presidential Candidate. Which "
+                "eligible Chancellor Candidate would I choose?' "
+                f"(enter a number from 0-{player_total - 1})\n"
+            )
 
             player_propose = get_input(players_string, message, typewriter_speed)
         else:
@@ -150,8 +148,10 @@ def closure(
                 sleep_max=0.1 * typewriter_speed,
             )
 
-            message = "\nWhat is your decision? (enter 0 for Nein! (no) " \
-                      "or 1 for Ja! (yes))\n"
+            message = (
+                "\nWhat is your decision? (enter 0 for Nein! (no) "
+                "or 1 for Ja! (yes))\n"
+            )
 
             player_vote = get_input(["0", "1"], message, typewriter_speed)
         else:
@@ -164,9 +164,7 @@ def closure(
 
         # narrate votes
 
-        print_typewriter(
-            "\nThe votes came in: \n\n", sleep_max=0.1 * typewriter_speed
-        )
+        print_typewriter("\nThe votes came in: \n\n", sleep_max=0.1 * typewriter_speed)
 
         for j in range(player_total):
             if j in dead_players:
@@ -208,9 +206,9 @@ def closure(
 
         # check for repercussions and narrate them if needed
         if (
-                vote_passed
-                and state["roles"][0][state["chanc"][0]] == 2
-                and state["board"][0][1] >= 3
+            vote_passed
+            and state["roles"][0][state["chanc"][0]] == 2
+            and state["board"][0][1] >= 3
         ):
             print_typewriter(
                 "\nHitler was elected Chancellor.\n\nThe "
@@ -233,9 +231,10 @@ def closure(
                 sleep_max=0.1 * typewriter_speed,
             )
 
-            message = "\nWhat type of card do you want to discard? (enter 0" \
-                      " for Liberal or 1 for Fascist)\n"
-
+            message = (
+                "\nWhat type of card do you want to discard? (enter 0"
+                " for Liberal or 1 for Fascist)\n"
+            )
 
             player_presi = get_input(["0", "1"], message, typewriter_speed)
 
@@ -267,9 +266,10 @@ def closure(
                 sleep_max=0.1 * typewriter_speed,
             )
 
-
-            message = "\nWhat kind of card do you want to discard?" \
-                      " (enter 0 for Liberal or 1 for Fascist)\n"
+            message = (
+                "\nWhat kind of card do you want to discard?"
+                " (enter 0 for Liberal or 1 for Fascist)\n"
+            )
 
             player_chanc = get_input(["0", "1"], message, typewriter_speed)
 
@@ -314,10 +314,11 @@ def closure(
                 # get shot choice from the player
                 while not valid_shot:
 
-
-                    message = "\nPresident! You have to decide which Player" \
-                              " to shoot! (enter a number between 0-" \
-                              f"{player_total - 1} to kill that Player)\n"
+                    message = (
+                        "\nPresident! You have to decide which Player"
+                        " to shoot! (enter a number between 0-"
+                        f"{player_total - 1} to kill that Player)\n"
+                    )
 
                     player_shoot = get_input(players_string, message, typewriter_speed)
 
@@ -354,11 +355,11 @@ def closure(
         return state, dead_players
 
     def run_func(
-            key: sh.key,
-            player_position: int,
-            params_dict: sh.params_dict,
-            typewriter_speed: float,
-            **_,
+        key: sh.key,
+        player_position: int,
+        params_dict: sh.params_dict,
+        typewriter_speed: float,
+        **_,
     ) -> sh.state:
         """ """
         key, subkey = jrn.split(key)
