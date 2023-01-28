@@ -44,6 +44,6 @@ params = {
 state = run_func_interactive(
     subkey,  # key created above
     4,  # player number of the human player
-    params,
+    params,  # type: ignore
     1.0,  # change this value down/up if the game should run faster/slower
 )
