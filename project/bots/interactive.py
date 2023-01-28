@@ -100,11 +100,13 @@ def closure(
 
         # get chancellor proposition from the player
         if player_position not in dead_players:
+
             message = "\nYour Party is still on the fence about their " \
                       "Presidential Candidate. Nonetheless you ask yourself" \
                       ": 'Assuming I am the Presidential Candidate. Which " \
                       "eligible Chancellor Candidate would I choose?' " \
                       f"(enter a number from 0-{player_total - 1})\n"
+
 
             player_propose = get_input(players_string, message, typewriter_speed)
         else:
@@ -147,6 +149,7 @@ def closure(
                 "\nLet us cast our votes. The People await guidance.",
                 sleep_max=0.1 * typewriter_speed,
             )
+
             message = "\nWhat is your decision? (enter 0 for Nein! (no) " \
                       "or 1 for Ja! (yes))\n"
 
@@ -160,6 +163,7 @@ def closure(
         state |= run.vote(key=simkey, probs=probs, **state)
 
         # narrate votes
+
         print_typewriter(
             "\nThe votes came in: \n\n", sleep_max=0.1 * typewriter_speed
         )
@@ -228,8 +232,10 @@ def closure(
                 "Chancellor. Your choice looks like this: ",
                 sleep_max=0.1 * typewriter_speed,
             )
+
             message = "\nWhat type of card do you want to discard? (enter 0" \
                       " for Liberal or 1 for Fascist)\n"
+
 
             player_presi = get_input(["0", "1"], message, typewriter_speed)
 
@@ -260,6 +266,7 @@ def closure(
                 "discard.\n",
                 sleep_max=0.1 * typewriter_speed,
             )
+
 
             message = "\nWhat kind of card do you want to discard?" \
                       " (enter 0 for Liberal or 1 for Fascist)\n"
@@ -306,6 +313,7 @@ def closure(
 
                 # get shot choice from the player
                 while not valid_shot:
+
 
                     message = "\nPresident! You have to decide which Player" \
                               " to shoot! (enter a number between 0-" \
