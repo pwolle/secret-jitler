@@ -6,283 +6,59 @@ import jax.random as jrn
 import jax.numpy as jnp
 
 import sys
-import random
-import time
-
+from time import sleep
+from random import uniform
 
 from game import init
 from game import stype as sh
 from game import util
 from game import narrate
-
 from game import run
 
 from .mask import mask
 
 
-def print_typewriter(string, sleep_max=0.0):
+def print_typewriter(string, sleep_max):
+    """
+    Print a given string using typewriter effect.
+
+    Args:
+        string: str
+            String to print.
+        sleep_max: float
+            Maximum amount of time between printing two characters.
+
+    Returns:
+        None
+    """
     for char in string:
         print(char, end="")
-        sys.stdout.flush()
-        time.sleep(random.uniform(0, sleep_max))
+        sys.stdout.flush()  # used for printing next character inline
+        sleep(uniform(0, sleep_max))
 
 
-def player_repr(value, player):
-    if value == player:
-        return "\033[4mYou\033[0m"
+def get_input(expected, message, typewriter_speed):
+    """
+    Get some input from the user and repeat a given message until that input
+    is valid
 
-    return f"Player {value}"
+    Args:
+        expected: str or list of strings
+            Valid inputs.
+        message: str
+            Message to print.
+        typewriter_speed: float
+            Weight of the standard sleep_max (0.1).
 
+    Returns:
+        Integer of the valid input.
+    """
+    input_string = "a"
+    while input_string not in expected:
+        print_typewriter(message, sleep_max=0.1 * typewriter_speed)
+        input_string = input()
 
-def validated_input(expected: dict, speed=0.0):
-    expected = {str(k).upper(): v for k, v in expected.items()}
-    texts = ["try again\n"]
-
-    while True:
-        read = input().upper()
-
-        try:
-            return expected[read]
-
-        except KeyError:
-            print_typewriter(random.choice(texts), speed)
-
-
-def propose(player_position: int, state, probs, speed=0.0):
-    if state["killed"][0, player_position]:
-        return probs
-
-    succesor = run.propose(key=jrn.PRNGKey(0), logprobs=probs, **state)
-    succesor = succesor["presi"][0]
-
-    if succesor != player_position:
-        return probs
-
-    player_total = state["roles"].shape[-1]
-
-    print_typewriter(
-        "\nYour Party is still on the fence about "
-        "their Presidential Candidate. Nonetheless "
-        "you ask yourself: 'Assuming I am the "
-        "Presidential Candidate. Which eligible "
-        "Chancellor Candidate would I choose?' "
-        "(enter a number "
-        f"from 0-{player_total - 1})\n",
-        speed,
-    )
-    proposal = validated_input({i: i for i in range(player_total)}, speed)
-
-    return probs.at[player_position, proposal].set(jnp.inf)
-
-
-def propose_announce(pos, state, speed=0.0):
-    print_typewriter(
-        f'\n{player_repr(pos, state["presi"][0])} is the Presidential Candidate.'
-        f'They have proposed {player_repr(state["proposed"][0], pos)} as their '
-        f"Chancellor.\n",
-        speed,
-    )
-
-
-def vote(
-    player_position: int,
-    state,
-    probs,
-    speed=0.0,
-):
-    if state["killed"][0, player_position]:
-        return probs
-
-    print_typewriter(
-        "\nLet us cast our votes. The People await guidance."
-        "\nWhat is your decision? (enter 0 for Nein! (no) or 1 for Ja! (yes))\n",
-        speed,
-    )
-
-    player_vote = validated_input(
-        {
-            0: 0,
-            1: 1,
-            "n": 0,
-            "y": 1,
-            "no": 0,
-            "yes": 1,
-            "nein": 0,
-            "ja": 1,
-        },
-        speed,
-    )
-
-    return probs.at[player_position].set(player_vote)
-
-
-def vote_announce(pos, state, speed=0.0):
-    print_typewriter("\nThe votes came in: \n", speed)
-
-    votes = state["voted"][0]
-    killed = state["killed"][0]
-
-    for i, vote in enumerate(votes):
-        if killed[i]:
-            continue
-
-        if vote:
-            print_typewriter(f"\n{player_repr(i, pos)} voted Ja!", speed)
-
-        else:
-            print_typewriter(f"\n{player_repr(i, pos)} voted Nein!", speed)
-
-    print_typewriter("\n", speed)
-
-    if state["tracker"][0] == 0:
-        if state["roles"][0][state["chanc"][0]] == 2 and state["board"][0][1] >= 3:
-            print_typewriter(
-                "\nHitler was elected Chancellor.\n\nThe "
-                "\x1b[31mFascists\x1b[0m have won!",
-                speed,
-            )
-            sys.exit()
-
-        print_typewriter("\nThe vote passed. We have a new Chancellor.\n", speed)
-        return False
-
-    if state["tracker"][0] == 3:
-        print_typewriter(
-            "\nThree elections in a row have been "
-            "rejected. The country is thrown into chaos "
-            "and the first policy drawn gets enacted "
-            "without votes.\n",
-            speed,
-        )
-
-        return True
-
-    print_typewriter(
-        "\nThe vote failed. The Presidential "
-        "Candidate missed this chance. The Election "
-        "Tracker advances to "
-        f"{state['tracker'][0]}\n",
-        speed,
-    )
-
-    return True
-
-
-def presi_disc(player_position, state, probs, speed=0.0):
-    if state["killed"][0, player_position]:
-        return probs
-
-    if state["presi"][0] != player_position:
-        print_typewriter(
-            "\n The President draws three policies, discards one and hands the"
-            " other two to the Chancellor."
-        )
-        return probs
-
-    print_typewriter(
-        "\nAs you are the President it is your duty "
-        "to give two of three Policies to the "
-        "Chancellor. Your choice looks like this: ",
-        speed,
-    )
-    narrate.print_cards(state["presi_shown"][0])
-
-    print_typewriter(
-        "\nWhat type of card do you want to "
-        "discard? (enter 0 for Liberal or 1 for "
-        "Fascist)\n",
-        speed,
-    )
-
-    discard = validated_input(
-        {0: 0, 1: 1, "l": 0, "f": 1, "liberal": 0, "fascist": 1}, speed
-    )
-
-    return probs.at[player_position].set(discard)
-
-
-def chanc_disc(player_position, state, probs, speed=0.0):
-    if state["killed"][0, player_position]:
-        return probs
-
-    if state["chanc"][0] != player_position:
-        print_typewriter(
-            "\nThe Chancellor chooses one of the two to "
-            "enact and discards the other.\n",
-            speed,
-        )
-        return probs
-
-    print_typewriter(
-        "\nYou take a look at the Policies and see: ",
-        speed,
-    )
-    narrate.print_cards(state["chanc_shown"][0])
-    print_typewriter(
-        "\nAs Chancellor your job is to decide which of "
-        "those two policies to enact and which one to "
-        "discard.\n",
-        speed,
-    )
-
-    discard = validated_input(
-        {0: 0, 1: 1, "l": 0, "f": 1, "liberal": 0, "fascist": 1}, speed
-    )
-
-    return probs.at[player_position].set(discard)
-
-
-def shoot(player_position, state, probs, speed=0.0):
-    necessary = jnp.logical_or(
-        ((state["board"][0][1], state["board"][1][1]) == (4, 3)),
-        ((state["board"][0][1], state["board"][1][1]) == (5, 4)),
-    )
-    if not necessary:
-        return probs
-
-    print_typewriter(
-        f"\nAs {state['board'][0][1]} F Policies have "
-        "been enacted already it is time for some action"
-        ". The President brought a gun and can now "
-        "formally execute a Player of their choice.\n",
-        speed,
-    )
-
-    if state["presi"][0] != player_position:
-        return probs
-
-    player_total = state["roles"].shape[-1]
-
-    print_typewriter(
-        "\nPresident! You have to decide "
-        "which Player to shoot! "
-        "(enter a number between 0-"
-        f"{player_total - 1} to kill that "
-        f"Player)\n",
-        speed,
-    )
-
-    target = validated_input({i: i for i in jnp.arange(player_total)}, speed)
-    return probs.at[player_position, target].set(jnp.inf)
-
-
-def shoot_announce(state, speed=0.0):
-    necessary = jnp.logical_or(
-        ((state["board"][0][1], state["board"][1][1]) == (4, 3)),
-        ((state["board"][0][1], state["board"][1][1]) == (5, 4)),
-    )
-    if not necessary:
-        return
-
-    dead_player = jnp.argmax(
-        state["killed"][0].astype(int) - state["killed"][1].astype(int)
-    )
-
-    if state["roles"][0][dead_player] == 2:
-        print_typewriter("\nHitler was shot!\n\nThe \x1b[34mLiberals\x1b[0m have won!")
-        sys.exit()
-
-    print_typewriter(f"\nPlayer {dead_player} was shot.\n", speed)
+    return int(input_string)
 
 
 def closure(
@@ -307,9 +83,10 @@ def closure(
     ):
         """ """
 
-        players_string = ""
+        # used for validating input
+        players_string = []
         for i in jnp.arange(player_total):
-            players_string += str(i)
+            players_string.append(str(i))
 
         state = util.push_state(state)
 
@@ -317,28 +94,190 @@ def closure(
         probs = propose_bot(
             key=botkey, params=params_dict["propose"], state=mask(state)
         )
-        probs = propose(player_position, state, probs)
+
+        # get chancellor proposition from the player
+        if player_position not in dead_players:
+            message = (
+                "\nYour Party is still on the fence about their "
+                "Presidential Candidate. Nonetheless you ask yourself"
+                ": 'Assuming I am the Presidential Candidate. Which "
+                "eligible Chancellor Candidate would I choose?' "
+                f"(enter a number from 0-{player_total - 1})\n"
+            )
+
+            player_propose = get_input(players_string, message, typewriter_speed)
+        else:
+            player_propose = 0
+        probs = probs.at[player_position, player_propose].set(jnp.inf)
+
+        # update the game state
         state |= run.propose(key=simkey, logprobs=probs, **state)
 
-        propose_announce(player_position, state)
+        # narrate choice
+        if state["proposed"][0] == player_position:
+            print_typewriter(
+                f"\nPlayer {state['presi'][0]} is the "
+                f"Presidential Candidate. They have proposed "
+                f"\033[4myou\033[0m as their Chancellor.\n",
+                sleep_max=0.1 * typewriter_speed,
+            )
+        elif state["presi"][0] == player_position:
+            print_typewriter(
+                "\n\033[4mYou\033[0m are the Presidential "
+                "Candidate. You have proposed Player "
+                f"{state['proposed'][0]} as your Chancellor.\n",
+                sleep_max=0.1 * typewriter_speed,
+            )
+        else:
+            print_typewriter(
+                f"\nPlayer {state['presi'][0]} is the "
+                "Presidential Candidate. They have proposed"
+                f" Player {state['proposed'][0]} as their "
+                f"Chancellor.\n",
+                sleep_max=0.1 * typewriter_speed,
+            )
 
         key, botkey, simkey = jrn.split(key, 3)
         probs = vote_bot(key=botkey, params=params_dict["vote"], state=mask(state))
-        probs = vote(player_position, state, probs)
+
+        # get vote from the player
+        if player_position not in dead_players:
+            print_typewriter(
+                "\nLet us cast our votes. The People await guidance.",
+                sleep_max=0.1 * typewriter_speed,
+            )
+            message = (
+                "\nWhat is your decision? (enter 0 for Nein! (no) "
+                "or 1 for Ja! (yes))\n"
+            )
+
+            player_vote = get_input(["0", "1"], message, typewriter_speed)
+        else:
+            player_vote = 0
+
+        probs = probs.at[player_position].set(player_vote)
+
+        # update the game state
         state |= run.vote(key=simkey, probs=probs, **state)
 
-        skip = vote_announce(player_position, state)
-        if skip:
-            return state, dead_players
+        # narrate votes
+        print_typewriter("\nThe votes came in: \n\n", sleep_max=0.1 * typewriter_speed)
+
+        for j in range(player_total):
+            if j in dead_players:
+                continue
+
+            if state["voted"][0][j]:
+                print_typewriter(
+                    f"Player {j} voted Ja! (yes).\n", sleep_max=0.1 * typewriter_speed
+                )
+            else:
+                print_typewriter(
+                    f"Player {j} voted Nein! (no).\n", sleep_max=0.1 * typewriter_speed
+                )
+
+        if state["tracker"][0] != 0:
+            vote_passed = False
+            if state["tracker"][0] == 3:
+                print_typewriter(
+                    "\nThree elections in a row have been "
+                    "rejected. The country is thrown into chaos "
+                    "and the first policy drawn gets enacted "
+                    "without votes.\n",
+                    sleep_max=0.1 * typewriter_speed,
+                )
+            else:
+                print_typewriter(
+                    "\nThe vote failed. The Presidential "
+                    "Candidate missed this chance. The Election "
+                    "Tracker advances to "
+                    f"{state['tracker'][0]}\n",
+                    sleep_max=0.1 * typewriter_speed,
+                )
+        else:
+            vote_passed = True
+            print_typewriter(
+                "\nThe vote passed. " "We have a new Chancellor.\n",
+                sleep_max=0.1 * typewriter_speed,
+            )
+
+        # check for repercussions and narrate them if needed
+        if (
+            vote_passed
+            and state["roles"][0][state["chanc"][0]] == 2
+            and state["board"][0][1] >= 3
+        ):
+            print_typewriter(
+                "\nHitler was elected Chancellor.\n\nThe "
+                "\x1b[31mFascists\x1b[0m have won!",
+                sleep_max=0.1 * typewriter_speed,
+            )
+            sys.exit()
 
         key, botkey, simkey = jrn.split(key, 3)
+
         probs = presi_bot(key=botkey, params=params_dict["presi"], state=mask(state))
-        probs = presi_disc(player_position, state, probs)
+
+        # narrate president choice
+        if state["presi"][0] == player_position and vote_passed:
+            # get discard choice from the player
+            print_typewriter(
+                "\nAs you are the President it is your duty "
+                "to give two of three Policies to the "
+                "Chancellor. Your choice looks like this: ",
+                sleep_max=0.1 * typewriter_speed,
+            )
+            message = (
+                "\nWhat type of card do you want to discard? (enter 0"
+                " for Liberal or 1 for Fascist)\n"
+            )
+
+            player_presi = get_input(["0", "1"], message, typewriter_speed)
+
+            probs = probs.at[player_position].set(player_presi)
+
+        # update the game state
         state |= run.presi_disc(key=simkey, probs=probs, **state)
+
+        # narrate policy handover
+        if vote_passed:
+            print_typewriter(
+                "\nThe Chancellor gets handed two Policies by their President.\n",
+                sleep_max=0.1 * typewriter_speed,
+            )
 
         key, botkey, simkey = jrn.split(key, 3)
         probs = chanc_bot(key=botkey, params=params_dict["chanc"], state=mask(state))
-        probs = chanc_disc(player_position, state, probs)
+        if state["chanc"][0] == player_position and vote_passed:
+            # get chancellor discard from the player
+            print_typewriter(
+                "\nYou take a look at the Policies and see: ",
+                sleep_max=0.1 * typewriter_speed,
+            )
+            narrate.print_cards(state["chanc_shown"][0])
+            print_typewriter(
+                "\nAs Chancellor your job is to decide which of "
+                "those two policies to enact and which one to "
+                "discard.\n",
+                sleep_max=0.1 * typewriter_speed,
+            )
+
+            message = (
+                "\nWhat kind of card do you want to discard?"
+                " (enter 0 for Liberal or 1 for Fascist)\n"
+            )
+
+            player_chanc = get_input(["0", "1"], message, typewriter_speed)
+
+            probs = probs.at[player_position].set(player_chanc)
+        elif vote_passed:
+            print_typewriter(
+                "\nThe Chancellor chooses one of the two to "
+                "enact and discards the other.\n",
+                sleep_max=0.1 * typewriter_speed,
+            )
+
+        # update the game state
         state |= run.chanc_disc(key=simkey, probs=probs, **state)
 
         # narrate board state
@@ -348,10 +287,66 @@ def closure(
         narrate.print_board(state["board"][0])
 
         key, botkey, simkey = jrn.split(key, 3)
+
         probs = shoot_bot(key=botkey, params=params_dict["shoot"], state=mask(state))
-        probs = shoot(player_position, state, probs)
+
+        shooting_necessary = jnp.logical_or(
+            ((state["board"][0][1], state["board"][1][1]) == (4, 3)),
+            ((state["board"][0][1], state["board"][1][1]) == (5, 4)),
+        )
+
+        # narrate shooting if needed
+        if shooting_necessary:
+            print_typewriter(
+                f"\nAs {state['board'][0][1]} F Policies have "
+                "been enacted already it is time for some action"
+                ". The President brought a gun and can now "
+                "formally execute a Player of their choice.\n",
+                sleep_max=0.1 * typewriter_speed,
+            )
+            if state["presi"][0] == player_position:
+                valid_shot = False
+
+                # get shot choice from the player
+                while not valid_shot:
+
+                    message = (
+                        "\nPresident! You have to decide which Player"
+                        " to shoot! (enter a number between 0-"
+                        f"{player_total - 1} to kill that Player)\n"
+                    )
+
+                    player_shoot = get_input(players_string, message, typewriter_speed)
+
+                    if state["killed"][0][player_shoot]:
+                        print_typewriter(
+                            "\nThat Player is already dead.\n",
+                            sleep_max=0.1 * typewriter_speed,
+                        )
+                        player_shoot = str(player_shoot)
+                    else:
+                        valid_shot = True
+
+                probs = probs.at[player_position, player_shoot].set(jnp.inf)
+
+        # update the game state
         state |= run.shoot(key=simkey, logprobs=probs, **state)
-        shoot_announce(state)
+
+        if shooting_necessary:
+            dead_player = jnp.argmax(
+                state["killed"][0].astype(int) - state["killed"][1].astype(int)
+            )
+            if state["roles"][0][dead_player]:
+                print_typewriter(
+                    "\nHitler was shot.\n", sleep_max=0.1 * typewriter_speed
+                )
+            else:
+                print_typewriter(
+                    f"\nPlayer {dead_player} was shot.\n",
+                    sleep_max=0.1 * typewriter_speed,
+                )
+
+            dead_players.append(dead_player)
 
         return state, dead_players
 
@@ -364,19 +359,24 @@ def closure(
     ) -> sh.state:
         """ """
         key, subkey = jrn.split(key)
+
         state = init.state(subkey, player_total, history_size)
+
         dead_players = []
 
+        # narrate game start
         print_typewriter(
             f"\n\t\t\033[4mA new game with {player_total} players starts!\033[0m\n",
             sleep_max=0.3 * typewriter_speed,
         )
 
+        # narrate player number
         print_typewriter(
             f"\nYour Player Number is {player_position}.\n",
             sleep_max=0.3 * typewriter_speed,
         )
 
+        # narrate role assignment
         if state["roles"][0][player_position] == 0:
             print_typewriter(
                 "\nYou have secretly been assigned the role"
@@ -388,7 +388,7 @@ def closure(
         elif state["roles"][0][player_position] == 1:
             print_typewriter(
                 "\nYou have secretly been assigned the role "
-                "\x1b[31mFascist \x1b[0m. In order to win you "
+                "\x1b[31mFascist\x1b[0m. In order to win you "
                 "have to make sure that six fascist policies are"
                 " enacted or Hitler gets elected after three "
                 "fascist policies have been enacted. Your fellow"
@@ -423,7 +423,9 @@ def closure(
                 sleep_max=0.1 * typewriter_speed,
             )
 
+        # run turns until the game ends
         i = 1
+
         while not state["winner"].any():
             print_typewriter(
                 f"\n\033[4mRound {i} has begun\033[0m\n",
@@ -435,6 +437,7 @@ def closure(
             )
             i += 1
 
+        # narrate winner team
         if state["winner"][0][0]:
             print_typewriter(
                 "\nThe \x1b[34mLiberals\x1b[0m have won!\n",
