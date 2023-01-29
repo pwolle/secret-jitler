@@ -42,7 +42,7 @@ params = {
 # run the game
 state = run_func_interactive(
     subkey,  # key created above
-    4,  # player number of the human player
+    4,  # player number id of the human player
     7,  # number of players
     params,  # type: ignore
 )

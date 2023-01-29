@@ -21,26 +21,26 @@ def mask_roles(player: int, roles, **_):
     Mask the role history of gamestate.
         - (0) Liberals can only see their role and assume others as liberals
         - (1) Fascists can see every role
-        - (2) Hitler can only see their role and assume others as liberals 
-    
+        - (2) Hitler can only see their role and assume others as liberals
+
     Args:
         player: int
             index of the player
-            
+
         roles: T.roles
             roles history of gamestate index 0 holds current turn
             index i:
                 0 if player i is liberal
                 1 if player i is fascist
                 2 if player i is hitler
-        
+
         **_
             accepts arbitrary keyword arguments
-    
+
     Returns:
         masked role
     """
-    
+
     # get history_size
     history_size = roles.shape[0]
     # get role index does not matter because roles do not change
@@ -58,7 +58,7 @@ def mask_roles(player: int, roles, **_):
     # mask with scheme wether role is fascist or not
     mask = jla.select(role, mask_facist, mask_full)
     masked = roles * mask
-    
+
     # rescale to original history
     return jnp.tile(masked, (history_size, 1))
 
@@ -67,20 +67,20 @@ def mask_presi_shown(player: int, presi, presi_shown, **_):
     """
     Mask the presi_shown history of gamestate.
     every player should only have this data if they were president at that
-    turn 
-    
+    turn
+
     Args:
         player: int
             index of the player
-            
+
         presi: T.presi
             president history of gamestate index 0 holds current turn
             index in history_size is the turn (0 is current)
             value corresponds to player
-        
+
         **_
             accepts arbitrary keyword arguments
-    
+
     Returns:
         masked presi_shown
     """
@@ -93,20 +93,20 @@ def mask_chanc_shown(player: int, chanc, chanc_shown, **_):
     """
     Mask the chanc_shown history of gamestate.
     every player should only have this data if they were chanccelor at that
-    turn 
-    
+    turn
+
     Args:
         player: int
             index of the player
-            
+
         chanc: T.chanc
             chancellor history of gamestate index 0 holds current turn
             index in history_size is the turn (0 is current)
             value corresponds to player
-        
+
         **_
             accepts arbitrary keyword arguments
-    
+
     Returns:
         masked chanc_shown
     """
@@ -119,8 +119,8 @@ def mask(state: T.state) -> T.state:
     """
     Mask the chanc_shown history of gamestate.
     every player should only have this data if they were chanccelor at that
-    turn 
-    
+    turn
+
     Args:
         state: dict {"roles": jtp.Int[jnp.ndarray, "history player_total"],
                     "presi": jtp.Int[jnp.ndarray, "history"],
@@ -136,10 +136,10 @@ def mask(state: T.state) -> T.state:
                     "killed": jtp.Int[jnp.ndarray, "history player_total"],
                     "winner": jtp.Int[jnp.ndarray, "history 2"]
                    }
-        
+
         **_
             accepts arbitrary keyword arguments
-    
+
     Returns:
         state: dict see above
     """
@@ -152,7 +152,7 @@ def mask(state: T.state) -> T.state:
             if k in ["draw", "disc", "winner"]:
                 continue
 
-            elif k == "roles":
+            if k == "roles":
                 masked[k] = mask_roles(player, **state)
 
             elif k == "presi_shown":
@@ -178,6 +178,3 @@ def mask(state: T.state) -> T.state:
     # call state player_total times for each player and stack together
     # new shape is then (player_total, history_size,...)
     return mask_state_vmap(players, state)  # type: ignore
-    
-    
-    

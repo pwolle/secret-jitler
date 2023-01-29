@@ -40,20 +40,6 @@ def vote_yes_facist_one(state, **_):
     return jla.select(chanc | presi, 1.0, 0.0)
 
 
-def shoot_next_liberal_president(state, **_):
-    otherwise = shoot_liberals(state)
-    player_total = otherwise.shape[-1]  # type: ignore
-
-    succesor = (state["presi"][0] + 1) % player_total
-    works = state["roles"][0][succesor] == 0
-    works &= state["killed"][0][succesor] == 0
-
-    probs = jnp.zeros_like(otherwise) - jnp.inf  # type: ignore
-    probs = probs.at[succesor].set(0.0)
-
-    return jla.select(works, probs, otherwise)  # type: ignore
-
-
 def next_presi(state, presi):
     killed = state["killed"][0]
     player_total = killed.shape[-1]
@@ -86,32 +72,6 @@ def next_lib3(state, **_):
 
     probs = jnp.zeros_like(roles) - jnp.inf  # type: ignore
     return probs.at[target].set(0.0)
-
-
-def shoot_next_liberal_presi2(state, **_):
-    otherwise = shoot_liberals(state)
-
-    killed = state["killed"][0]
-    roles = state["roles"][0]
-    player_total = killed.shape[-1]
-
-    presi = state["presi"][0]
-    succesor = presi
-    feasible = 1
-
-    for _ in range(1, 4):
-        succesor += feasible
-        succesor %= player_total
-
-        # stop if (successor is not killed and liberal)
-        feasible *= killed[succesor]  # & (roles[succesor] != 0)
-
-    liberal = roles[succesor] == 0
-
-    probs = jnp.zeros_like(killed) - jnp.inf  # type: ignore
-    probs = probs.at[succesor].set(0.0)
-
-    return jla.select(liberal, probs, otherwise)  # type: ignore
 
 
 def main():
