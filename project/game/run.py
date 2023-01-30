@@ -101,10 +101,10 @@ def propose(
     mask &= ~killed[0]
 
     # set logprob to -inf for masked players
-    logprob = jnp.where(mask, logprob, -jnp.inf)  # type: ignore
+    logprob = jnp.where(mask, logprob, -jnp.inf)
 
     # sample next chanc
-    proposal = jrn.categorical(key, logprob, shape=None)  # type: ignore
+    proposal = jrn.categorical(key, logprob, shape=None)
 
     # update proposed chancellor
     proposed = proposed.at[0].set(proposal)
@@ -648,7 +648,7 @@ def shoot(
     # set logprob of masked players to -inf
     logprob = jnp.where(mask, logprob, -jnp.inf)
 
-    kill = jrn.categorical(key, logprob)  # type: ignore
+    kill = jrn.categorical(key, logprob)
 
     killed = jla.select(skip, killed, killed.at[0, kill].set(True))
 

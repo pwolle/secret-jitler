@@ -29,7 +29,7 @@ def test_unchanged(
     for i in range(1, arr[0].shape[0]):
         unchanged *= (arr[i - 1][:-1] == arr[i][1:]).all()
 
-    return unchanged  # type: ignore
+    return unchanged
 
 
 @jaxtyped
@@ -44,8 +44,9 @@ def test_roles(
 
     Args:
         roles: jtp.Int[jnp.ndarray, "historyy history players"]
-            Array containing the role for each player. It has two history axes for uniform data inputs.
-            According to the game rules we have got different scenarios for our roles:
+            Array containing the role for each player. It has two history axes for
+            uniform data inputs. According to the game rules we have got different
+            scenarios for our roles:
 
             Players  |  5  |  6  |  7  |  8  |  9  | 10  |
             ---------|-----|-----|-----|-----|-----|-----|

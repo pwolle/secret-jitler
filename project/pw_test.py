@@ -53,7 +53,7 @@ def shoot_next_liberal(state, **_):
 
     target = presis[jnp.argmax(presi_roles).astype(int)].astype(int)
 
-    probs = jnp.zeros_like(roles) - jnp.inf  # type: ignore
+    probs = jnp.zeros_like(roles) - jnp.inf
     return probs.at[target].set(0.0)
 
 
@@ -178,12 +178,12 @@ def main():
 
     key = jrn.PRNGKey(random.randint(0, 2**32 - 1))
     print("compiling...")
-    winners = [winner_func(key, params)]  # type: ignore
+    winners = [winner_func(key, params)]
     steps = 500
 
-    for _ in trange(steps):  # type: ignore
-        key, subkey = jrn.split(key)  # type: ignore
-        winners.append(winner_func(subkey, params))  # type: ignore
+    for _ in trange(steps):
+        key, subkey = jrn.split(key)
+        winners.append(winner_func(subkey, params))
 
     winner = jnp.array(winners)
 

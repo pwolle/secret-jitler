@@ -146,7 +146,7 @@ def mask(state: st.state) -> st.state:
     """
 
     # only used internally for vectorization
-    def mask_state(player: int, state) -> dict[str, Any]:
+    def mask_state(player: int | Any, state) -> dict[str, Any]:
         masked = {}
 
         for k, v in state.items():
@@ -178,4 +178,4 @@ def mask(state: st.state) -> st.state:
     # vmap to mask state for every player
     # call state player_total times for each player and stack together
     # new shape is then (player_total, history_size,...)
-    return mask_state_vmap(players, state)  # type: ignore
+    return mask_state_vmap(players, state)
