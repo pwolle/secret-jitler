@@ -59,7 +59,7 @@ propose_bot = run.fuse(
 
 vote_bot = run.fuse(
     bots.vote_liberal_sigmoid_more_yes,
-    bots.vote_fascist_sigmoid,
+    bots.vote_fascist_sigmoid_more_yes,
     bots.vote_yes,
 )
 
