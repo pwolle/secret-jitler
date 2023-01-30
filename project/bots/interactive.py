@@ -2,18 +2,17 @@
 module for playing with bots
 """
 import random
-import time
 import sys
+import time
 
-import jax.random as jrn
 import jax.numpy as jnp
-
-from game import run, util, narrate, init
-from game import stype as sh
+import jax.random as jrn
+from game import init, narrate, run, util
+from game import stype as st
 
 from .mask import mask
 
-SPEED = 7
+SPEED = 10
 
 
 def typewrite(string, speed=SPEED, end="\n"):
@@ -21,14 +20,17 @@ def typewrite(string, speed=SPEED, end="\n"):
         print(char, end="", flush=True)
 
         if char == " ":
-            time.sleep(random.uniform(0, 3 / speed))
+            timeout = 1.5 / speed
+            time.sleep(random.uniform(timeout / 2, timeout))
             continue
 
         if char in [",", ".", ":", "\n"]:
-            time.sleep(random.uniform(0, 5 / speed))
+            timeout = 3 / speed
+            time.sleep(random.uniform(timeout / 2, timeout))
             continue
 
-        time.sleep(random.uniform(0, 1 / speed))
+        timeout = 1 / speed
+        time.sleep(random.uniform(timeout / 5, timeout))
 
     print(end=end, flush=True)
 
@@ -196,11 +198,11 @@ def shoot(player, probs, state, speed=SPEED):
 
 def closure(
     history_size: int,
-    propose_bot: sh.Bot,
-    vote_bot: sh.Bot,
-    presi_bot: sh.Bot,
-    chanc_bot: sh.Bot,
-    shoot_bot: sh.Bot,
+    propose_bot: st.Bot,
+    vote_bot: st.Bot,
+    presi_bot: st.Bot,
+    chanc_bot: st.Bot,
+    shoot_bot: st.Bot,
 ):
     def turn_func(key, player, state, params, speed=SPEED):
         state = util.push_state(state)

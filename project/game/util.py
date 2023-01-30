@@ -1,6 +1,6 @@
-import jaxtyping as jtp
 import jax.numpy as jnp
 import jax.random as jrn
+import jaxtyping as jtp
 from jaxtyping import jaxtyped
 from typeguard import typechecked
 

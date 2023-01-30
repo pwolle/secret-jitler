@@ -7,8 +7,8 @@ Convert the game state into a more easily digestible format for learning algorit
 """
 
 
-import jax.numpy as jnp
 import jax
+import jax.numpy as jnp
 
 from .mask import mask
 

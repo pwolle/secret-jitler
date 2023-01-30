@@ -2,43 +2,40 @@
 This module contains helper functions for running bots.
 """
 
-import jax.random as jrn
-import jax.numpy as jnp
-import jax.lax as jla
+from typing import Any, Callable
+
 import jax
-
+import jax.lax as jla
+import jax.numpy as jnp
+import jax.random as jrn
 import jaxtyping as jtp
-from typing import Callable, Any
-
-from game import init
-from game import stype as T
-from game import util
-from game.run import chanc_disc, presi_disc, propose, shoot, vote
+from game import init, run, util
+from game import stype as st
 
 from .mask import mask
 
 
-def fuse(role_0: T.Bot | Any, role_1: T.Bot | Any, role_2: T.Bot | Any) -> T.Bot:
-    """ 
+def fuse(role_0: st.Bot | Any, role_1: st.Bot | Any, role_2: st.Bot | Any) -> st.Bot:
+    """
     A function to fuse choosen 'base'-bots (see README for more information)
-    
+
     Args:
-    	role_0: T.Bot | Any    	    
-    	     the bot which applies in the l case iE if the assigned role is l
-    	
-    	role_1: T.Bot | Any    	    
-    	     the bot which applies in the f case iE if the assigned role is f
-    	   	
-    	role_2: T.Bot | Any	    
-    	     the bot which applies in the h case iE if the assigned role is H
-    	     
+        role_0: st.Bot | Any
+             the bot which applies in the l case iE if the assigned role is l
+
+        role_1: st.Bot | Any
+             the bot which applies in the f case iE if the assigned role is f
+
+        role_2: st.Bot | Any
+             the bot which applies in the h case iE if the assigned role is H
+
     Retuns:
-        fused_auto: T.Bot
+        fused_auto: st.Bot
              the fused bot
     """
 
     def fused(
-        player: int, key: T.key, params: jtp.PyTree, state: T.state
+        player: int, key: st.key, params: jtp.PyTree, state: st.state
     ) -> jtp.PyTree:
         kwargs = {
             "player": player,
@@ -61,7 +58,7 @@ def fuse(role_0: T.Bot | Any, role_1: T.Bot | Any, role_2: T.Bot | Any) -> T.Bot
 
     fused_vmap = jax.vmap(fused, in_axes=(0, None, None, 0))
 
-    def fused_auto(key: T.key, params, state) -> jtp.PyTree:
+    def fused_auto(key: st.key, params, state) -> jtp.PyTree:
         player_total = state["killed"].shape[-1]
         players = jnp.arange(player_total)
         return fused_vmap(players, key, params, state)  # type: ignore
@@ -72,47 +69,49 @@ def fuse(role_0: T.Bot | Any, role_1: T.Bot | Any, role_2: T.Bot | Any) -> T.Bot
 def closure(
     player_total: int,
     history_size: int,
-    propose_bot: T.Bot,
-    vote_bot: T.Bot,
-    presi_bot: T.Bot,
-    chanc_bot: T.Bot,
-    shoot_bot: T.Bot,
-) -> Callable[[T.key, T.params_dict], T.state]:
-    """ 
+    propose_bot: st.Bot,
+    vote_bot: st.Bot,
+    presi_bot: st.Bot,
+    chanc_bot: st.Bot,
+    shoot_bot: st.Bot,
+) -> Callable[[st.key, st.params_dict], st.state]:
+    """
     Build a jit-able bot-function.
-    This funcion gets 'one-action-bots' iE one bot for voting descisions etc 
+    This funcion gets 'one-action-bots' iE one bot for voting descisions etc
     and returns a function which simulates the game with the given bots.
-    
-    Args: 
-    	player_total: int
-    	     total number of players   
-    	
-    	history_size: int
-    	     length of known history
-    	 	
-    	propose_bot: T.Bot   	    
-    	     partial Bot responsible for proposal descisions
-    	    	
-    	vote_bot: T.Bot    	    
-    	     partial Bot responsible for voting descisions
-                
-        presi_bot: T.Bot	
-	     partial Bot responsible for presidential descisions
-                
-        chanc_bot: T.Bot	 
-	     partial Bot responsible for chancellor-related descision
-    	
-    	shoot_bot: T.Bot    	    
-    	     partial Bot responsible for kill descisions
-    	    
-    Returns:
-    	run: Callable[[T.key, T.params_dict], T.state]
-    	     a function as described above
 
-    
+    Args:
+        player_total: int
+             total number of players
+
+        history_size: int
+             length of known history
+
+        propose_bot: st.Bot
+             partial Bot responsible for proposal descisions
+
+        vote_bot: st.Bot
+             partial Bot responsible for voting descisions
+
+        presi_bot: st.Bot
+         partial Bot responsible for presidential descisions
+
+        chanc_bot: st.Bot
+         partial Bot responsible for chancellor-related descision
+
+        shoot_bot: st.Bot
+             partial Bot responsible for kill descisions
+
+    Returns:
+        run: Callable[[st.key, st.params_dict], st.state]
+             a function as described above
+
+
     """
 
-    def turn(key: T.key, state: T.state, params_dict: T.params_dict, **_) -> T.state:
+    def turn(
+        key: st.key, state: st.state, params_dict: st.params_dict, **_
+    ) -> st.state:
 
         state = util.push_state(state)
 
@@ -120,23 +119,23 @@ def closure(
         probs = propose_bot(
             key=botkey, params=params_dict["propose"], state=mask(state)
         )
-        state |= propose(key=simkey, logprobs=probs, **state)
+        state |= run.propose(key=simkey, logprobs=probs, **state)
 
         key, botkey, simkey = jrn.split(key, 3)
         probs = vote_bot(key=botkey, params=params_dict["vote"], state=mask(state))
-        state |= vote(key=simkey, probs=probs, **state)
+        state |= run.vote(key=simkey, probs=probs, **state)
 
         key, botkey, simkey = jrn.split(key, 3)
         probs = presi_bot(key=botkey, params=params_dict["presi"], state=mask(state))
-        state |= presi_disc(key=simkey, probs=probs, **state)
+        state |= run.presi_disc(key=simkey, probs=probs, **state)
 
         key, botkey, simkey = jrn.split(key, 3)
         probs = chanc_bot(key=botkey, params=params_dict["chanc"], state=mask(state))
-        state |= chanc_disc(key=simkey, probs=probs, **state)
+        state |= run.chanc_disc(key=simkey, probs=probs, **state)
 
         key, botkey, simkey = jrn.split(key, 3)
         probs = shoot_bot(key=botkey, params=params_dict["shoot"], state=mask(state))
-        state |= shoot(key=simkey, logprobs=probs, **state)
+        state |= run.shoot(key=simkey, logprobs=probs, **state)
         return state
 
     def cond_fun(while_dict: dict[str, Any]) -> jtp.Bool[jnp.ndarray, ""]:
@@ -144,7 +143,7 @@ def closure(
         return jnp.all(while_dict["state"]["winner"] == 0)
 
     @jax.jit
-    def run(key: T.key, params_dict: T.params_dict) -> T.state:
+    def run_func(key: st.key, params_dict: st.params_dict) -> st.state:
         def turn_partial(while_dict: dict[str, Any]) -> dict[str, Any]:
             key = while_dict["key"]
             state = while_dict["state"]
@@ -165,38 +164,37 @@ def closure(
 
         return while_dict["state"]
 
-    return run
+    return run_func
 
 
-def evaluate(run_func: Callable[[T.key, T.params_dict], T.state], batch_size: int):
-    """ 
+def evaluate(run_func: Callable[[st.key, st.params_dict], st.state], batch_size: int):
+    """
     Function which obtains winner information and evaluates them.
-    
+
     Args:
-        run_func: Callable[[T.key, T.params_dict], T.state]
-            the 
-        
+        run_func: Callable[[st.key, st.params_dict], st.state]
+            the
+
         batch_size: int
             number of played rounds
-        
+
     Returns:
-    	evaluate_func: Callable[[key: T.key, params_dict: T.params_dict], jtp.Bool[jnp.ndarray, "..."]]
-    	    funciton to evaluate the given game simulation.
-            
-        
+        evaluate_func: Callable[[key: st.key, params_dict: st.params_dict], jtp.Bool[jnp.ndarray, "..."]]
+            funciton to evaluate the given game simulation.
+
+
     """
 
-    def run_winner(key: T.key, params_dict) -> jtp.Bool[jnp.ndarray, "..."]:
+    def run_winner(key: st.key, params_dict) -> jtp.Bool[jnp.ndarray, "..."]:
         return run_func(key, params_dict)["winner"][0]
 
     run_winner_vmap = jax.vmap(run_winner, (0, None))
 
     def evaluate_func(
-        key: T.key, params_dict: T.params_dict
+        key: st.key, params_dict: st.params_dict
     ) -> jtp.Bool[jnp.ndarray, "..."]:
         keys = jrn.split(key, batch_size)
         keys = jnp.stack(keys)  # type: ignore
         return run_winner_vmap(keys, params_dict).argmax(-1)
 
     return evaluate_func
-

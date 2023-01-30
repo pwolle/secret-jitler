@@ -2,11 +2,11 @@
 contains all the types used in the game
 """
 
-import jaxtyping as jtp
+from typing import Any, Literal, Protocol, runtime_checkable
+
 import jax.numpy as jnp
 import jax.random as jrn
-
-from typing import Protocol, runtime_checkable, Any, Literal
+import jaxtyping as jtp
 
 # - helpfull-
 key = jrn.KeyArray | jtp.UInt32[jnp.ndarray, "2"]

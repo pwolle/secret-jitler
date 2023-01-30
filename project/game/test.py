@@ -13,9 +13,10 @@ from . import run
 @jaxtyped
 @typechecked
 def test_unchanged(
-        *,
-        arr: jtp.Int[jnp.ndarray, "historyy history players"] | jtp.Int[jnp.ndarray, "historyy history"] | jtp.Int[
-            jnp.ndarray, "historyy history 2"]
+    *,
+    arr: jtp.Int[jnp.ndarray, "historyy history players"]
+    | jtp.Int[jnp.ndarray, "historyy history"]
+    | jtp.Int[jnp.ndarray, "historyy history 2"],
 ) -> jtp.Bool[jnp.ndarray, ""]:
     """
     Test a given history array.
@@ -34,9 +35,9 @@ def test_unchanged(
 @jaxtyped
 @typechecked
 def test_roles(
-        *,
-        player_total: int | jtp.Int[jnp.ndarray, ""],
-        roles: jtp.Int[jnp.ndarray, "historyy history players"]
+    *,
+    player_total: int | jtp.Int[jnp.ndarray, ""],
+    roles: jtp.Int[jnp.ndarray, "historyy history players"],
 ) -> jtp.Bool[jnp.ndarray, ""]:
     """
     Test if the roles array is in a valid state.
@@ -76,10 +77,10 @@ def test_roles(
 @jaxtyped
 @typechecked
 def test_presi_chanc_or_proposed(
-        *,
-        player_total: int,
-        arr: jtp.Int[jnp.ndarray, "historyy history"],
-        killed: jtp.Bool[jnp.ndarray, "historyy history players"]
+    *,
+    player_total: int,
+    arr: jtp.Int[jnp.ndarray, "historyy history"],
+    killed: jtp.Bool[jnp.ndarray, "historyy history players"],
 ) -> jtp.Bool[jnp.ndarray, ""]:
     """
     Test the presi, chanc or proposed history array.
@@ -108,7 +109,9 @@ def test_presi_chanc_or_proposed(
 
 @jaxtyped
 @typechecked
-def test_tracker(*, tracker: jtp.Int[jnp.ndarray, "historyy history"]) -> jtp.Bool[jnp.ndarray, ""]:
+def test_tracker(
+    *, tracker: jtp.Int[jnp.ndarray, "historyy history"]
+) -> jtp.Bool[jnp.ndarray, ""]:
     """
     Test the tracker history array.
 
@@ -128,10 +131,10 @@ def test_tracker(*, tracker: jtp.Int[jnp.ndarray, "historyy history"]) -> jtp.Bo
 @jaxtyped
 @typechecked
 def test_cards(
-        *,
-        draw: jtp.Int[jnp.ndarray, "historyy history 2"],
-        disc: jtp.Int[jnp.ndarray, "historyy history 2"],
-        board: jtp.Int[jnp.ndarray, "historyy history 2"],
+    *,
+    draw: jtp.Int[jnp.ndarray, "historyy history 2"],
+    disc: jtp.Int[jnp.ndarray, "historyy history 2"],
+    board: jtp.Int[jnp.ndarray, "historyy history 2"],
 ) -> jtp.Bool[jnp.ndarray, ""]:
     """
     Test the draw, disc and board history array.
@@ -157,34 +160,43 @@ def test_cards(
     """
     right_interval_draw = jnp.logical_and(
         jnp.logical_and(draw[..., 0] >= 0, draw[..., 0] <= 6).all(),
-        jnp.logical_and(draw[..., 1] >= 0, draw[..., 1] <= 11).all()
+        jnp.logical_and(draw[..., 1] >= 0, draw[..., 1] <= 11).all(),
     )
 
     right_interval_disc = jnp.logical_and(
         jnp.logical_and(disc[..., 0] >= 0, disc[..., 0] <= 6).all(),
-        jnp.logical_and(disc[..., 1] >= 0, disc[..., 1] <= 11).all()
+        jnp.logical_and(disc[..., 1] >= 0, disc[..., 1] <= 11).all(),
     )
 
     right_interval_board = jnp.logical_and(
         jnp.logical_and(board[..., 0] >= 0, board[..., 0] <= 5).all(),
-        jnp.logical_and(board[..., 1] >= 0, board[..., 1] <= 6).all()
+        jnp.logical_and(board[..., 1] >= 0, board[..., 1] <= 6).all(),
     )
 
     right_sum_L = (draw[..., 0] + disc[..., 0] + board[..., 0] == 6).all()
     right_sum_F = (draw[..., 1] + disc[..., 1] + board[..., 1] == 11).all()
 
-    unchanged = test_unchanged(
-        arr=draw) * test_unchanged(arr=disc) * test_unchanged(arr=board)
+    unchanged = (
+        test_unchanged(arr=draw) * test_unchanged(arr=disc) * test_unchanged(arr=board)
+    )
 
-    works = right_interval_draw * right_interval_disc * \
-        right_interval_board * right_sum_L * right_sum_F * unchanged
+    works = (
+        right_interval_draw
+        * right_interval_disc
+        * right_interval_board
+        * right_sum_L
+        * right_sum_F
+        * unchanged
+    )
 
     return works
 
 
 @jaxtyped
 @typechecked
-def test_presi_shown(*, presi_shown: jtp.Int[jnp.ndarray, "historyy history 2"]) -> jtp.Bool[jnp.ndarray, ""]:
+def test_presi_shown(
+    *, presi_shown: jtp.Int[jnp.ndarray, "historyy history 2"]
+) -> jtp.Bool[jnp.ndarray, ""]:
     """
     Test the presi_shown history array.
 
@@ -199,8 +211,9 @@ def test_presi_shown(*, presi_shown: jtp.Int[jnp.ndarray, "historyy history 2"])
     """
     right_entries = jnp.logical_and(presi_shown >= 0, presi_shown <= 3).all()
 
-    right_sum = (jnp.logical_or(presi_shown.sum(axis=-1) ==
-                 3, presi_shown.sum(axis=-1) == 0)).all()
+    right_sum = (
+        jnp.logical_or(presi_shown.sum(axis=-1) == 3, presi_shown.sum(axis=-1) == 0)
+    ).all()
 
     unchanged = test_unchanged(arr=presi_shown)
 
@@ -211,7 +224,9 @@ def test_presi_shown(*, presi_shown: jtp.Int[jnp.ndarray, "historyy history 2"])
 
 @jaxtyped
 @typechecked
-def test_chanc_shown(*, chanc_shown: jtp.Int[jnp.ndarray, "historyy history 2"]) -> jtp.Bool[jnp.ndarray, ""]:
+def test_chanc_shown(
+    *, chanc_shown: jtp.Int[jnp.ndarray, "historyy history 2"]
+) -> jtp.Bool[jnp.ndarray, ""]:
     """
     Test the chanc_shown history array.
 
@@ -226,8 +241,9 @@ def test_chanc_shown(*, chanc_shown: jtp.Int[jnp.ndarray, "historyy history 2"])
     """
     right_entries = jnp.logical_and(chanc_shown >= 0, chanc_shown <= 2).all()
 
-    right_sum = (jnp.logical_or(chanc_shown.sum(axis=-1) ==
-                 2, chanc_shown.sum(axis=-1) == 0)).all()
+    right_sum = (
+        jnp.logical_or(chanc_shown.sum(axis=-1) == 2, chanc_shown.sum(axis=-1) == 0)
+    ).all()
 
     unchanged = test_unchanged(arr=chanc_shown)
 
@@ -238,7 +254,9 @@ def test_chanc_shown(*, chanc_shown: jtp.Int[jnp.ndarray, "historyy history 2"])
 
 @jaxtyped
 @typechecked
-def test_winner(*, winner: jtp.Bool[jnp.ndarray, "historyy history 2"]) -> jtp.Bool[jnp.ndarray, ""]:
+def test_winner(
+    *, winner: jtp.Bool[jnp.ndarray, "historyy history 2"]
+) -> jtp.Bool[jnp.ndarray, ""]:
     """
     Test the winner history array.
 
@@ -262,10 +280,10 @@ def test_winner(*, winner: jtp.Bool[jnp.ndarray, "historyy history 2"]) -> jtp.B
 @jaxtyped
 @typechecked
 def test_dummy_history(
-        *,
-        key: jrn.KeyArray | jtp.UInt32[jnp.ndarray, "2"],
-        player_total: int = 10,
-        game_len: int = 30
+    *,
+    key: jrn.KeyArray | jtp.UInt32[jnp.ndarray, "2"],
+    player_total: int = 10,
+    game_len: int = 30,
 ) -> jtp.Bool[jnp.ndarray, ""]:
     """
     Test the function dummy_history from run.
@@ -296,56 +314,60 @@ def test_dummy_history(
         player_total=player_total,
         game_len=game_len,
         prob_vote=prob_vote,
-        prob_discard=prob_discard
+        prob_discard=prob_discard,
     )
 
-    roles_work = test_roles(player_total=player_total, roles=dic['roles'])
+    roles_work = test_roles(player_total=player_total, roles=dic["roles"])
 
     presi_works = test_presi_chanc_or_proposed(
-        player_total=player_total, arr=dic['presi'], killed=dic['killed'])
+        player_total=player_total, arr=dic["presi"], killed=dic["killed"]
+    )
 
     chanc_works = test_presi_chanc_or_proposed(
-        player_total=player_total, arr=dic['chanc'], killed=dic['killed'])
+        player_total=player_total, arr=dic["chanc"], killed=dic["killed"]
+    )
 
     proposed_works = test_presi_chanc_or_proposed(
-        player_total=player_total, arr=dic['proposed'])
+        player_total=player_total, arr=dic["proposed"]
+    )
 
-    voted_works = test_unchanged(arr=dic['voted'])
+    voted_works = test_unchanged(arr=dic["voted"])
 
-    tracker_works = test_tracker(tracker=dic['tracker'])
+    tracker_works = test_tracker(tracker=dic["tracker"])
 
-    cards_work = test_cards(
-        draw=dic['draw'], disc=dic['disc'], board=dic['board'])
+    cards_work = test_cards(draw=dic["draw"], disc=dic["disc"], board=dic["board"])
 
-    presi_shown_works = test_presi_shown(presi_shown=dic['presi_shown'])
+    presi_shown_works = test_presi_shown(presi_shown=dic["presi_shown"])
 
-    chanc_shown_works = test_chanc_shown(chanc_shown=dic['chanc_shown'])
+    chanc_shown_works = test_chanc_shown(chanc_shown=dic["chanc_shown"])
 
-    killed_works = test_unchanged(arr=dic['killed'])
+    killed_works = test_unchanged(arr=dic["killed"])
 
-    winner_works = test_winner(winner=dic['winner'])
+    winner_works = test_winner(winner=dic["winner"])
 
-    works = roles_work \
-        * presi_works \
-        * chanc_works \
-        * proposed_works \
-        * voted_works \
-        * cards_work \
-        * presi_shown_works \
-        * chanc_shown_works \
-        * tracker_works \
-        * killed_works \
+    works = (
+        roles_work
+        * presi_works
+        * chanc_works
+        * proposed_works
+        * voted_works
+        * cards_work
+        * presi_shown_works
+        * chanc_shown_works
+        * tracker_works
+        * killed_works
         * winner_works
+    )
 
-    return jnp.logical_or(works, dic['winner'].sum()).all()
+    return jnp.logical_or(works, dic["winner"].sum()).all()
 
 
 class TestDummyHistory(unittest.TestCase):
-
     def test_works(self):
         # jit the function
-        test_jit = jax.jit(test_dummy_history, static_argnames=[
-                           "player_total", "game_len"])
+        test_jit = jax.jit(
+            test_dummy_history, static_argnames=["player_total", "game_len"]
+        )
 
         # let it run once for faster loop afterwards
         key = jrn.PRNGKey(34527)
