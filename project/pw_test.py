@@ -10,10 +10,7 @@ from tqdm import trange
 
 
 def propose_liberal_looking_fascist(state, **_):
-    # do not propose liberals
     roles = jnp.where(state["roles"][0] != 0, 0, -jnp.inf)
-
-    # propose the most liberal presidents
     return roles - detect_fascists(state) * 10
 
 

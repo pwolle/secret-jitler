@@ -2,68 +2,65 @@
 This file contains the code to run the game interactively.
 """
 
+import jax
+
+jax.config.update("jax_platform_name", "cpu")
+
 import argparse
-import jax.random as jrn
 import random
-from bots import bots, run, interactive
+
+import jax.random as jrn
+from bots import bots, interactive, run
 
 # get command line arguments from user
 parser = argparse.ArgumentParser()
-parser.add_argument(
-    "--players", type=int, default=10, help="number of players"
-)
+parser.add_argument("--players", type=int, default=10, help="number of players")
+parser.add_argument("--seed", type=int, help="seed for your game")
+parser.add_argument("--position", type=int, help="position of the human player")
+parser.add_argument("--speed", type=int, default=12, help="speed of the game")
 
-parser.add_argument(
-    "--seed", type=int, help="seed for your game"
-)
-
-parser.add_argument(
-    "--player_number", type=int, help="player number of the human player"
-)
-
-parser.add_argument(
-    "--speed", type=int, default=8, help="speed of the game"
-)
+parser = parser.parse_args()
 
 # check for valid arguments
-players = parser.parse_args().players
-
+players = parser.players
 if players < 5:
     raise ValueError("There must be at least 5 players.")
 
-seed = parser.parse_args().seed
 
-player_number = parser.parse_args().player_number
-
-if player_number is not None and (
-        player_number < 0 or player_number >= players
-):
+position = parser.position
+if position is not None and (position < 0 or position >= players):
     raise ValueError(
         f"Player number must be between 0 and {players - 1} (players - 1)."
     )
 
-speed = parser.parse_args().speed
-
+speed = parser.speed
 if speed < 0:
     raise ValueError("Speed must be positive.")
 
 # create a random seed if none is given
+seed = parser.seed
 if seed is None:
-    seed = random.randint(0, 2 ** 32 - 1)
+    seed = random.randint(0, 2**32 - 1)
 
 # create a random key using some seed
 key = jrn.PRNGKey(seed)
 key, subkey1, subkey2 = jrn.split(key, 3)
 
-if player_number is None:
-    player_number = jrn.randint(subkey2, (), 0, players)
+if position is None:
+    position = jrn.randint(subkey2, (), 0, players)
 
 # fuse bots from bots.bots
 propose_bot = run.fuse(
-    bots.propose_random, bots.propose_random, bots.propose_random
+    bots.propose_most_liberal,
+    bots.propose_liberal_looking_fascist,
+    bots.propose_most_liberal,
 )
 
-vote_bot = run.fuse(bots.vote_yes, bots.vote_yes, bots.vote_yes)
+vote_bot = run.fuse(
+    bots.vote_liberal_sigmoid_more_yes,
+    bots.vote_fascist_sigmoid,
+    bots.vote_yes,
+)
 
 presi_bot = run.fuse(
     bots.discard_true,
@@ -71,11 +68,13 @@ presi_bot = run.fuse(
     bots.discard_false,
 )
 
-chanc_bot = run.fuse(
-    bots.discard_true, bots.discard_false, bots.discard_false
-)
+chanc_bot = run.fuse(bots.discard_true, bots.discard_false, bots.discard_true)
 
-shoot_bot = run.fuse(bots.shoot_random, bots.shoot_random, bots.shoot_random)
+shoot_bot = run.fuse(
+    bots.shoot_most_fascist,
+    bots.shoot_next_liberal_presi,
+    bots.shoot_next_liberal_presi,
+)
 
 # create run function
 run_func_interactive = interactive.closure(
@@ -99,7 +98,7 @@ params = {
 # run the game
 state = run_func_interactive(
     subkey1,  # key created above
-    player_number,  # player number of the human player
+    position,  # player number of the human player
     players,  # number of players
     params,  # type: ignore
     speed,  # speed
