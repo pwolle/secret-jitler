@@ -175,12 +175,12 @@ def main():
 
     key = jrn.PRNGKey(random.randint(0, 2**32 - 1))
     print("compiling...")
-    winners = [winner_func(key, params)]
+    winners = [winner_func(key, params)]  # type: ignore
     steps = 500
 
     for _ in trange(steps):
         key, subkey = jrn.split(key)
-        winners.append(winner_func(subkey, params))
+        winners.append(winner_func(subkey, params))  # type: ignore
 
     winner = jnp.array(winners)
 

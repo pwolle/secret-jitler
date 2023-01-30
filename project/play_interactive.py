@@ -2,15 +2,15 @@
 This file contains the code to run the game interactively.
 """
 
-import jax
-
-jax.config.update("jax_platform_name", "cpu")
-
 import argparse
 import random
 
+import jax
 import jax.random as jrn
 from bots import bots, interactive, run
+
+jax.config.update("jax_platform_name", "cpu")
+
 
 # get command line arguments from user
 parser = argparse.ArgumentParser()
@@ -26,12 +26,13 @@ players = parser.players
 if players < 5:
     raise ValueError("There must be at least 5 players.")
 
-
 position = parser.position
-if position is not None and (position < 0 or position >= players):
-    raise ValueError(
-        f"Player number must be between 0 and {players - 1} (players - 1)."
-    )
+if position is not None:
+    if position < 0:
+        raise ValueError("Player number must be positive.")
+
+    if position > players:
+        raise ValueError(f"Player number must be smaller than {players-1} (players-1).")
 
 speed = parser.speed
 if speed < 0:
@@ -78,7 +79,7 @@ shoot_bot = run.fuse(
 
 # create run function
 run_func_interactive = interactive.closure(
-    30,  # history size
+    30,  # maximum history size needed
     propose_bot=propose_bot,
     vote_bot=vote_bot,
     presi_bot=presi_bot,

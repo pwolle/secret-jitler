@@ -184,7 +184,7 @@ def vote_fascist_sigmoid(state, **_):
     presi = state["roles"][0][state["presi"][0]] != 0
     chanc = state["roles"][0][state["proposed"][0]] != 0
     total = presi.astype("float32") + chanc.astype("float32")
-    return _sigmoid(total)
+    return _sigmoid(0.5 + total * 0.5)
 
 
 def shoot_next_liberal_presi(state, **_):
@@ -223,7 +223,7 @@ def vote_liberal_sigmoid_more_yes(state, **_):
     presi = fascist_scale[state["presi"][0]]
     chanc = fascist_scale[state["proposed"][0]]
     total = presi + chanc
-    return _sigmoid(total * 1.5 + 1)
+    return _sigmoid(total * 1.5 + 0.5)
 
 
 def shoot_most_fascist(state, **_):
