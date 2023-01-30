@@ -3,6 +3,8 @@ import jax.numpy as jnp
 import jax.lax as jla
 import random
 
+from kiwisolver import strength
+
 import bots.bots
 import bots.run
 
@@ -13,31 +15,10 @@ def propose_facist(state, **_):
     return jnp.where(state["roles"][0] != 0, 0, -jnp.inf)
 
 
-def shoot_liberals(state, **_):
-    return jnp.where(state["roles"][0] == 0, 0, -jnp.inf)
-
-
-def vote_yes_facist_chanc(state, **_):
-    role = state["roles"][0][state["proposed"][0]] != 0
-    return jla.select(role, 1.0, 0.0)
-
-
-def vote_yes_facist_presi(state, **_):
-    proposed = state["presi"][0]
-    role = state["roles"][0][proposed] != 0
-    return jla.select(role, 1.0, 0.0)
-
-
-def vote_yes_facist_combi(state, **_):
-    chanc = state["roles"][0][state["proposed"][0]] != 0
+def vote_yes_facist(state, **_):
+    # chanc = state["roles"][0][state["proposed"][0]] != 0
     presi = state["roles"][0][state["presi"][0]] != 0
-    return jla.select(chanc & presi, 1.0, 0.0)
-
-
-def vote_yes_facist_one(state, **_):
-    chanc = state["roles"][0][state["proposed"][0]] != 0
-    presi = state["roles"][0][state["presi"][0]] != 0
-    return jla.select(chanc | presi, 1.0, 0.0)
+    return jla.select(presi, 1.0, 0.0)
 
 
 def next_presi(state, presi):
@@ -55,7 +36,7 @@ def next_presi(state, presi):
     return succesor
 
 
-def next_lib3(state, **_):
+def shoot_next_liberal(state, **_):
     roles = state["roles"][0]
     player_total = roles.shape[-1]
 
@@ -74,20 +55,66 @@ def next_lib3(state, **_):
     return probs.at[target].set(0.0)
 
 
+def fometer(state, ratio=1.25):
+    player_total = state["killed"][0].shape[-1]
+
+    board = state["board"]
+    tracker = state["tracker"]
+    presi = state["presi"]
+    chanc = state["chanc"]
+
+    new_policies = board[:-1] - board[1:]
+
+    enacted = tracker == 0
+    enacted &= presi != -1
+
+    meter = new_policies.argmax(-1)
+    meter = 2 * meter - 1
+    meter = meter * enacted[:-1]
+
+    presi_meter = jnp.zeros([player_total])
+    presi_meter = presi_meter.at[presi[:-1]].add(meter)
+
+    chanc_meter = jnp.zeros([player_total])
+    chanc_meter = chanc_meter.at[chanc[:-1]].add(meter)
+
+    return ratio * presi_meter + chanc_meter / ratio
+
+
+def sigmoid(x):
+    return 1 / (1 + jnp.exp(-x))
+
+
+def propose_meter(state, **_):
+    return -fometer(state) * 10
+
+
+def vote_meter(state, **_):
+    meter = fometer(state)
+    presi = meter[state["presi"][0]]
+    chanc = meter[state["proposed"][0]]
+    total = presi + chanc
+    return sigmoid(-total * 5 - 3)
+
+
+def shoot_meter(state, **_):
+    return fometer(state) * 10
+
+
 def main():
     history_size = 15
     player_total = 10
-    batch_size = 256
+    batch_size = 128
 
     propose_bot = bots.run.fuse(
-        bots.bots.propose_random,
+        propose_meter,
         propose_facist,
         bots.bots.propose_random,
     )
 
     vote_bot = bots.run.fuse(
-        bots.bots.vote_yes,
-        vote_yes_facist_presi,
+        vote_meter,
+        vote_yes_facist,
         bots.bots.vote_yes,
     )
 
@@ -104,8 +131,8 @@ def main():
     )
 
     shoot_bot = bots.run.fuse(
-        bots.bots.shoot_random,
-        next_lib3,
+        shoot_meter,
+        shoot_next_liberal,
         bots.bots.shoot_random,
     )
 
@@ -127,7 +154,7 @@ def main():
     print("compiling...")
     winners = [winner_func(key, params)]  # type: ignore
 
-    for _ in trange(1000):  # type: ignore
+    for _ in trange(500):  # type: ignore
         key, subkey = jrn.split(key)  # type: ignore
         winners.append(winner_func(subkey, params))  # type: ignore
 
