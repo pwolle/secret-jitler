@@ -21,7 +21,7 @@ def typewrite(string, speed=SPEED, end="\n"):
         print(char, end="", flush=True)
 
         if char == " ":
-            time.sleep(random.uniform(0, 2 / speed))
+            time.sleep(random.uniform(0, 3 / speed))
             continue
 
         if char in [",", ".", ":", "\n"]:

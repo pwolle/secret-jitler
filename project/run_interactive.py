@@ -45,5 +45,5 @@ state = run_func_interactive(
     1,  # player number of the human player
     5,  # number of players
     params,  # type: ignore
-    7,  # speed
+    # 7,  # speed
 )
