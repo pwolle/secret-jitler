@@ -10,13 +10,31 @@ from bots import bots, run
 from tqdm import trange
 
 
-def main(player_total=5, history_size=2, batch_size=128, n_tests=1000):
+def main(players=5, history=2, batch_size=128, n_tests=1000):
     """
     Performance test for game implementation:
     gtx 1060: 2.9e6 it/s at batch size 131072
     i7-6700: 5.8e4 it/s at batch size 256
     AMD 7 4700U: 7.1e4 it/s at batch size 128
     """
+    if players < 5:
+        raise ValueError("There must be at least 5 players.")
+
+    if players > 10:
+        raise ValueError("There must be at most 10 players.")
+
+    if history < 2:
+        raise ValueError("History must be at least 2.")
+
+    if history > 30:
+        raise ValueError("History must be at most 30.")
+
+    if batch_size < 1:
+        raise ValueError("Batch size must be at least 1.")
+
+    if n_tests < 1:
+        raise ValueError("Number of tests must be at least 1.")
+
     # the simplest bots
     propose_bot = run.fuse(*[bots.propose_random] * 3)
     vote_bot = run.fuse(*[bots.vote_yes] * 3)
@@ -28,8 +46,8 @@ def main(player_total=5, history_size=2, batch_size=128, n_tests=1000):
     params = {"propose": 0, "vote": 0, "presi": 0, "chanc": 0, "shoot": 0}
 
     run_func = run.closure(
-        player_total,
-        history_size,
+        players,
+        history,
         propose_bot,
         vote_bot,
         presi_bot,
@@ -59,7 +77,27 @@ def main(player_total=5, history_size=2, batch_size=128, n_tests=1000):
     performance = n_tests * batch_size / (end - start)
 
     print(f"performance: {performance:.3g} games per second")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    import sys
+
+    # get command line arguments from user
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--players", type=int, default=5, help="number of players")
+    parser.add_argument("--history", type=int, default=2, help="history size")
+    parser.add_argument("--batch", type=int, default=128, help="batch size")
+    parser.add_argument("--tests", type=int, default=1000, help="number of tests")
+
+    args = parser.parse_args()
+
+    sys.exit(
+        main(
+            args.players,
+            args.history,
+            args.batch,
+            args.tests,
+        )
+    )

@@ -15,7 +15,6 @@ def propose_liberal_looking_fascist(state, **_):
 
 
 def vote_iff_fascist_presi(state, **_):
-    # chanc = state["roles"][0][state["proposed"][0]] != 0
     presi = state["roles"][0][state["presi"][0]] != 0
     return jla.select(presi, 1.0, 0.0)
 
