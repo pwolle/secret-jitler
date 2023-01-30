@@ -3,8 +3,6 @@ import jax.numpy as jnp
 import jax.lax as jla
 import random
 
-from kiwisolver import strength
-
 import bots.bots
 import bots.run
 
