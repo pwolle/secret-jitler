@@ -3,20 +3,24 @@ import jax.numpy as jnp
 import jax.lax as jla
 import random
 
-import bots.bots
-import bots.run
+
+from bots import bots, run
 
 from tqdm import trange
 
 
 def propose_facist(state, **_):
-    return jnp.where(state["roles"][0] != 0, 0, -jnp.inf)
+    # do not propose liberals
+    roles = jnp.where(state["roles"][0] != 0, 0, -jnp.inf)
+
+    # propose the most liberal presidents
+    return roles - fometer(state) * 10
 
 
 def vote_yes_facist(state, **_):
-    chanc = state["roles"][0][state["proposed"][0]] != 0
+    # chanc = state["roles"][0][state["proposed"][0]] != 0
     presi = state["roles"][0][state["presi"][0]] != 0
-    return jla.select(presi | chanc, 1.0, 0.0)
+    return jla.select(presi, 1.0, 0.0)
 
 
 def next_presi(state, presi):
@@ -82,65 +86,76 @@ def fometer(state, ratio=1.0):
     confirmed_meter = jnp.zeros([player_total])
     confirmed_meter = confirmed_meter.at[chanc[:-1]].add(confirmed)
 
-    return ratio * presi_meter + chanc_meter / ratio + confirmed_meter * 1e3
+    total_meter = ratio * presi_meter
+    total_meter += chanc_meter / ratio
+    total_meter += confirmed_meter * 1e2
+
+    return total_meter
 
 
 def sigmoid(x):
     return 1 / (1 + jnp.exp(-x))
 
 
-def propose_meter(state, **_):
-    return -fometer(state) * 10
+def propose_meter(state, params, **_):
+    strength = params["liberal"]["strength"]
+    ratio = params["liberal"]["ratio"]
+    return -fometer(state, ratio) * strength
 
 
-def vote_meter(state, **_):
-    meter = fometer(state)
+def vote_meter(state, params, **_):
+    ratio = params["liberal"]["ratio"]
+    meter = fometer(state, ratio)
     presi = meter[state["presi"][0]]
     chanc = meter[state["proposed"][0]]
     total = presi + chanc
-    return sigmoid(-total * 5 - 2.5)
+    strength = params["liberal"]["strength"]
+    offset = params["liberal"]["offset"]
+    return sigmoid(-total * strength + offset)
 
 
-def shoot_meter(state, **_):
-    return fometer(state) * 10
+def shoot_meter(state, params, **_):
+    strength = params["liberal"]["strength"]
+    ratio = params["liberal"]["ratio"]
+    return fometer(state, ratio) * strength
 
 
 def main():
-    history_size = 15
+    history_size = 30
     player_total = 10
     batch_size = 128
 
-    propose_bot = bots.run.fuse(
+    propose_bot = run.fuse(
         propose_meter,
         propose_facist,
-        bots.bots.propose_random,
+        bots.propose_random,
     )
 
-    vote_bot = bots.run.fuse(
+    vote_bot = run.fuse(
         vote_meter,
         vote_yes_facist,
-        bots.bots.vote_yes,
+        bots.vote_yes,
     )
 
-    presi_bot = bots.run.fuse(
-        bots.bots.discard_true,
-        bots.bots.discard_false,
-        bots.bots.discard_true,
+    presi_bot = run.fuse(
+        bots.discard_true,
+        bots.discard_false,
+        bots.discard_true,
     )
 
-    chanc_bot = bots.run.fuse(
-        bots.bots.discard_true,
-        bots.bots.discard_false,
-        bots.bots.discard_true,
+    chanc_bot = run.fuse(
+        bots.discard_true,
+        bots.discard_false,
+        bots.discard_true,
     )
 
-    shoot_bot = bots.run.fuse(
+    shoot_bot = run.fuse(
         shoot_meter,
         shoot_next_liberal,
-        bots.bots.shoot_random,
+        bots.shoot_random,
     )
 
-    game_run = bots.run.closure(
+    game_run = run.closure(
         player_total,
         history_size,
         propose_bot,
@@ -150,24 +165,34 @@ def main():
         shoot_bot,
     )
 
-    winner_func = bots.run.evaluate(game_run, batch_size)
+    winner_func = run.evaluate(game_run, batch_size)
 
-    params = {"propose": 0, "vote": 0, "presi": 0, "chanc": 0, "shoot": 0}
+    ratio = 1.0
+    params = {
+        "propose": {"liberal": {"strength": 10, "ratio": ratio}},
+        "vote": {"liberal": {"strength": 5, "offset": -2, "ratio": ratio}},
+        "presi": 0,
+        "chanc": 0,
+        "shoot": {"liberal": {"strength": 10, "ratio": ratio}},
+    }
 
     key = jrn.PRNGKey(random.randint(0, 2**32 - 1))
     print("compiling...")
     winners = [winner_func(key, params)]  # type: ignore
+    steps = 500
 
-    for _ in trange(500):  # type: ignore
+    for _ in trange(steps):  # type: ignore
         key, subkey = jrn.split(key)  # type: ignore
         winners.append(winner_func(subkey, params))  # type: ignore
 
     winner = jnp.array(winners)
 
     winrate = winner.mean()
-    deviation = winner.std() / jnp.sqrt(batch_size)
 
-    print(f"Winrate: {winrate:.2%} ± {deviation:.3%}")
+    # standard error of the mean
+    deviation = winner.std() / jnp.sqrt(winner.size)
+
+    print(f"Winrate: {winrate:.2%} ± {deviation:.3%}p")
 
 
 if __name__ == "__main__":
