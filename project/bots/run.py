@@ -35,7 +35,7 @@ def fuse(role_0: st.Bot | Any, role_1: st.Bot | Any, role_2: st.Bot | Any) -> st
     """
 
     def fused(
-        player: int, key: st.key, params: jtp.PyTree, state: st.state
+        player: int | Any, key: st.key, params: jtp.PyTree, state: st.state
     ) -> jtp.PyTree:
         kwargs = {
             "player": player,
@@ -44,26 +44,15 @@ def fuse(role_0: st.Bot | Any, role_1: st.Bot | Any, role_2: st.Bot | Any) -> st
             "state": state,
         }
 
-        role_0_probs = role_0(**kwargs)
-        role_1_probs = role_1(**kwargs)
-        role_2_probs = role_2(**kwargs)
-
         role = state["roles"][0, player]
-        probs = role_0_probs
-
-        probs = jla.select(role == 1, role_1_probs, probs)
-        probs = jla.select(role == 2, role_2_probs, probs)
-
-        return probs
-
-        # return jla.switch(
-        #     role,
-        #     (
-        #         lambda: role_0(**kwargs),
-        #         lambda: role_1(**kwargs),
-        #         lambda: role_2(**kwargs),
-        #     ),
-        # )
+        return jla.switch(
+            role,
+            (
+                lambda: role_0(**kwargs),
+                lambda: role_1(**kwargs),
+                lambda: role_2(**kwargs),
+            ),
+        )
 
     fused_vmap = jax.vmap(fused, in_axes=(0, None, None, 0))
 
@@ -188,7 +177,10 @@ def evaluate(run_func: Callable[[st.key, st.params_dict], st.state], batch_size:
             number of played rounds
 
     Returns:
-        evaluate_func: Callable[[key: st.key, params_dict: st.params_dict], jtp.Bool[jnp.ndarray, "..."]]
+        evaluate_func: Callable[
+            [key: st.key, params_dict: st.params_dict],
+            jtp.Bool[jnp.ndarray, "..."
+        ]]
             funciton to evaluate the given game simulation.
 
 
@@ -203,7 +195,7 @@ def evaluate(run_func: Callable[[st.key, st.params_dict], st.state], batch_size:
         key: st.key, params_dict: st.params_dict
     ) -> jtp.Bool[jnp.ndarray, "..."]:
         keys = jrn.split(key, batch_size)
-        keys = jnp.stack(keys)
+        keys = jnp.stack(keys)  # type: ignore
         return run_winner_vmap(keys, params_dict).argmax(-1)
 
     return evaluate_func
