@@ -21,7 +21,7 @@ chanc_bot = run.fuse(bots.discard_true, bots.discard_false, bots.discard_false)
 shoot_bot = run.fuse(bots.shoot_random, bots.shoot_random, bots.shoot_random)
 
 # create run function
-run_func_interactive = interactive_pw.closure(
+run_func_interactive = interactive.closure(
     30,  # history size
     propose_bot=propose_bot,
     vote_bot=vote_bot,
@@ -45,5 +45,5 @@ state = run_func_interactive(
     1,  # player number of the human player
     5,  # number of players
     params,  # type: ignore
-    7  # speed
+    7,  # speed
 )
