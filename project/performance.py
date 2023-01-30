@@ -1,9 +1,13 @@
+"""
+This programm is used to test the performance of the game implementation.
+"""
+
+import time
+
 import jax
 import jax.random as jrn
 from bots import bots, run
 from tqdm import trange
-
-import time
 
 
 def main(player_total=5, history_size=2, batch_size=128, n_tests=1000):
