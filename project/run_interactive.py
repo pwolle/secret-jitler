@@ -44,6 +44,6 @@ state = run_func_interactive(
     subkey,  # key created above
     1,  # player number of the human player
     5,  # number of players
-    params,  # type: ignore
+    params,
     # 7,  # speed
 )

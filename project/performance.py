@@ -1,13 +1,12 @@
-import jax.random as jrn
 import jax
-
-import bots.bots as bots
-import bots.run as run
-
+import jax.random as jrn
+from bots import bots, run
 from tqdm import trange
 
+import time
 
-def main(player_total=5, history_size=2, batch_size=128):
+
+def main(player_total=5, history_size=2, batch_size=128, n_tests=1000):
     """
     Performance test for game implementation:
     gtx 1060: 2.9e6 it/s at batch size 131072
@@ -40,21 +39,22 @@ def main(player_total=5, history_size=2, batch_size=128):
     key = jrn.PRNGKey(0)
 
     print("compiling")
-    winner_func(key, params)  # type: ignore
+    winner_func(key, params)
     print("compiled")
 
     def test_func():
-        winner = winner_func(key, params)  # type: ignore
-        winner.block_until_ready()  # type: ignore
+        winner = winner_func(key, params)
+        winner.block_until_ready()
 
-    # # timeit does not seem to work with gpu very well
-    # import timeit
-    # itrs = 1000
-    # time = timeit.timeit(test_func, number=itrs) / itrs / batch_size
-    # print(f"performance: {1/time:.3g} games per second")
+    start = time.perf_counter()
 
-    for _ in trange(100000):
+    for _ in trange(n_tests):
         test_func()
+
+    end = time.perf_counter()
+    performance = n_tests * batch_size / (end - start)
+
+    print(f"performance: {performance:.3g} games per second")
 
 
 if __name__ == "__main__":

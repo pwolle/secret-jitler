@@ -56,12 +56,21 @@ def fuse(role_0: st.Bot | Any, role_1: st.Bot | Any, role_2: st.Bot | Any) -> st
 
         return probs
 
+        # return jla.switch(
+        #     role,
+        #     (
+        #         lambda: role_0(**kwargs),
+        #         lambda: role_1(**kwargs),
+        #         lambda: role_2(**kwargs),
+        #     ),
+        # )
+
     fused_vmap = jax.vmap(fused, in_axes=(0, None, None, 0))
 
     def fused_auto(key: st.key, params, state) -> jtp.PyTree:
         player_total = state["killed"].shape[-1]
         players = jnp.arange(player_total)
-        return fused_vmap(players, key, params, state)  # type: ignore
+        return fused_vmap(players, key, params, state)
 
     return fused_auto
 
@@ -194,7 +203,7 @@ def evaluate(run_func: Callable[[st.key, st.params_dict], st.state], batch_size:
         key: st.key, params_dict: st.params_dict
     ) -> jtp.Bool[jnp.ndarray, "..."]:
         keys = jrn.split(key, batch_size)
-        keys = jnp.stack(keys)  # type: ignore
+        keys = jnp.stack(keys)
         return run_winner_vmap(keys, params_dict).argmax(-1)
 
     return evaluate_func

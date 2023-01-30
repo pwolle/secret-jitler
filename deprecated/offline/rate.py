@@ -5,8 +5,7 @@ import jax
 
 
 def rate_votes(state):
-    """
-    """
+    """ """
 
     def rate(player: int, winner, voted, roles):
         vote = voted[0, player]
@@ -38,12 +37,11 @@ def rate_votes(state):
     voted = state["voted"][1:]
     roles = state["roles"][1:]
 
-    return rate_vmap_vmap(players, winner, voted, roles)  # type: ignore
+    return rate_vmap_vmap(players, winner, voted, roles)
 
 
 def rate_presi_disc(state):
-    """
-    """
+    """ """
 
     def rate(player: int, winner, presi_shown, chanc_shown, roles):
         discarded = presi_shown[0] - chanc_shown[0]
@@ -85,18 +83,11 @@ def rate_presi_disc(state):
     chanc_shown = state["chanc_shown"][1:]
     roles = state["roles"][1:]
 
-    return rate_vmap_vmap(
-        players,  # type: ignore
-        winner,
-        presi_shown,
-        chanc_shown,
-        roles
-    )
+    return rate_vmap_vmap(players, winner, presi_shown, chanc_shown, roles)
 
 
 def rate_chanc_disc(state):
-    """
-    """
+    """ """
 
     def rate(player: int, winner, chanc_shown, roles, board):
         non_discarded = board[0] - board[1]
@@ -139,10 +130,4 @@ def rate_chanc_disc(state):
     roles = state["roles"][1:]
     board = state["board"][1:]
 
-    return rate_vmap_vmap(
-        players,  # type: ignore
-        winner,
-        chanc_shown,
-        roles,
-        board
-    )
+    return rate_vmap_vmap(players, winner, chanc_shown, roles, board)
