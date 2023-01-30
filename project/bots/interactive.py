@@ -19,6 +19,15 @@ SPEED = 7
 def typewrite(string, speed=SPEED, end="\n"):
     for char in string:
         print(char, end="", flush=True)
+
+        if char == " ":
+            time.sleep(random.uniform(0, 2 / speed))
+            continue
+
+        if char in [",", ".", ":", "\n"]:
+            time.sleep(random.uniform(0, 5 / speed))
+            continue
+
         time.sleep(random.uniform(0, 1 / speed))
 
     print(end=end, flush=True)
@@ -40,7 +49,7 @@ def valid_input(expected: dict, speed=SPEED):
         "We are not sure what you mean.",
         "Come again?",
         "What do you mean by that?",
-        "What is that supposed to mean?"
+        "What is that supposed to mean?",
     ]
 
     while True:
@@ -64,16 +73,13 @@ def propose(player, probs, state, speed=SPEED):
         return probs
 
     total = state["roles"].shape[-1]
-    typewrite(
-        "\nYou are the Presidential Candidate.",
-        speed
-    )
+    typewrite("\nYou are the Presidential Candidate.", speed)
     typewrite(
         "It is your job to propose an eligible Chancellor Candidate. Only "
         "other players that are not dead and have not been elected in the "
         "last round can be proposed. Who do you choose? "
         f"(enter a number between 0-{total-1})",
-        speed
+        speed,
     )
 
     proposal = valid_input({i: i for i in range(total)}, speed)
@@ -84,10 +90,7 @@ def vote(player, probs, state, speed=SPEED):
     if state["killed"][0, player]:
         return probs
 
-    typewrite(
-        "\nWhat is your decision? (enter Nein! (no) or Ja! (yes))",
-        speed
-    )
+    typewrite("\nWhat is your decision? (enter Nein! (no) or Ja! (yes))", speed)
 
     vote = valid_input(
         {
@@ -114,9 +117,8 @@ def presi_disc(player, probs, state, speed=SPEED):
 
     if state["presi"][0] != player:
         typewrite(
-            "\nThe President chooses two Policies to give to their "
-            "Chancellor.",
-            speed
+            "\nThe President chooses two Policies to give to their " "Chancellor.",
+            speed,
         )
         return probs
 
@@ -124,13 +126,12 @@ def presi_disc(player, probs, state, speed=SPEED):
         "\nAs you are the President it is your duty to give two of three "
         "Policies to the Chancellor. Your choice looks like this: ",
         speed,
-        end=""
+        end="",
     )
     narrate.print_cards(state["presi_shown"][0])
     typewrite(
-        "\nWhat type of card do you want to discard? (enter Liberal or"
-        " Fascist)",
-        speed
+        "\nWhat type of card do you want to discard? (enter Liberal or" " Fascist)",
+        speed,
     )
 
     disc = valid_input({0: 0, 1: 1, "l": 0, "f": 1, "liberal": 0, "fascist": 1}, speed)
@@ -142,30 +143,24 @@ def chanc_disc(player, probs, state, speed=SPEED):
         return probs
 
     if state["chanc"][0] != player:
-        typewrite(
-            "\nThe Chancellor chooses one Policy to discard.",
-            speed
-        )
+        typewrite("\nThe Chancellor chooses one Policy to discard.", speed)
         return probs
 
     typewrite(
         "\nYou get handed two Policies by the President. You take a look at "
         "them and see: ",
         speed,
-        end=""
+        end="",
     )
     narrate.print_cards(state["chanc_shown"][0])
     typewrite(
         "\nAs Chancellor your job is to decide which of those two policies to"
         " enact and which one to discard. (enter l to discard a liberal "
         "policy or f to discard a fascist one)",
-        speed
+        speed,
     )
 
-    disc = valid_input(
-        {0: 0, 1: 1, "l": 0, "f": 1, "liberal": 0, "fascist": 1},
-        speed
-    )
+    disc = valid_input({0: 0, 1: 1, "l": 0, "f": 1, "liberal": 0, "fascist": 1}, speed)
     return probs.at[player].set(disc)
 
 
@@ -182,7 +177,7 @@ def shoot(player, probs, state, speed=SPEED):
             f"\nAs {state['board'][0][1]} F Policies have been enacted "
             "already it is time for some action. The President brought a gun"
             " and can now formally execute a Player of their choice.",
-            speed
+            speed,
         )
         return probs, True
 
@@ -190,7 +185,7 @@ def shoot(player, probs, state, speed=SPEED):
     typewrite(
         "\nPresident! You have to decide which Player to shoot! (enter a "
         f"number between 0-{total - 1} to kill that Player)",
-        speed
+        speed,
     )
 
     # TODO filter expected by alive
@@ -212,45 +207,34 @@ def closure(
 
         # propose
         key, botkey, simkey = jrn.split(key, 3)
-        probs = propose_bot(
-            key=botkey,
-            params=params["propose"],
-            state=mask(state)
-        )
+        probs = propose_bot(key=botkey, params=params["propose"], state=mask(state))
         probs = propose(player, probs, state, speed)
         state |= run.propose(key=simkey, logprobs=probs, **state)
 
         typewrite(
-            f'\n{prepr(state["presi"][0], player)} is the '
-            f'Presidential Candidate.',
-            speed
+            f'\n{prepr(state["presi"][0], player)} is the ' f"Presidential Candidate.",
+            speed,
         )
         typewrite(
             f'They have proposed {prepr(state["proposed"][0], player)} as '
-            f'their Chancellor.',
-            speed
+            f"their Chancellor.",
+            speed,
         )
 
         # vote
-        typewrite(
-            "\nLet us cast our votes. The people await guidance.",
-            speed
-        )
+        typewrite("\nLet us cast our votes. The people await guidance.", speed)
 
         key, botkey, simkey = jrn.split(key, 3)
         probs = vote_bot(key=botkey, params=params["vote"], state=mask(state))
         probs = vote(player, probs, state, speed)
         state |= run.vote(key=simkey, probs=probs, **state)
 
-        typewrite(
-            "\nThe votes came in:",
-            speed
-        )
+        typewrite("\nThe votes came in:", speed)
         for i, killed in enumerate(state["killed"][0]):
             if killed:
                 continue
 
-            v = ['Nein!', 'Ja!'][int(state["voted"][0, i])]
+            v = ["Nein!", "Ja!"][int(state["voted"][0, i])]
             typewrite(f"{prepr(i, player)} voted {v}.", speed)
 
         if state["tracker"][0] == 3:
@@ -258,9 +242,9 @@ def closure(
                 "\nThree elections in a row have been rejected. The country"
                 " is thrown into chaos and the first policy drawn gets "
                 "enacted without votes.",
-                speed
+                speed,
             )
-            typewrite("\nThe resulting board state is: ",speed)
+            typewrite("\nThe resulting board state is: ", speed)
             narrate.print_board(state["board"][0])
 
             if state["winner"][0, 0]:
@@ -278,7 +262,7 @@ def closure(
                 "\nThe vote failed. The Presidential Candidate missed this "
                 "chance. The Election Tracker advances to "
                 f"{state['tracker'][0]}\n",
-                speed
+                speed,
             )
             return state
 
@@ -286,14 +270,11 @@ def closure(
             typewrite(
                 "\nHitler was elected Chancellor.\n\nThe "
                 "\x1b[31mFascists\x1b[0m have won!",
-                speed
+                speed,
             )
             sys.exit()
 
-        typewrite(
-            "\nThe vote passed. We have a new President and Chancellor.",
-            speed
-        )
+        typewrite("\nThe vote passed. We have a new President and Chancellor.", speed)
 
         # president discard
         key, botkey, simkey = jrn.split(key, 3)
@@ -307,7 +288,9 @@ def closure(
         probs = chanc_disc(player, probs, state, speed)
         state |= run.chanc_disc(key=simkey, probs=probs, **state)
 
-        typewrite("\nA new policy has been enacted. The resulting board state is:", speed)
+        typewrite(
+            "\nA new policy has been enacted. The resulting board state is:", speed
+        )
         narrate.print_board(state["board"][0])
 
         # check board for win
@@ -321,11 +304,7 @@ def closure(
 
         # shoot
         key, botkey, simkey = jrn.split(key, 3)
-        probs = shoot_bot(
-            key=botkey,
-            params=params["shoot"],
-            state=mask(state)
-        )
+        probs = shoot_bot(key=botkey, params=params["shoot"], state=mask(state))
         probs, shot = shoot(player, probs, state, speed)
         state |= run.shoot(key=simkey, logprobs=probs, **state)
 
@@ -334,10 +313,7 @@ def closure(
             typewrite(f"\n{prepr(dead, player)} was shot.", speed)
 
         if state["winner"][0, 0]:
-            typewrite(
-                "Hitler was shot, the \x1b[34mLiberals\x1b[0m win!",
-                speed
-            )
+            typewrite("Hitler was shot, the \x1b[34mLiberals\x1b[0m win!", speed)
             sys.exit()
 
         return state
@@ -347,8 +323,7 @@ def closure(
         state = init.state(subkey, total, history_size)
 
         typewrite(
-            f"\n\t\t\033[4mA new game with {total} players starts!\033[0m\n",
-            speed-2
+            f"\n\t\t\033[4mA new game with {total} players starts!\033[0m\n", speed - 2
         )
         typewrite(f"\nYour Player Number is {player}.", speed)
 
@@ -358,7 +333,7 @@ def closure(
                 " \x1b[34mLiberal\x1b[0m. In order to win you "
                 "have to make sure that five liberal policies "
                 "are enacted or Hitler is killed.",
-                speed
+                speed,
             )
 
         if state["roles"][0][player] == 1:
@@ -369,7 +344,7 @@ def closure(
                 " enacted or Hitler gets elected after three "
                 "fascist policies have been enacted. Your fellow"
                 " Fascists are:",
-                speed
+                speed,
             )
 
             for i in range(total):
@@ -387,7 +362,7 @@ def closure(
                 "fascist policies are enacted or you get "
                 "elected after three fascist policies have been "
                 "enacted.",
-                speed
+                speed,
             )
 
         turn = 0
