@@ -89,7 +89,7 @@ def mask_presi_shown(player: int, presi, presi_shown, **_):
     return presi_shown * mask[:, None]
 
 
-def mask_chanc_shown(player: int, chanc, chanc_shown, **_):
+def mask_chanc_shown(player: int, chanc, presi, chanc_shown, **_):
     """
     Mask the chanc_shown history of gamestate.
     every player should only have this data if they were chanccelor at that
@@ -112,6 +112,7 @@ def mask_chanc_shown(player: int, chanc, chanc_shown, **_):
     """
     # mask everything except where player was chancellor
     mask = player == chanc
+    mask |= player == presi
     return chanc_shown * mask[:, None]
 
 

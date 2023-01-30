@@ -16,9 +16,9 @@ def propose_facist(state, **_):
 
 
 def vote_yes_facist(state, **_):
-    # chanc = state["roles"][0][state["proposed"][0]] != 0
+    chanc = state["roles"][0][state["proposed"][0]] != 0
     presi = state["roles"][0][state["presi"][0]] != 0
-    return jla.select(presi, 1.0, 0.0)
+    return jla.select(presi | chanc, 1.0, 0.0)
 
 
 def next_presi(state, presi):
@@ -55,7 +55,7 @@ def shoot_next_liberal(state, **_):
     return probs.at[target].set(0.0)
 
 
-def fometer(state, ratio=1.25):
+def fometer(state, ratio=1.0):
     player_total = state["killed"][0].shape[-1]
 
     board = state["board"]
@@ -78,6 +78,9 @@ def fometer(state, ratio=1.25):
     chanc_meter = jnp.zeros([player_total])
     chanc_meter = chanc_meter.at[chanc[:-1]].add(meter)
 
+    confirmed = meter == 1
+    confirmed &= state["chanc_shown"][0] == jnp.array([0, 2])
+
     return ratio * presi_meter + chanc_meter / ratio
 
 
@@ -94,7 +97,7 @@ def vote_meter(state, **_):
     presi = meter[state["presi"][0]]
     chanc = meter[state["proposed"][0]]
     total = presi + chanc
-    return sigmoid(-total * 5 - 3)
+    return sigmoid(-total * 5 - 2.5)
 
 
 def shoot_meter(state, **_):
@@ -121,13 +124,13 @@ def main():
     presi_bot = bots.run.fuse(
         bots.bots.discard_true,
         bots.bots.discard_false,
-        bots.bots.discard_false,
+        bots.bots.discard_true,
     )
 
     chanc_bot = bots.run.fuse(
         bots.bots.discard_true,
         bots.bots.discard_false,
-        bots.bots.discard_false,
+        bots.bots.discard_true,
     )
 
     shoot_bot = bots.run.fuse(
