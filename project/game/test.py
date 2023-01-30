@@ -29,7 +29,7 @@ def test_unchanged(
     for i in range(1, arr[0].shape[0]):
         unchanged *= (arr[i - 1][:-1] == arr[i][1:]).all()
 
-    return unchanged
+    return unchanged  # type: ignore
 
 
 @jaxtyped

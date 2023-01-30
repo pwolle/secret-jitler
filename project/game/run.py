@@ -104,7 +104,7 @@ def propose(
     logprob = jnp.where(mask, logprob, -jnp.inf)
 
     # sample next chanc
-    proposal = jrn.categorical(key, logprob, shape=None)
+    proposal = jrn.categorical(key, logprob)  # type: ignore
 
     # update proposed chancellor
     proposed = proposed.at[0].set(proposal)
@@ -318,7 +318,6 @@ def vote(
     chanc_shown = jla.select(works, chanc_shown, chanc_shown_skip)
     draw = jla.select(works, draw, draw_skip)
     disc = jla.select(works, disc, disc_skip)
-    # chanc_shown = jla.select(~works, chanc_shown_skip, chanc_shown)
 
     # if force (force => ~works=skip) then update variables
     force = tracker[0] == 3
@@ -648,7 +647,7 @@ def shoot(
     # set logprob of masked players to -inf
     logprob = jnp.where(mask, logprob, -jnp.inf)
 
-    kill = jrn.categorical(key, logprob)
+    kill = jrn.categorical(key, logprob)  # type: ignore
 
     killed = jla.select(skip, killed, killed.at[0, kill].set(True))
 

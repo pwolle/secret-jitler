@@ -9,21 +9,21 @@ from bots import bots, run
 from tqdm import trange
 
 
-def propose_facist(state, **_):
+def propose_liberal_looking_fascist(state, **_):
     # do not propose liberals
     roles = jnp.where(state["roles"][0] != 0, 0, -jnp.inf)
 
     # propose the most liberal presidents
-    return roles - fometer(state) * 10
+    return roles - detect_fascists(state) * 10
 
 
-def vote_yes_facist(state, **_):
+def vote_iff_fascist_presi(state, **_):
     # chanc = state["roles"][0][state["proposed"][0]] != 0
     presi = state["roles"][0][state["presi"][0]] != 0
     return jla.select(presi, 1.0, 0.0)
 
 
-def next_presi(state, presi):
+def _next_presi(state, presi):
     killed = state["killed"][0]
     player_total = killed.shape[-1]
 
@@ -38,7 +38,7 @@ def next_presi(state, presi):
     return succesor
 
 
-def shoot_next_liberal(state, **_):
+def shoot_next_liberal_presi(state, **_):
     roles = state["roles"][0]
     player_total = roles.shape[-1]
 
@@ -47,7 +47,7 @@ def shoot_next_liberal(state, **_):
     presi_roles = jnp.zeros(player_total)
 
     for i in range(3):
-        presi = next_presi(state, presi)
+        presi = _next_presi(state, presi)
         presis = presis.at[i].set(presi)
         presi_roles = presi_roles.at[i].set(roles[presi] == 0)
 
@@ -57,7 +57,7 @@ def shoot_next_liberal(state, **_):
     return probs.at[target].set(0.0)
 
 
-def fometer(state, ratio=1.0):
+def detect_fascists(state, ratio=1.0):
     player_total = state["killed"][0].shape[-1]
 
     board = state["board"]
@@ -97,15 +97,15 @@ def sigmoid(x):
     return 1 / (1 + jnp.exp(-x))
 
 
-def propose_meter(state, params, **_):
+def propose_meter_most_liberal(state, params, **_):
     strength = params["liberal"]["strength"]
     ratio = params["liberal"]["ratio"]
-    return -fometer(state, ratio) * strength
+    return -detect_fascists(state, ratio) * strength
 
 
 def vote_meter(state, params, **_):
     ratio = params["liberal"]["ratio"]
-    meter = fometer(state, ratio)
+    meter = detect_fascists(state, ratio)
     presi = meter[state["presi"][0]]
     chanc = meter[state["proposed"][0]]
     total = presi + chanc
@@ -117,7 +117,7 @@ def vote_meter(state, params, **_):
 def shoot_meter(state, params, **_):
     strength = params["liberal"]["strength"]
     ratio = params["liberal"]["ratio"]
-    return fometer(state, ratio) * strength
+    return detect_fascists(state, ratio) * strength
 
 
 def main():
@@ -126,14 +126,14 @@ def main():
     batch_size = 128
 
     propose_bot = run.fuse(
-        propose_meter,
-        propose_facist,
+        propose_meter_most_liberal,
+        propose_liberal_looking_fascist,
         bots.propose_random,
     )
 
     vote_bot = run.fuse(
         vote_meter,
-        vote_yes_facist,
+        vote_iff_fascist_presi,
         bots.vote_yes,
     )
 
@@ -151,7 +151,7 @@ def main():
 
     shoot_bot = run.fuse(
         shoot_meter,
-        shoot_next_liberal,
+        shoot_next_liberal_presi,
         bots.shoot_random,
     )
 
