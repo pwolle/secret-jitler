@@ -3,8 +3,6 @@ import jax.numpy as jnp
 import jax.lax as jla
 import random
 
-from kiwisolver import strength
-
 import bots.bots
 import bots.run
 
@@ -79,9 +77,12 @@ def fometer(state, ratio=1.0):
     chanc_meter = chanc_meter.at[chanc[:-1]].add(meter)
 
     confirmed = meter == 1
-    confirmed &= state["chanc_shown"][0] == jnp.array([0, 2])
+    confirmed &= state["chanc_shown"][:-1, 0] == 1
 
-    return ratio * presi_meter + chanc_meter / ratio
+    confirmed_meter = jnp.zeros([player_total])
+    confirmed_meter = confirmed_meter.at[chanc[:-1]].add(confirmed)
+
+    return ratio * presi_meter + chanc_meter / ratio + confirmed_meter * 1e3
 
 
 def sigmoid(x):
