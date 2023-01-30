@@ -7,13 +7,13 @@ the dimension changes to (player_total,history_size,...)
     presi_shown and chanc_shown should only see the player who was president/chancellor at that time
 """
 
-import jax.numpy as jnp
-import jax.lax as jla
-import jax
-
-import game.stype as T
 
 from typing import Any
+
+import game.stype as st
+import jax
+import jax.lax as jla
+import jax.numpy as jnp
 
 
 def mask_roles(player: int, roles, **_):
@@ -27,7 +27,7 @@ def mask_roles(player: int, roles, **_):
         player: int
             index of the player
 
-        roles: T.roles
+        roles: st.roles
             roles history of gamestate index 0 holds current turn
             index i:
                 0 if player i is liberal
@@ -73,7 +73,7 @@ def mask_presi_shown(player: int, presi, presi_shown, **_):
         player: int
             index of the player
 
-        presi: T.presi
+        presi: st.presi
             president history of gamestate index 0 holds current turn
             index in history_size is the turn (0 is current)
             value corresponds to player
@@ -99,7 +99,7 @@ def mask_chanc_shown(player: int, chanc, presi, chanc_shown, **_):
         player: int
             index of the player
 
-        chanc: T.chanc
+        chanc: st.chanc
             chancellor history of gamestate index 0 holds current turn
             index in history_size is the turn (0 is current)
             value corresponds to player
@@ -116,7 +116,7 @@ def mask_chanc_shown(player: int, chanc, presi, chanc_shown, **_):
     return chanc_shown * mask[:, None]
 
 
-def mask(state: T.state) -> T.state:
+def mask(state: st.state) -> st.state:
     """
     Mask the chanc_shown history of gamestate.
     every player should only have this data if they were chanccelor at that

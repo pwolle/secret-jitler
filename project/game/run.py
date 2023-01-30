@@ -5,9 +5,8 @@ import jaxtyping as jtp
 from jaxtyping import jaxtyped
 from typeguard import typechecked
 
-from . import init
+from . import init, util
 from . import stype as st
-from . import util
 
 
 @jaxtyped
