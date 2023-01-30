@@ -180,11 +180,18 @@ def vote_iff_fascist_presi(state, **_):
     return jla.select(presi, 1.0, 0.0)
 
 
-def vote_fascist_sigmoid(state, **_):
-    presi = state["roles"][0][state["presi"][0]] != 0
-    chanc = state["roles"][0][state["proposed"][0]] != 0
-    total = presi.astype("float32") + chanc.astype("float32")
-    return _sigmoid(0.5 + total * 0.5)
+def vote_fascist_sigmoid_more_yes(state, **_):
+    fascist_scale = _detect_fascists(state)
+    presi_scale = fascist_scale[state["presi"][0]]
+    chanc_scale = fascist_scale[state["proposed"][0]]
+    total_scale = presi_scale + chanc_scale
+
+    presi_known = state["roles"][0][state["presi"][0]] != 0
+    chanc_known = state["roles"][0][state["proposed"][0]] != 0
+    total_known = presi_known.astype("float32") + chanc_known.astype("float32")
+
+    total = total_scale * 0.5 + total_known
+    return _sigmoid(0.75 + total)
 
 
 def shoot_next_liberal_presi(state, **_):
@@ -223,7 +230,7 @@ def vote_liberal_sigmoid_more_yes(state, **_):
     presi = fascist_scale[state["presi"][0]]
     chanc = fascist_scale[state["proposed"][0]]
     total = presi + chanc
-    return _sigmoid(total * 1.5 + 0.5)
+    return _sigmoid(total * 1.5 + 0.75)
 
 
 def shoot_most_fascist(state, **_):
