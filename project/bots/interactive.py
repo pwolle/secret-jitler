@@ -214,7 +214,7 @@ def closure(
         state |= run.propose(key=simkey, logprobs=probs, **state)
 
         typewrite(
-            f'\n{prepr(state["presi"][0], player)} is the ' f"Presidential Candidate.",
+            f'\n{prepr(state["presi"][0], player)} is the Presidential Candidate.',
             speed,
         )
         typewrite(
@@ -359,7 +359,7 @@ def closure(
             typewrite(
                 "\nThe secret Hitler winks at you conspiratorial. It is "
                 f"Player {int(jnp.arange(total)[state['roles'][0]==2])}.",
-                speed
+                speed,
             )
 
         if state["roles"][0][player] == 2:
@@ -377,6 +377,8 @@ def closure(
         while True:
             turn += 1
             typewrite(f"\n\033[4mRound {turn} has begun\033[0m", speed)
-            state = turn_func(key, player, state, params, speed)
+
+            key, subkey = jrn.split(key)
+            state = turn_func(subkey, player, state, params, speed)
 
     return run_func

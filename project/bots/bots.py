@@ -190,8 +190,8 @@ def vote_fascist_sigmoid_more_yes(state, **_):
     chanc_known = state["roles"][0][state["proposed"][0]] != 0
     total_known = presi_known.astype("float32") + chanc_known.astype("float32")
 
-    total = total_known - total_scale
-    return _sigmoid(1.0 + total)
+    total = total_known * 0.5 - total_scale
+    return _sigmoid(0.75 + total)
 
 
 def shoot_next_liberal_presi(state, **_):
