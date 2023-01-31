@@ -580,8 +580,10 @@ def closure(
                     typewrite(f"\x1b[31mPlayer {i}\x1b[0m", speed)
 
             typewrite(
-                "\nThe secret Hitler winks at you conspiratorial. It is "
-                f"Player {int(jnp.arange(total)[state['roles'][0]==2])}.",
+                "\nYou can recognize the secret Hitler. It is "
+                "\033[4m\x1b[31mPlayer "
+                f"{int(jnp.arange(total)[state['roles'][0]==2])}"
+                "\x1b[0m\033[0m. They do not know who you are.\n",
                 speed,
             )
 
