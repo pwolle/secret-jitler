@@ -81,7 +81,7 @@ Alternatively you can just modify `project/benchmark.py` to include your bots.
 
 ## Creating your own bots
 
-Bots are always called with the following keyward arguments (see `bots/run.py`)
+Bots are always called with the following keyword arguments (see `bots/run.py`)
 
 ``` python
 ... = some_bot(
