@@ -13,6 +13,22 @@ jax.config.update("jax_platform_name", "cpu")
 
 
 def main(players, position, speed, seed=None):
+    """
+    Run the game interactively.
+    Args:
+        players: int
+            The number of players in the game.
+        position: int
+            The position of the human player.
+        speed: int
+            The speed of the game.
+        seed: int
+            The seed for the random number generator.
+
+    Returns:
+        None
+    """
+    # check if the inputs are valid
     if players < 5:
         raise ValueError("There must be at least 5 players.")
 
