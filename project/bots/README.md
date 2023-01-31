@@ -14,12 +14,12 @@ This repository already implements a range of different bots. A bot function for
 ``` python
 vote_bot = bots.run.fuse(
     bots.bots.discard_true,  # role liberal
-    bots.bots.discard_false, # role facist
+    bots.bots.discard_false, # role fascist
     bots.bots.discard_false, # role hitler
 )
 ```
 
-In the case above presidents with role liberal will always try to discard a facist policy, while the players with either facist or hitler as role will try to discard a liberal policy.
+In the case above presidents with role liberal will always try to discard a fascist policy, while the players with either fascist or hitler as role will try to discard a liberal policy.
 
 ## Running bots
 
@@ -66,15 +66,15 @@ winner_func = bot.run.evaluate(
 key = jax.random.PRNGKey(42)
 
 # `results` will be a boolean array of shape (1024, 2)
-# `results[i, 0]` will be iff the liberal party won the `i`th game
-# `results[i, 1]` will be iff the facist party won the `i`th game
+# `results[i]` will be 0 iff the liberal party won the `i`th game
+# `results[i]` will be 1 iff the fascist party won the `i`th game
 results = winner_func(key, params)
 
 # get the win rates by calculating the mean over the first axis
 results = results.mean(axis=0)
 
 print(f"liberals won {results[0]} of games")
-print(f"facists won {results[1]} of games")
+print(f"fascists won {results[1]} of games")
 ```
 
 ## Creating your own bots
@@ -107,6 +107,6 @@ Where the states values first axis represents the games history i.e. `value[i]` 
 
 1. __chancellor proposal__ unnormalized log probablities for each player including the president themselves
 2. __voting__ probablity of voting yes
-3. __presi__ probability of discarding a facist policy
-4. __chanc__ probability of discarding a facist policy
+3. __presi__ probability of discarding a fascist policy
+4. __chanc__ probability of discarding a fascist policy
 5. __shoot__ unnormalized log probablities for each player including the president, note, that president will never shoot themselves
