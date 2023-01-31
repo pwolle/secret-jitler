@@ -16,6 +16,19 @@ SPEED = 10
 
 
 def typewrite(string, speed=SPEED, end="\n"):
+    """
+    Print a string with a typewriter effect.
+    Args:
+        string: str
+            The string to print.
+        speed: int
+            The speed of the typewriter effect.
+        end: str
+            The string to append at the end of the string.
+
+    Returns:
+        None
+    """
     for char in string:
         print(char, end="", flush=True)
 
@@ -36,6 +49,17 @@ def typewrite(string, speed=SPEED, end="\n"):
 
 
 def prepr(index: int, player: int):
+    """
+    Print the player index with a special format if it is the player.
+    Args:
+        index: int
+            The index to check.
+        player: int
+            The index of the player.
+
+    Returns:
+        Formatted string.
+    """
     if index != player:
         return f"Player {index}"
 
@@ -43,6 +67,17 @@ def prepr(index: int, player: int):
 
 
 def valid_input(expected: dict, speed=SPEED):
+    """
+    Read input from the user and check if it is valid.
+    Args:
+        expected: dict
+            A dictionary of valid inputs.
+        speed: int
+            The speed of the typewriter effect.
+
+    Returns:
+        The valid input.
+    """
     expected = {str(k).upper(): v for k, v in expected.items()}
     messages = [
         "That is not a valid input.",
@@ -65,13 +100,29 @@ def valid_input(expected: dict, speed=SPEED):
 
 
 def propose(player, probs, state, speed=SPEED):
+    """
+    Get the proposal probabilities from the player if needed.
+    Args:
+        player: int
+            The index of the player.
+        probs: array
+            The log probabilities of each player proposing chancellor
+            candidates.
+        state: history
+            The state of the game.
+        speed: int
+            The speed of the typewriter effect.
+
+    Returns:
+        The log probabilities of each player proposing chancellor candidates.
+    """
     if state["killed"][0, player]:
         return probs
 
-    succesor = run.propose(key=jrn.PRNGKey(0), logprobs=probs, **state)
-    succesor = succesor["presi"][0]
+    successor = run.propose(key=jrn.PRNGKey(0), logprobs=probs, **state)
+    successor = successor["presi"][0]
 
-    if succesor != player:
+    if successor != player:
         return probs
 
     total = state["roles"].shape[-1]
@@ -89,10 +140,28 @@ def propose(player, probs, state, speed=SPEED):
 
 
 def vote(player, probs, state, speed=SPEED):
+    """
+    Get the vote from the player.
+    Args:
+        player: int
+            The index of the player.
+        probs: array
+            The probabilities of the players voting yes.
+        state: array
+            The state of the game.
+        speed: int
+            The speed of the typewriter effect.
+
+    Returns:
+        The probabilities of the players voting yes.
+    """
     if state["killed"][0, player]:
         return probs
 
-    typewrite("\nWhat is your decision? (enter Nein! (no) or Ja! (yes))", speed)
+    typewrite(
+        "\nWhat is your decision? (enter Nein! (no) or Ja! (yes))",
+        speed
+    )
 
     vote = valid_input(
         {
@@ -114,12 +183,28 @@ def vote(player, probs, state, speed=SPEED):
 
 
 def presi_disc(player, probs, state, speed=SPEED):
+    """
+    Get the president discard probability from the player if needed.
+    Args:
+        player: int
+            The index of the player.
+        probs: array
+            The probabilities of the players discarding a F card.
+        state: array
+            The state of the game.
+        speed: int
+            The speed of the typewriter effect.
+
+    Returns:
+        The probabilities of the players discarding a F card.
+    """
     if state["killed"][0, player]:
         return probs
 
     if state["presi"][0] != player:
         typewrite(
-            "\nThe President chooses two Policies to give to their " "Chancellor.",
+            "\nThe President chooses two Policies to give to their " 
+            "Chancellor.",
             speed,
         )
         return probs
@@ -132,15 +217,34 @@ def presi_disc(player, probs, state, speed=SPEED):
     )
     narrate.print_cards(state["presi_shown"][0])
     typewrite(
-        "\nWhat type of card do you want to discard? (enter Liberal or" " Fascist)",
+        "\nWhat type of card do you want to discard? (enter Liberal or" 
+        " Fascist)",
         speed,
     )
 
-    disc = valid_input({0: 0, 1: 1, "l": 0, "f": 1, "liberal": 0, "fascist": 1}, speed)
+    disc = valid_input(
+        {0: 0, 1: 1, "l": 0, "f": 1, "liberal": 0, "fascist": 1},
+        speed
+    )
     return probs.at[player].set(disc)
 
 
 def chanc_disc(player, probs, state, speed=SPEED):
+    """
+    Get the chancellor discard probability from the player if needed.
+    Args:
+        player: int
+            The index of the player.
+        probs: array
+            The probabilities of the players discarding a F card.
+        state: array
+            The state of the game.
+        speed: int
+            The speed of the typewriter effect.
+
+    Returns:
+        The probabilities of the players discarding a F card.
+    """
     if state["killed"][0, player]:
         return probs
 
@@ -162,11 +266,29 @@ def chanc_disc(player, probs, state, speed=SPEED):
         speed,
     )
 
-    disc = valid_input({0: 0, 1: 1, "l": 0, "f": 1, "liberal": 0, "fascist": 1}, speed)
+    disc = valid_input(
+        {0: 0, 1: 1, "l": 0, "f": 1, "liberal": 0, "fascist": 1},
+        speed
+    )
     return probs.at[player].set(disc)
 
 
 def shoot(player, probs, state, speed=SPEED):
+    """
+    Get the shoot probability from the player if needed.
+    Args:
+        player: int
+            The index of the player.
+        probs: array
+            The probabilities of the players shooting each player.
+        state: array
+            The state of the game.
+        speed: int
+            The speed of the typewriter effect.
+
+    Returns:
+        The probabilities of the players shooting each player.
+    """
     necessary = jnp.logical_or(
         ((state["board"][0][1], state["board"][1][1]) == (4, 3)),
         ((state["board"][0][1], state["board"][1][1]) == (5, 4)),
@@ -191,9 +313,45 @@ def shoot(player, probs, state, speed=SPEED):
     )
 
     # TODO filter expected by alive
-    target = valid_input({i: i for i in jnp.arange(total)}, speed)
+    target = valid_input({i: i for i in range(total)}, speed)
     probs = probs.at[player, target].set(jnp.inf)
     return probs, True
+
+
+def show_roles(player, state, speed=SPEED):
+    """
+    Show the roles of all players to the player.
+    Args:
+        player: int
+            The index of the player.
+        state: array
+            The state of the game.
+        speed: int
+            The speed of the typewriter effect.
+
+    Returns:
+        None
+    """
+    typewrite("\nHere are the roles of all players:\n", speed)
+    for i, role in enumerate(state["roles"][0]):
+        if i == player:
+            continue
+
+        if role == 0:
+            typewrite(
+                f"Player {i} was \x1b[34mLiberal\x1b[0m.",
+                speed
+            )
+        elif role == 1:
+            typewrite(
+                f"Player {i} was \x1b[31mFascist\x1b[0m.",
+                speed
+            )
+        else:
+            typewrite(
+                f"Player {i} was \033[4m\x1b[31mHitler\x1b[0m\033[0m.",
+                speed
+            )
 
 
 def closure(
@@ -204,7 +362,43 @@ def closure(
     chanc_bot: st.Bot,
     shoot_bot: st.Bot,
 ):
+    """
+    Create a function that plays one game.
+    Args:
+        history_size: int
+            The size of the history.
+        propose_bot: st.Bot
+            The bot used for proposing.
+        vote_bot: st.Bot
+            The bot used for voting.
+        presi_bot: st.Bot
+            The bot used for the president discards.
+        chanc_bot: st.Bot
+            The bot used for the chancellor discards.
+        shoot_bot: st.Bot
+            The bot used for shooting.
+
+    Returns:
+        The function that plays one game.
+    """
     def turn_func(key, player, state, params, speed=SPEED):
+        """
+        Play a turn of the game.
+        Args:
+            key: jax.random.PRNGKey
+                The key to use for the RNG.
+            player: int
+                The index of the player.
+            state: array
+                The state of the game.
+            params: dict
+                The bot parameters.
+            speed: int
+                The speed of the typewriter effect.
+
+        Returns:
+            The new state of the game.
+        """
         state = util.push_state(state)
 
         # propose
@@ -239,6 +433,7 @@ def closure(
             v = ["Nein!", "Ja!"][int(state["voted"][0, i])]
             typewrite(f"{prepr(i, player)} voted {v}.", speed)
 
+        # check election tracker progress
         if state["tracker"][0] == 3:
             typewrite(
                 "\nThree elections in a row have been rejected. The country"
@@ -250,11 +445,13 @@ def closure(
             narrate.print_board(state["board"][0])
 
             if state["winner"][0, 0]:
-                typewrite("\nThe liberals win!", speed)
+                typewrite("\nThe \x1b[34mLiberals\x1b[0m win!\n", speed)
+                show_roles(player, state, speed)
                 sys.exit()
 
             if state["winner"][0, 1]:
-                typewrite("\nThe fascists win!", speed)
+                typewrite("\nThe \x1b[31mFascists\x1b[0m win!\n", speed)
+                show_roles(player, state, speed)
                 sys.exit()
 
             return state
@@ -263,20 +460,31 @@ def closure(
             typewrite(
                 "\nThe vote failed. The Presidential Candidate missed this "
                 "chance. The Election Tracker advances to "
-                f"{state['tracker'][0]}\n",
+                f"{state['tracker'][0]}.\n",
                 speed,
             )
             return state
 
+        typewrite(
+            "\nThe vote passed. We have a new President and Chancellor.",
+            speed
+        )
+
         if state["roles"][0][state["chanc"][0]] == 2 and state["board"][0][1] >= 3:
             typewrite(
                 "\nHitler was elected Chancellor.\n\nThe "
-                "\x1b[31mFascists\x1b[0m have won!",
+                "\x1b[31mFascists\x1b[0m have won!\n",
                 speed,
             )
+            show_roles(player, state, speed)
             sys.exit()
 
-        typewrite("\nThe vote passed. We have a new President and Chancellor.", speed)
+        if state["board"][0][1] >= 3:
+            typewrite(
+                "\nThe new Chancellor is not Hitler. "
+                "The country is safe for now.\n",
+                speed
+            )
 
         # president discard
         key, botkey, simkey = jrn.split(key, 3)
@@ -297,11 +505,13 @@ def closure(
 
         # check board for win
         if state["winner"][0, 0]:
-            typewrite("The \x1b[34mLiberals\x1b[0m win!", speed)
+            typewrite("The \x1b[34mLiberals\x1b[0m win!\n", speed)
+            show_roles(player, state, speed)
             sys.exit()
 
         if state["winner"][0, 1]:
-            typewrite("The \x1b[31mFascists\x1b[0m win!", speed)
+            typewrite("The \x1b[31mFascists\x1b[0m win!\n", speed)
+            show_roles(player, state, speed)
             sys.exit()
 
         # shoot
@@ -315,17 +525,36 @@ def closure(
             typewrite(f"\n{prepr(dead, player)} was shot.", speed)
 
         if state["winner"][0, 0]:
-            typewrite("Hitler was shot, the \x1b[34mLiberals\x1b[0m win!", speed)
+            typewrite("Hitler was shot, the \x1b[34mLiberals\x1b[0m win!\n", speed)
+            show_roles(player, state, speed)
             sys.exit()
 
         return state
 
     def run_func(key, player, total, params, speed=SPEED):
+        """
+        Create a function that runs one interactive game of secret-jitler.
+        Args:
+            key: jax.random.PRNGKey
+                The random key to use for the game.
+            player: int
+                The player number of the human player.
+            total: int
+                The total number of players.
+            params: dict
+                The parameters for the bots.
+            speed: int
+                The speed of the print statements.
+
+        Returns:
+            The function that runs the game.
+        """
         key, subkey = jrn.split(key)
         state = init.state(subkey, total, history_size)
 
         typewrite(
-            f"\n\t\t\033[4mA new game with {total} players starts!\033[0m\n", speed - 2
+            f"\n\t\t\033[4mA new game with {total} players starts!\033[0m\n",
+            speed - 2
         )
         typewrite(f"\nYour Player Number is {player}.", speed)
 

@@ -49,7 +49,7 @@ def main(players, position, speed, seed=None):
 
     if seed is None:
         seed = random.randint(0, 2**32 - 1)
-        print(f"your random seed is {seed}")
+        print(f"seed: {seed}\n\n")
 
     key = jrn.PRNGKey(seed)
     key, subkey1, subkey2 = jrn.split(key, 3)
@@ -84,7 +84,6 @@ def main(players, position, speed, seed=None):
     )
 
     # create run function
-
     run_func_interactive = interactive.closure(
         30,  # maximum history size needed
         propose_bot=propose_bot,
