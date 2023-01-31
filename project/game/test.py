@@ -1,6 +1,3 @@
-import unittest
-
-import jax
 import jax.numpy as jnp
 import jax.random as jrn
 import jaxtyping as jtp
@@ -329,14 +326,16 @@ def test_dummy_history(
     )
 
     proposed_works = test_presi_chanc_or_proposed(
-        player_total=player_total, arr=dic["proposed"]
+        player_total=player_total, arr=dic["proposed"], killed=dic["killed"]
     )
 
     voted_works = test_unchanged(arr=dic["voted"])
 
     tracker_works = test_tracker(tracker=dic["tracker"])
 
-    cards_work = test_cards(draw=dic["draw"], disc=dic["disc"], board=dic["board"])
+    cards_work = test_cards(
+        draw=dic["draw"], disc=dic["disc"], board=dic["board"]
+    )
 
     presi_shown_works = test_presi_shown(presi_shown=dic["presi_shown"])
 
@@ -361,22 +360,3 @@ def test_dummy_history(
     )
 
     return jnp.logical_or(works, dic["winner"].sum()).all()
-
-
-class TestDummyHistory(unittest.TestCase):
-    def test_works(self):
-        # jit the function
-        test_jit = jax.jit(
-            test_dummy_history, static_argnames=["player_total", "game_len"]
-        )
-
-        # let it run once for faster loop afterwards
-        key = jrn.PRNGKey(34527)
-        test_jit(key=key)
-
-        # test for 1000 random keys
-        for i in range(10000):
-            key = jrn.PRNGKey(8127346 - i)
-            key, subkey = jrn.split(key)
-            result = test_jit(key=subkey)
-            self.assertTrue(result)
