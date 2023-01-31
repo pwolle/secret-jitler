@@ -143,7 +143,7 @@ def _detect_fascists(state, ratio=1.0):
 
     total_meter = ratio * presi_meter
     total_meter += chanc_meter / ratio
-    total_meter += confirmed_meter * 1e2
+    # total_meter += confirmed_meter * 1e2
 
     return total_meter
 
@@ -222,7 +222,7 @@ def vote_liberal_sigmoid(state, **_):
     presi = fascist_scale[state["presi"][0]]
     chanc = fascist_scale[state["proposed"][0]]
     total = presi + chanc
-    return _sigmoid(total * 5 - 2)
+    return _sigmoid(-total * 5 - 2)
 
 
 def vote_liberal_sigmoid_more_yes(state, **_):
@@ -230,7 +230,7 @@ def vote_liberal_sigmoid_more_yes(state, **_):
     presi = fascist_scale[state["presi"][0]]
     chanc = fascist_scale[state["proposed"][0]]
     total = presi + chanc
-    return _sigmoid(total * 1.5 + 1)
+    return _sigmoid(-total * 1.5 + 1)
 
 
 def shoot_most_fascist(state, **_):
