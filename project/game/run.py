@@ -276,6 +276,7 @@ def vote(
     winner_done = winner.sum().astype(bool)
     winner_cond = roles[0, chanc[0]] == 2
     winner_cond &= board[0, 1] >= 3
+    winner_cond &= works
 
     winner = winner.at[0, 1].set(
         jla.select(
