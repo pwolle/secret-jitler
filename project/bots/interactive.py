@@ -345,7 +345,7 @@ def closure(
                 "have to make sure that six fascist policies are"
                 " enacted or Hitler gets elected after three "
                 "fascist policies have been enacted. Your fellow"
-                " Fascists are:",
+                " Fascists are:\n",
                 speed,
             )
 
@@ -355,6 +355,12 @@ def closure(
 
                 if state["roles"][0][i] == 1:
                     typewrite(f"\x1b[31mPlayer {i}\x1b[0m", speed)
+
+            typewrite(
+                "\nThe secret Hitler winks at you conspiratorial. It is "
+                f"Player {int(jnp.arange(total)[state['roles'][0]==2])}.",
+                speed
+            )
 
         if state["roles"][0][player] == 2:
             typewrite(
