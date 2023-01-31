@@ -80,7 +80,7 @@ def valid_input(expected: dict, speed=SPEED):
     """
     expected = {str(k).lower(): v for k, v in expected.items()}
     messages = [
-        "That is not a valid input. Type help for to see valid inputs",
+        "That is not a valid input.",
         "Try again.",
         "We did not understand that.",
         "We are not sure what you mean.",
@@ -92,7 +92,7 @@ def valid_input(expected: dict, speed=SPEED):
     while True:
         read = input().lower()
         if read == "help":
-            message = "expected one of" + ", ".join(expected.keys())
+            message = "expected one of " + ", ".join(expected.keys())
             typewrite(message, speed)
 
         try:
@@ -100,6 +100,7 @@ def valid_input(expected: dict, speed=SPEED):
 
         except KeyError:
             typewrite(random.choice(messages), speed)
+            typewrite('Type "help" to list valid inputs.', speed)
 
 
 def propose(player, probs, state, speed=SPEED):
