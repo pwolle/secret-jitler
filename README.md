@@ -41,7 +41,7 @@ If you want to build a bot, take a look at the [documentation](https://github.co
 
 ## Performance 🥵
 Performance numbers estimated using the script `project/performance.py`.
-| hardware | throuput in it/s | batch size |
+| hardware | throughput in it/s | batch size |
 | - | - | - |
 | gtx 1060 | 2.9e6 | 131072 |
 | i7-6700  | 5.8e4 | 256 |
