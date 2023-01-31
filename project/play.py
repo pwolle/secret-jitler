@@ -124,12 +124,4 @@ if __name__ == "__main__":
     parser.add_argument("--speed", type=int, default=12, help="speed of the game")
 
     args = parser.parse_args()
-
-    sys.exit(
-        main(
-            args.players,
-            args.position,
-            args.speed,
-            args.seed,
-        )
-    )
+    sys.exit(main(args.players, args.position, args.speed, args.seed))
