@@ -66,8 +66,8 @@ winner_func = bot.run.evaluate(
 key = jax.random.PRNGKey(42)
 
 # `results` will be a boolean array of shape (1024, 2)
-# `results[i, 0]` will be iff the liberal party won the `i`th game
-# `results[i, 1]` will be iff the facist party won the `i`th game
+# `results[i]` will be 0 iff the liberal party won the `i`th game
+# `results[i]` will be 1 iff the fascist party won the `i`th game
 results = winner_func(key, params)
 
 # get the win rates by calculating the mean over the first axis
