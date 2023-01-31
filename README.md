@@ -9,7 +9,7 @@ A **j**ust-**i**n-**t**ime compiled python implementation of the popular parlor 
 - 🤯 see what's going on thanks to the narration 
 
 ## Motivation
-As avid players of the game Secret Hitler, we are always discussing our stratiegies. Since we are programmmers, we decided to create a test for these strategies in simulated games.
+As avid players of the game Secret Hitler, we are always discussing our strategies. Since we are programmmers, we decided to create a test for these strategies in simulated games.
 
 ## Installation
 
