@@ -68,16 +68,16 @@ def main(players, history, batch, iters):
 
     winner_func = run.evaluate(game_run, batch)
 
-    ratio = 1.0
     params = {
-        "propose": {"liberal": {"strength": 10, "ratio": ratio}},
-        "vote": {"liberal": {"strength": 5, "offset": -2, "ratio": ratio}},
+        "propose": 0,
+        "vote": 0,
         "presi": 0,
         "chanc": 0,
-        "shoot": {"liberal": {"strength": 10, "ratio": ratio}},
+        "shoot": 0,
     }
 
     key = jrn.PRNGKey(random.randint(0, 2**32 - 1))
+
     print("compiling...")
     winners = [winner_func(key, params)]  # type: ignore
     print("compiled.")
