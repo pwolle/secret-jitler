@@ -78,9 +78,9 @@ def valid_input(expected: dict, speed=SPEED):
     Returns:
         The valid input.
     """
-    expected = {str(k).upper(): v for k, v in expected.items()}
+    expected = {str(k).lower(): v for k, v in expected.items()}
     messages = [
-        "That is not a valid input.",
+        "That is not a valid input. Type help for to see valid inputs",
         "Try again.",
         "We did not understand that.",
         "We are not sure what you mean.",
@@ -90,7 +90,10 @@ def valid_input(expected: dict, speed=SPEED):
     ]
 
     while True:
-        read = input().upper()
+        read = input().lower()
+        if read == "help":
+            message = "expected one of" + ", ".join(expected.keys())
+            typewrite(message, speed)
 
         try:
             return expected[read]
@@ -158,10 +161,7 @@ def vote(player, probs, state, speed=SPEED):
     if state["killed"][0, player]:
         return probs
 
-    typewrite(
-        "\nWhat is your decision? (enter Nein! (no) or Ja! (yes))",
-        speed
-    )
+    typewrite("\nWhat is your decision? (enter Nein! (no) or Ja! (yes))", speed)
 
     vote = valid_input(
         {
@@ -203,8 +203,7 @@ def presi_disc(player, probs, state, speed=SPEED):
 
     if state["presi"][0] != player:
         typewrite(
-            "\nThe President chooses two Policies to give to their " 
-            "Chancellor.",
+            "\nThe President chooses two Policies to give to their " "Chancellor.",
             speed,
         )
         return probs
@@ -217,15 +216,11 @@ def presi_disc(player, probs, state, speed=SPEED):
     )
     narrate.print_cards(state["presi_shown"][0])
     typewrite(
-        "\nWhat type of card do you want to discard? (enter Liberal or" 
-        " Fascist)",
+        "\nWhat type of card do you want to discard? (enter Liberal or" " Fascist)",
         speed,
     )
 
-    disc = valid_input(
-        {0: 0, 1: 1, "l": 0, "f": 1, "liberal": 0, "fascist": 1},
-        speed
-    )
+    disc = valid_input({0: 0, 1: 1, "l": 0, "f": 1, "liberal": 0, "fascist": 1}, speed)
     return probs.at[player].set(disc)
 
 
@@ -266,10 +261,7 @@ def chanc_disc(player, probs, state, speed=SPEED):
         speed,
     )
 
-    disc = valid_input(
-        {0: 0, 1: 1, "l": 0, "f": 1, "liberal": 0, "fascist": 1},
-        speed
-    )
+    disc = valid_input({0: 0, 1: 1, "l": 0, "f": 1, "liberal": 0, "fascist": 1}, speed)
     return probs.at[player].set(disc)
 
 
@@ -312,8 +304,21 @@ def shoot(player, probs, state, speed=SPEED):
         speed,
     )
 
-    # TODO filter expected by alive
-    target = valid_input({i: i for i in range(total)}, speed)
+    expect = {}
+
+    for i in range(total):
+        # do not shoot yourself
+        if i == player:
+            continue
+
+        # do not shoot dead players
+        if state["killed"][0, i]:
+            continue
+
+        expect[i] = i
+
+    target = valid_input(expect, speed)
+
     probs = probs.at[player, target].set(jnp.inf)
     return probs, True
 
@@ -338,20 +343,11 @@ def show_roles(player, state, speed=SPEED):
             continue
 
         if role == 0:
-            typewrite(
-                f"Player {i} was \x1b[34mLiberal\x1b[0m.",
-                speed
-            )
+            typewrite(f"Player {i} was \x1b[34mLiberal\x1b[0m.", speed)
         elif role == 1:
-            typewrite(
-                f"Player {i} was \x1b[31mFascist\x1b[0m.",
-                speed
-            )
+            typewrite(f"Player {i} was \x1b[31mFascist\x1b[0m.", speed)
         else:
-            typewrite(
-                f"Player {i} was \033[4m\x1b[31mHitler\x1b[0m\033[0m.",
-                speed
-            )
+            typewrite(f"Player {i} was \033[4m\x1b[31mHitler\x1b[0m\033[0m.", speed)
 
 
 def closure(
@@ -381,6 +377,7 @@ def closure(
     Returns:
         The function that plays one game.
     """
+
     def turn_func(key, player, state, params, speed=SPEED):
         """
         Play a turn of the game.
@@ -465,10 +462,7 @@ def closure(
             )
             return state
 
-        typewrite(
-            "\nThe vote passed. We have a new President and Chancellor.",
-            speed
-        )
+        typewrite("\nThe vote passed. We have a new President and Chancellor.", speed)
 
         if state["roles"][0][state["chanc"][0]] == 2 and state["board"][0][1] >= 3:
             typewrite(
@@ -481,9 +475,8 @@ def closure(
 
         if state["board"][0][1] >= 3:
             typewrite(
-                "\nThe new Chancellor is not Hitler. "
-                "The country is safe for now.\n",
-                speed
+                "\nThe new Chancellor is not Hitler. " "The country is safe for now.\n",
+                speed,
             )
 
         # president discard
@@ -554,8 +547,7 @@ def closure(
         state = init.state(subkey, total, history_size)
 
         typewrite(
-            f"\n\t\t\033[4mA new game with {total} players starts!\033[0m\n",
-            speed - 2
+            f"\n\t\t\033[4mA new game with {total} players starts!\033[0m\n", speed - 2
         )
         typewrite(f"\nYour Player Number is {player}.", speed)
 
