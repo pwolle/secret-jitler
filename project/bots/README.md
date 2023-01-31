@@ -65,7 +65,7 @@ winner_func = bot.run.evaluate(
 # choose your random seed
 key = jax.random.PRNGKey(42)
 
-# `results` will be a boolean array of shape (1024, 2)
+# `results` will be a boolean array of shape (1024,)
 # `results[i]` will be 0 iff the liberal party won the `i`th game
 # `results[i]` will be 1 iff the fascist party won the `i`th game
 results = winner_func(key, params)
@@ -73,8 +73,8 @@ results = winner_func(key, params)
 # get the win rates by calculating the mean over the first axis
 results = results.mean(axis=0)
 
-print(f"liberals won {results[0]} of games")
-print(f"fascists won {results[1]} of games")
+print(f"liberals won {1-results} of games")
+print(f"fascists won {results} of games")
 ```
 
 Alternatively you can just modify `project/benchmark.py` to include your bots.
