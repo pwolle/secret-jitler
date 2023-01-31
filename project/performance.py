@@ -10,8 +10,32 @@ from bots import bots, run
 from tqdm import trange
 
 
-def main(players=5, history=2, batch_size=128, n_tests=1000):
+def main(players: int = 5, history: int = 2, batch_size: int = 128, n_tests=1000):
     """
+    Calculate the performance of the game implementation.
+
+    Args:
+        players: int
+            The number of players in the game.
+
+        history: int
+            The number of previous rounds to consider.
+
+        batch_size: int
+            The number of games to run in parallel.
+
+        n_tests: int
+            The number of tests to run.
+
+    Returns:
+        0
+
+    Raises:
+        ValueError: If the number of players is not between 5 and 10.
+        ValueError: If the history is not between 2 and 30.
+        ValueError: If the batch size is smaller than 1.
+        ValueError: If the number of tests is smaller than 1.
+
     Performance test for game implementation:
     gtx 1060: 2.9e6 it/s at batch size 131072
     i7-6700: 5.8e4 it/s at batch size 256

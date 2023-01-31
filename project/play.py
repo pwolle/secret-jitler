@@ -15,6 +15,7 @@ jax.config.update("jax_platform_name", "cpu")
 def main(players, position, speed, seed=None):
     """
     Run the game interactively.
+
     Args:
         players: int
             The number of players in the game.
@@ -27,6 +28,11 @@ def main(players, position, speed, seed=None):
 
     Returns:
         None
+
+    Raises:
+        ValueError: If the number of players is not between 5 and 10.
+        ValueError: If the position is not between 0 and players-1.
+        ValueError: If the speed is not positive.
     """
     # check if the inputs are valid
     if players < 5:
