@@ -139,7 +139,32 @@ def propose(player, probs, state, speed=SPEED):
         speed,
     )
 
-    proposal = valid_input({i: i for i in range(total)}, speed)
+    expect = {}
+
+    for i in range(total):
+        # do not propose yourself
+        if i == player:
+            continue
+
+        # do not propose dead players
+        if state["killed"][0, i]:
+            continue
+
+        # do not propose ex-president
+        if state["presi"][1] == i:
+            continue
+
+        # do not propose ex-chancellor
+        if state["chanc"][1] == i:
+            continue
+
+        expect[i] = i
+
+    if len(expect) == 0:
+        expect = {i: i for i in range(total)}
+
+    proposal = valid_input(expect, speed)
+
     return probs.at[player, proposal].set(jnp.inf)
 
 
