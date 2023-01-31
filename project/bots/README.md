@@ -77,6 +77,8 @@ print(f"liberals won {results[0]} of games")
 print(f"fascists won {results[1]} of games")
 ```
 
+Alternatively you can just modify `project/benchmark.py` to include your bots.
+
 ## Creating your own bots
 
 Bots are always called with the following keyward arguments (see `bots/run.py`)
