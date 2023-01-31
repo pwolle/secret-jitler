@@ -287,6 +287,7 @@ def closure(
         # chancellor discard
         key, botkey, simkey = jrn.split(key, 3)
         probs = chanc_bot(key=botkey, params=params["chanc"], state=mask(state))
+
         probs = chanc_disc(player, probs, state, speed)
         state |= run.chanc_disc(key=simkey, probs=probs, **state)
 
