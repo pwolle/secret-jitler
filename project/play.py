@@ -49,6 +49,7 @@ def main(players, position, speed, seed=None):
 
     if seed is None:
         seed = random.randint(0, 2**32 - 1)
+        print(f"your random seed is {seed}")
 
     key = jrn.PRNGKey(seed)
     key, subkey1, subkey2 = jrn.split(key, 3)
@@ -65,7 +66,7 @@ def main(players, position, speed, seed=None):
     vote_bot = run.fuse(
         bots.vote_liberal_sigmoid_more_yes,
         bots.vote_fascist_sigmoid_more_yes,
-        bots.vote_yes,
+        bots.vote_liberal_sigmoid_more_yes,
     )
 
     presi_bot = run.fuse(
